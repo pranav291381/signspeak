@@ -144,7 +144,7 @@
       "unstable": "Hold each sign clearly."
     },
     "result": {
-      "label": "Recognised",
+      "label": "Last recognised",
       "empty": "Recognised signs will appear here.",
       "high": "High confidence",
       "medium": "Medium confidence",

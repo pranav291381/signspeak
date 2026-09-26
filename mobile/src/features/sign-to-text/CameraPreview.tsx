@@ -45,17 +45,18 @@ export function CameraPreview({ facing, active, onReady, onError }: Props) {
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    aspectRatio: 1,
-    maxHeight: 420,
+    // Landscape preview keeps the result visible without scrolling on small phones.
+    aspectRatio: 4 / 3,
+    maxHeight: 300,
     alignSelf: 'center',
     overflow: 'hidden',
   },
   guideOuter: {
     position: 'absolute',
-    top: '8%',
-    bottom: '8%',
-    left: '12%',
-    right: '12%',
+    top: '6%',
+    bottom: '6%',
+    left: '18%',
+    right: '18%',
     borderWidth: 1,
     borderColor: '#000000',
   },

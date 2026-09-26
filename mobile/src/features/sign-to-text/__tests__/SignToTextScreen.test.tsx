@@ -176,7 +176,7 @@ describe('SignToTextScreen', () => {
 
     expect(screen.getByTestId('recognition-text')).toHaveTextContent('नमस्ते');
     // UI stays in English.
-    expect(screen.getByText('Recognised')).toBeOnTheScreen();
+    expect(screen.getByText('Last recognised')).toBeOnTheScreen();
     // Uncalibrated recognizer: no confidence claims.
     expect(screen.queryByText(/confidence/)).toBeNull();
   });

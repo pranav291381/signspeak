@@ -104,22 +104,13 @@ export function SignToTextScreen({ sessionFactory }: Props) {
   return (
     <Screen testID="sign-to-text-screen">
       {snapshot.simulated ? (
-        <View style={{ gap: spacing.sm }}>
-          <Notice
-            testID="simulated-banner"
-            tone="warning"
-            icon="flask-outline"
-            title={t('signToText.simulated.title')}
-            message={t('signToText.simulated.message')}
-          />
-          <Button
-            variant="secondary"
-            label={t('signToText.simulated.turnOff')}
-            icon="flask-off-outline"
-            onPress={() => updateSettings({ demoMode: false })}
-            testID="demo-mode-off"
-          />
-        </View>
+        <Notice
+          testID="simulated-banner"
+          tone="warning"
+          icon="flask-outline"
+          title={t('signToText.simulated.title')}
+          message={t('signToText.simulated.message')}
+        />
       ) : null}
 
       <CameraGate>
@@ -186,6 +177,16 @@ export function SignToTextScreen({ sessionFactory }: Props) {
           </View>
         </View>
       </CameraGate>
+
+      {snapshot.simulated ? (
+        <Button
+          variant="secondary"
+          label={t('signToText.simulated.turnOff')}
+          icon="flask-off-outline"
+          onPress={() => updateSettings({ demoMode: false })}
+          testID="demo-mode-off"
+        />
+      ) : null}
     </Screen>
   );
 }
