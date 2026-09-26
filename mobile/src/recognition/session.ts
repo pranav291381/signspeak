@@ -1,4 +1,5 @@
 import { DEFAULT_SESSION_CONFIG, type SessionConfig } from './config';
+import { handsVisible } from './features';
 import { PredictionStabilizer } from './stabilizer';
 import {
   RecognizerUnavailableError,
@@ -30,6 +31,8 @@ export interface SessionListener {
 
 /** Fraction of frames in a window that must contain a detected person. */
 const MIN_PRESENT_FRACTION = 0.5;
+/** With `requireHands`: fraction of frames in a window that must show a hand. */
+const MIN_HANDS_FRACTION = 0.15;
 /** Consecutive prediction failures before the session reports a model error. */
 const MAX_CONSECUTIVE_ERRORS = 3;
 
@@ -163,6 +166,13 @@ export class RecognitionSession {
     if (present < MIN_PRESENT_FRACTION) {
       this.apply(this.stabilizer.update(null, frame.timestampMs));
       return;
+    }
+    if (this.config.requireHands) {
+      const hands = this.window.filter((f) => handsVisible(f.values)).length / this.window.length;
+      if (hands < MIN_HANDS_FRACTION) {
+        this.apply({ ...this.stabilizer.update(null, frame.timestampMs), status: 'no_hands' });
+        return;
+      }
     }
     void this.predict([...this.window], frame.timestampMs);
   }

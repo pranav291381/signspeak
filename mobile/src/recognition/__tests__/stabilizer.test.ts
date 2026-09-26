@@ -25,6 +25,16 @@ const make = (calibrated = false) =>
   new PredictionStabilizer({ isEmergency: (l) => EMERGENCY.has(l), calibrated });
 
 describe('PredictionStabilizer', () => {
+  it('never says "not sure" while the signer is resting (idle windows)', () => {
+    const idle: RawPrediction = { ...pred({ [UNKNOWN_LABEL]: 1 }), idle: true };
+    const steps = run(make(), Array(20).fill(idle));
+    expect(new Set(steps.map((s) => s.status))).toEqual(new Set(['analyzing']));
+    // Evidence from before the rest does not carry over.
+    const stabilizer = make();
+    run(stabilizer, [confident('HELLO'), confident('HELLO'), confident('HELLO'), idle]);
+    expect(stabilizer.update(confident('HELLO'), 10_000).status).toBe('analyzing');
+  });
+
   it('recognizes a sign only after the minimum number of stable predictions', () => {
     const steps = run(make(), Array(4).fill(confident('HELLO')));
     expect(steps.slice(0, 3).map((s) => s.status)).toEqual(['analyzing', 'analyzing', 'analyzing']);

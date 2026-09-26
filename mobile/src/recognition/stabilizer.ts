@@ -80,6 +80,17 @@ export class PredictionStabilizer {
       return { status: 'no_signer' };
     }
 
+    if (prediction.idle) {
+      // Resting between signs: forget partial evidence without counting a failure.
+      this.history = [];
+      this.streakLabel = null;
+      this.streak = 0;
+      this.released = true;
+      this.predictionsWithoutResult = 0;
+      this.recentReasons = [];
+      return { status: 'analyzing' };
+    }
+
     const smoothed = this.smooth(prediction.scores);
     const [first, second] = smoothed;
     const rawTop = topLabel(prediction.scores);

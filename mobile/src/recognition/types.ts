@@ -33,6 +33,11 @@ export interface ScoredLabel {
 export interface RawPrediction {
   scores: ScoredLabel[];
   latencyMs: number;
+  /**
+   * Nothing sign-like in the window (e.g. hands resting). Not a failed attempt,
+   * so it never leads to "not sure".
+   */
+  idle?: boolean;
 }
 
 export type RecognizerKind = 'unavailable' | 'simulated' | 'on_device' | 'remote';
@@ -81,12 +86,13 @@ export interface Recognition {
 
 /**
  * What the user should be told right now.
- * - `no_signer`: nobody (no hands/upper body) detected
+ * - `no_signer`: nobody (no upper body) detected
+ * - `no_hands`: a person is in view but no hands (only for recognizers that read hands)
  * - `analyzing`: watching; not enough evidence yet
  * - `uncertain`: activity without a trustworthy result ("please repeat")
  * - `recognized`: a stable, confident result (see `recognition`)
  */
-export type RecognitionStatus = 'no_signer' | 'analyzing' | 'uncertain' | 'recognized';
+export type RecognitionStatus = 'no_signer' | 'no_hands' | 'analyzing' | 'uncertain' | 'recognized';
 
 export interface StabilizerStep {
   status: RecognitionStatus;
