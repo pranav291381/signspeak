@@ -17,10 +17,10 @@ Status: **engineering privacy design**, not legal advice. It must be reviewed ag
 | Camera frames | Memory only, during Sign → Text | **Never** | Discarded immediately after processing | n/a |
 | Landmarks (numeric hand/pose points) | Memory only | Not in current app. Future server inference would be opt-in only (see below) | Discarded after each window | n/a |
 | Recognition results (text) | Screen. History only if the user enables it | No | Until cleared or superseded | Clear on screen, or clear history |
-| History (recognized text, phrase lookups) | On-device storage, **off by default**, max 50 entries | No | Until the user clears it or turns history off (turning it off deletes it) | Settings → Clear history |
+| History (recognized text, phrase lookups) | On-device storage, **off by default**, max 50 entries. Simulated demo results are never saved | No | Until the user clears it or turns history off (turning it off deletes it) | History → Clear history, or Settings → turn history off |
 | Settings (languages, speech, camera, demo mode) | On-device storage | No | Until app uninstall | Uninstall / reset |
 | Learning progress | On-device storage | No | Until reset | Settings → Reset learning progress |
-| Feedback reports | Composed on device. Sent/shared only when the user taps Send | Yes, only on explicit action | Backend: 180 days (proposed) | Request via partner / contact (see below) |
+| Feedback reports | Composed on device (Settings → Report a problem). Shared through the phone's share sheet, or sent to the pilot server only when the user taps Send and a server is configured | Yes, only on explicit action | Backend: 180 days (configurable, purge job) | Quote the report reference to the partner's data steward |
 | Analytics | **None** | — | — | — |
 | Accounts | **None** | — | — | — |
 | Recordings | The app **does not record** video | — | — | — |
@@ -54,11 +54,22 @@ Recording ISL signers for training is a separate, consented research activity go
 - Everything stored on the device can be deleted from Settings or by uninstalling.
 - For feedback already sent, the deploying organization handles deletion requests. The contact is published in the pilot information sheet. Feedback records carry a random report ID that the user can quote.
 
+## Where things are stored on the device
+
+| Key (AsyncStorage) | Contents |
+| --- | --- |
+| `islconnect.settings.v1` | Languages, speech, camera, history and demo-mode switches |
+| `islconnect.history.v1` | Only when history is on: text of recognized signs and looked-up phrases, with time |
+| `islconnect.progress.v1` | Signs marked as learned, quiz counts |
+
+AsyncStorage relies on the operating system's app sandbox and at-rest encryption. See `docs/security-review.md` for the accepted risk and plan.
+
 ## Security practices
 
 - No secrets in source code. Configuration uses environment variables, and `.env.example` lists only variable names.
 - Backend: input validation on every endpoint, request size limits, no raw media accepted.
-- Dependencies are pinned via lockfiles and audited in CI.
+- Dependencies are pinned via lockfiles and audited in CI (fails on high or critical issues in shipped dependencies).
+- Review results and accepted risks: `docs/security-review.md`.
 
 ## Open items before pilot
 
