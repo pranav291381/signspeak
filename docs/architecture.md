@@ -85,11 +85,13 @@ Environment note: `download.pytorch.org` is blocked by this development environm
 ├── .env.example            # variable names only, never values
 ├── .github/workflows/      # CI
 ├── docs/                   # product, architecture, privacy, dataset, evaluation, pilot
-├── mobile/                 # Expo React Native app (TypeScript)
-│   ├── app/                # expo-router routes (thin screens that render features)
+├── mobile/                 # Expo React Native app (TypeScript, Expo SDK 57)
 │   └── src/
+│       ├── app/            # expo-router routes (thin files that render feature screens)
 │       ├── components/     # design system: Screen, AppText, Button, Card, Notice, StateView…
 │       ├── theme/          # tokens: color (light/dark), spacing, typography, radii
+│       ├── accessibility/  # reduce-motion and other a11y hooks
+│       ├── storage/        # KeyValueStore interface (AsyncStorage / in-memory for tests)
 │       ├── i18n/           # i18next setup, language registry
 │       ├── locales/        # <lang>/common.json
 │       ├── settings/       # settings model, persistence, provider
@@ -114,7 +116,7 @@ Environment note: `download.pytorch.org` is blocked by this development environm
 
 | Layer | Responsibility | Depends on |
 | --- | --- | --- |
-| `app/` routes | Navigation only | `features/` |
+| `src/app/` routes | Navigation only | `features/` |
 | `features/*` | Screens: compose components, call services via hooks | components, services |
 | `components/` + `theme/` | Design system, accessibility defaults (48dp targets, roles, labels) | nothing app-specific |
 | Services (`recognition`, `speech`, `content`, `history`, `settings`) | Business logic as plain TypeScript, unit-tested without React | platform adapters |
