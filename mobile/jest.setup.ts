@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import { configure } from '@testing-library/react-native';
 
-// On a cold cache (always the case in CI) React Native's lazily required
-// components are transformed on first render, which can exceed the 1 s default.
-configure({ asyncUtilTimeout: 5000 });
+// On a cold cache (always the case in CI, and after a machine restart) React Native's lazily required
+// components are transformed on first render, which can exceed the 1 s default
+// (and occasionally 5 s on a cold disk). Waiting longer never hides a missing element.
+configure({ asyncUtilTimeout: 10000 });
 
 jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock'),

@@ -5,7 +5,8 @@ const expoConfig = require('eslint-config-expo/flat');
 module.exports = defineConfig([
   expoConfig,
   {
-    ignores: ['dist/*', 'coverage/*'],
+    // public/mediapipe holds third-party files copied at install time.
+    ignores: ['dist/*', 'coverage/*', 'public/mediapipe/*'],
   },
   {
     files: ['src/**/*.tsx'],
