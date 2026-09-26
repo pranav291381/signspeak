@@ -320,5 +320,19 @@
     "sent": "Thank you. Report sent. Reference: {{id}}",
     "offline": "No internet connection. The report was not sent. You can share it instead.",
     "failed": "The report could not be sent. You can share it instead."
+  },
+  "diagram": {
+    "a11y": "Hand diagram of the sign for {{text}}",
+    "missingTitle": "“{{text}}” has not been recorded yet",
+    "missingSign": "Teach this sign once and its diagram will appear here.",
+    "missingLetter": "Record this letter in Learn → Alphabet to fingerspell it.",
+    "recordIt": "Record it",
+    "jumpTo": "Show {{text}}",
+    "play": "Play",
+    "pause": "Pause",
+    "replay": "Play again",
+    "previous": "Previous sign",
+    "next": "Next sign",
+    "slow": "Slow motion"
   }
 }
