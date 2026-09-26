@@ -213,19 +213,47 @@ function stopCamera(): void {
 
 // ---- Drawing ------------------------------------------------------------------
 
-const ARM_PAIRS: [number, number][] = [
+type Pt = { x: number; y: number };
+
+/** Hand connections with finger index (0 thumb … 4 little, 5 palm). */
+const HAND_BONES: [number, number, number][] = [
+  [0, 1, 0], [1, 2, 0], [2, 3, 0], [3, 4, 0],
+  [0, 5, 5], [5, 6, 1], [6, 7, 1], [7, 8, 1],
+  [9, 10, 2], [10, 11, 2], [11, 12, 2],
+  [13, 14, 3], [14, 15, 3], [15, 16, 3],
+  [0, 17, 5], [17, 18, 4], [18, 19, 4], [19, 20, 4],
+  [5, 9, 5], [9, 13, 5], [13, 17, 5],
+];
+const FINGERTIPS = [4, 8, 12, 16, 20];
+const FINGER_COLORS = ['#FDBA74', '#C4B5FD', '#93C5FD', '#6EE7B7', '#F9A8D4', '#E2E8F0'];
+const BODY_PAIRS: [number, number][] = [
   [11, 12],
   [11, 13],
   [13, 15],
   [12, 14],
   [14, 16],
 ];
+const TRAIL_LENGTH = 8;
+const FLASH_MS = 600;
 
-function draw(pose: { x: number; y: number }[] | undefined, hands: { x: number; y: number }[][]): void {
+/** Recent fingertip positions per hand (by handedness), for motion trails. */
+const trails = new Map<string, Pt[][]>();
+let flashUntil = 0;
+
+function flash(): void {
+  flashUntil = performance.now() + FLASH_MS;
+}
+
+function draw(
+  pose: Pt[] | undefined,
+  hands: { landmarks: Pt[][]; handedness?: { categoryName: string }[][] },
+  reduceMotion: boolean,
+): void {
   const ctx = overlay.getContext('2d');
   if (!ctx) return;
-  const w = (overlay.width = overlay.clientWidth * devicePixelRatio);
-  const h = (overlay.height = overlay.clientHeight * devicePixelRatio);
+  const ratio = devicePixelRatio || 1;
+  const w = (overlay.width = overlay.clientWidth * ratio);
+  const h = (overlay.height = overlay.clientHeight * ratio);
   ctx.clearRect(0, 0, w, h);
   // Map normalized video coordinates into the object-fit: cover area.
   const vw = video.videoWidth || 640;
@@ -233,11 +261,17 @@ function draw(pose: { x: number; y: number }[] | undefined, hands: { x: number; 
   const scale = Math.max(w / vw, h / vh);
   const dx = (w - vw * scale) / 2;
   const dy = (h - vh * scale) / 2;
-  const px = (p: { x: number; y: number }) => [dx + p.x * vw * scale, dy + p.y * vh * scale] as const;
-  ctx.lineWidth = 3 * devicePixelRatio;
+  const px = (p: Pt) => [dx + p.x * vw * scale, dy + p.y * vh * scale] as const;
+  const now = performance.now();
+  const flashing = !reduceMotion && now < flashUntil;
+  const glow = flashing ? 1 - (flashUntil - now) / FLASH_MS : 1;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
   if (pose) {
-    ctx.strokeStyle = 'rgba(255,255,255,0.8)';
-    for (const [a, b] of ARM_PAIRS) {
+    ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+    ctx.lineWidth = 3 * ratio;
+    for (const [a, b] of BODY_PAIRS) {
       const pa = pose[a];
       const pb = pose[b];
       if (!pa || !pb) continue;
@@ -247,17 +281,73 @@ function draw(pose: { x: number; y: number }[] | undefined, hands: { x: number; 
       ctx.stroke();
     }
   }
-  ctx.fillStyle = '#8DBBF2';
-  ctx.strokeStyle = '#0E1014';
-  for (const hand of hands) {
-    for (const point of hand) {
+
+  const seen = new Set<string>();
+  hands.landmarks.forEach((hand, i) => {
+    if (hand.length < 21) return;
+    const label = hands.handedness?.[i]?.[0]?.categoryName ?? String(i);
+    seen.add(label);
+    // Size strokes to the hand so near and far hands look alike.
+    const [wx, wy] = px(hand[0]!);
+    const [kx, ky] = px(hand[9]!);
+    const unit = Math.max(Math.hypot(kx - wx, ky - wy), 12 * ratio);
+    const width = Math.max(unit * 0.09, 2 * ratio);
+
+    if (!reduceMotion) {
+      const history = trails.get(label) ?? FINGERTIPS.map(() => []);
+      FINGERTIPS.forEach((tip, f) => {
+        const points = history[f]!;
+        points.push(hand[tip]!);
+        if (points.length > TRAIL_LENGTH) points.shift();
+        for (let k = 1; k < points.length; k++) {
+          ctx.strokeStyle = FINGER_COLORS[f]!;
+          ctx.globalAlpha = (k / points.length) * 0.45;
+          ctx.lineWidth = width * (0.4 + (k / points.length) * 0.8);
+          ctx.beginPath();
+          ctx.moveTo(...px(points[k - 1]!));
+          ctx.lineTo(...px(points[k]!));
+          ctx.stroke();
+        }
+      });
+      trails.set(label, history);
+    }
+
+    // Soft glow under each bone, then the bone itself.
+    for (const pass of [0, 1]) {
+      for (const [a, b, finger] of HAND_BONES) {
+        ctx.strokeStyle = FINGER_COLORS[finger]!;
+        ctx.globalAlpha = pass === 0 ? 0.22 + 0.3 * (flashing ? 1 - glow : 0) : 1;
+        ctx.lineWidth = pass === 0 ? width * (2.8 + (flashing ? 2 * (1 - glow) : 0)) : width;
+        ctx.beginPath();
+        ctx.moveTo(...px(hand[a]!));
+        ctx.lineTo(...px(hand[b]!));
+        ctx.stroke();
+      }
+    }
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#FFFFFF';
+    hand.forEach((point, k) => {
+      if (FINGERTIPS.includes(k)) return;
       const [x, y] = px(point);
       ctx.beginPath();
-      ctx.arc(x, y, 4 * devicePixelRatio, 0, Math.PI * 2);
+      ctx.arc(x, y, width * 0.55, 0, Math.PI * 2);
       ctx.fill();
-      ctx.stroke();
-    }
-  }
+    });
+    FINGERTIPS.forEach((tip, f) => {
+      const [x, y] = px(hand[tip]!);
+      ctx.fillStyle = FINGER_COLORS[f]!;
+      ctx.globalAlpha = 0.35;
+      ctx.beginPath();
+      ctx.arc(x, y, width * 1.8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.beginPath();
+      ctx.arc(x, y, width * 0.9, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  });
+  for (const label of [...trails.keys()]) if (!seen.has(label)) trails.delete(label);
+  ctx.globalAlpha = 1;
 }
 
 // ---- Main loop -------------------------------------------------------------------
@@ -267,6 +357,7 @@ async function main(): Promise<void> {
   if (!config) return;
   let active = config.active;
   let facing = config.facing;
+  let reduceMotion = config.reduceMotion;
   let landmarkers: Landmarkers | null = null;
   let cameraOn = false;
   let busy = false;
@@ -307,6 +398,10 @@ async function main(): Promise<void> {
       if (message.type === 'setActive') {
         active = message.active;
         void syncCamera();
+      } else if (message.type === 'flash') {
+        flash();
+      } else if (message.type === 'setReduceMotion') {
+        reduceMotion = message.reduceMotion;
       } else if (message.type === 'setFacing' && message.facing !== facing) {
         facing = message.facing;
         if (cameraOn) {
@@ -350,7 +445,7 @@ async function main(): Promise<void> {
       const { values, hands } = frameValues(pose, handsResult);
       meter.record(now, performance.now() - started);
       send({ type: 'frame', t: Date.now(), v: values, hands });
-      if (config.showLandmarks) draw(pose, handsResult.landmarks);
+      if (config.showLandmarks) draw(pose, handsResult, reduceMotion);
       if (now - lastStats > 2000) {
         lastStats = now;
         send({ type: 'stats', fps: Math.round(meter.fps * 10) / 10, inferenceMs: Math.round(meter.inferenceMs) });

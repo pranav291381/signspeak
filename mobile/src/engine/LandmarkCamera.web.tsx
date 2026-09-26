@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { useReduceMotion } from '@/accessibility/useReduceMotion';
+
 import { buildEngineHtml, engineConfig } from './engineHtml';
 import { decodeEngineMessage, encodeMessage, type HostToEngine } from './protocol';
 import type { LandmarkCameraProps } from './types';
@@ -10,12 +12,13 @@ import { useEngineMessages } from './useEngineMessages';
  * Web version: the same engine page in an iframe (srcdoc, same origin), so the
  * web build runs exactly the code phones run in their WebView.
  */
-export function LandmarkCamera({ facing, active, style, testID, ...handlers }: LandmarkCameraProps) {
+export function LandmarkCamera({ facing, active, flashSignal = 0, style, testID, ...handlers }: LandmarkCameraProps) {
   const frame = useRef<HTMLIFrameElement>(null);
   const onMessage = useEngineMessages(handlers);
   // Built once per mount: later changes are sent as messages (no camera restart).
+  const reduceMotion = useReduceMotion();
   const [html] = useState(() =>
-    buildEngineHtml(engineConfig({ facing, active, platform: 'web', origin: globalThis.location?.origin })),
+    buildEngineHtml(engineConfig({ facing, active, platform: 'web', origin: globalThis.location?.origin, reduceMotion })),
   );
 
   useEffect(() => {
@@ -32,6 +35,14 @@ export function LandmarkCamera({ facing, active, style, testID, ...handlers }: L
   useEffect(() => {
     send({ type: 'setActive', active });
   }, [active]);
+
+  useEffect(() => {
+    if (flashSignal > 0) send({ type: 'flash' });
+  }, [flashSignal]);
+
+  useEffect(() => {
+    send({ type: 'setReduceMotion', reduceMotion });
+  }, [reduceMotion]);
 
   useEffect(() => {
     send({ type: 'setFacing', facing });

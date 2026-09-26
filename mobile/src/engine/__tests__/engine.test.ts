@@ -16,6 +16,11 @@ describe('engine protocol', () => {
     expect(decodeEngineMessage(encodeMessage(frame))).toEqual(frame);
     expect(decodeHostMessage(encodeMessage({ type: 'setActive', active: false }))).toEqual({ type: 'setActive', active: false });
     expect(decodeHostMessage(encodeMessage({ type: 'setFacing', facing: 'front' }))).toEqual({ type: 'setFacing', facing: 'front' });
+    expect(decodeHostMessage(encodeMessage({ type: 'flash', extra: 'ignored' }))).toEqual({ type: 'flash' });
+    expect(decodeHostMessage(encodeMessage({ type: 'setReduceMotion', reduceMotion: true }))).toEqual({
+      type: 'setReduceMotion',
+      reduceMotion: true,
+    });
   });
 
   it('ignores messages that are not from the engine or are malformed', () => {
@@ -107,6 +112,11 @@ describe('engine assets and config', () => {
     expect(hashes[HAND_MODEL_KEY]).toBe(manifest.models.hand.sha256);
     expect(hashes[POSE_MODEL_KEY]).toBe(manifest.models.pose.sha256);
     expect(hashes['vision_wasm_internal.wasm']).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it('passes the reduced-motion preference to the overlay', () => {
+    expect(engineConfig({ facing: 'back', active: true, platform: 'ios' }).reduceMotion).toBe(false);
+    expect(engineConfig({ facing: 'back', active: true, platform: 'ios', reduceMotion: true }).reduceMotion).toBe(true);
   });
 
   it('embeds the configuration safely in the engine page', () => {

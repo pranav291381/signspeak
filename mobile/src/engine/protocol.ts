@@ -23,8 +23,10 @@ export interface EngineConfig {
   sources: EngineAssetSource[];
   /** SHA-256 (hex) pinned at build time: WASM by file name, models as 'model:hand' / 'model:pose'. */
   hashes: Record<string, string>;
-  /** Draw detected hand and arm points over the preview. */
+  /** Draw the tracked hand skeleton and arms over the preview. */
   showLandmarks: boolean;
+  /** No motion trails or flashes (system "reduce motion" setting). */
+  reduceMotion: boolean;
 }
 
 export type EngineStatus = 'loading' | 'downloading' | 'starting_camera' | 'running' | 'paused';
@@ -45,7 +47,12 @@ export type EngineToHost =
   | { type: 'frame'; t: number; v: number[] | null; hands: number }
   | { type: 'stats'; fps: number; inferenceMs: number };
 
-export type HostToEngine = { type: 'setActive'; active: boolean } | { type: 'setFacing'; facing: EngineFacing };
+export type HostToEngine =
+  | { type: 'setActive'; active: boolean }
+  | { type: 'setFacing'; facing: EngineFacing }
+  /** Briefly highlight the skeleton, e.g. when a sign was recognized. */
+  | { type: 'flash' }
+  | { type: 'setReduceMotion'; reduceMotion: boolean };
 
 export interface TaggedMessage<T> {
   tag: typeof ENGINE_MESSAGE_TAG;
@@ -88,5 +95,9 @@ export function decodeHostMessage(data: unknown): HostToEngine | null {
   const payload = message.payload;
   if (payload.type === 'setActive' && typeof payload.active === 'boolean') return payload;
   if (payload.type === 'setFacing' && (payload.facing === 'front' || payload.facing === 'back')) return payload;
+  if (payload.type === 'flash') return { type: 'flash' };
+  if (payload.type === 'setReduceMotion' && typeof payload.reduceMotion === 'boolean') {
+    return { type: 'setReduceMotion', reduceMotion: payload.reduceMotion };
+  }
   return null;
 }

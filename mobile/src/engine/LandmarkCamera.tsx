@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 
+import { useReduceMotion } from '@/accessibility/useReduceMotion';
+
 import { buildEngineHtml, engineConfig } from './engineHtml';
 import { decodeEngineMessage, encodeMessage, type EngineFacing, type HostToEngine } from './protocol';
 import type { LandmarkCameraProps } from './types';
@@ -14,13 +16,14 @@ import { useEngineMessages } from './useEngineMessages';
  * context, so the camera API is available. Camera images never leave the
  * WebView; only landmark numbers are posted back.
  */
-export function LandmarkCamera({ facing, active, style, testID, ...handlers }: LandmarkCameraProps) {
+export function LandmarkCamera({ facing, active, flashSignal = 0, style, testID, ...handlers }: LandmarkCameraProps) {
   const ref = useRef<WebView>(null);
   const onMessage = useEngineMessages(handlers);
 
   // Built once per mount: later changes are sent as messages, so the camera
   // does not restart and models are not reloaded.
-  const [html] = useState(() => buildEngineHtml(engineConfig({ facing, active, platform: Platform.OS })));
+  const reduceMotion = useReduceMotion();
+  const [html] = useState(() => buildEngineHtml(engineConfig({ facing, active, platform: Platform.OS, reduceMotion })));
 
   const send = (message: HostToEngine) => {
     const script = `window.__islEngine&&window.__islEngine.receive(${JSON.stringify(encodeMessage(message))});true;`;
@@ -30,6 +33,14 @@ export function LandmarkCamera({ facing, active, style, testID, ...handlers }: L
   useEffect(() => {
     send({ type: 'setActive', active });
   }, [active]);
+
+  useEffect(() => {
+    if (flashSignal > 0) send({ type: 'flash' });
+  }, [flashSignal]);
+
+  useEffect(() => {
+    send({ type: 'setReduceMotion', reduceMotion });
+  }, [reduceMotion]);
 
   useEffect(() => {
     send({ type: 'setFacing', facing: facing as EngineFacing });

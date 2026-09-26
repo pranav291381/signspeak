@@ -14,6 +14,8 @@ export interface LandmarkCameraProps extends EngineHandlers {
   facing: EngineFacing;
   /** False releases the camera and stops tracking (battery, privacy). */
   active: boolean;
+  /** Increment to briefly highlight the hand skeleton (e.g. a sign was recognized). */
+  flashSignal?: number;
   style?: StyleProp<ViewStyle>;
   testID?: string;
 }

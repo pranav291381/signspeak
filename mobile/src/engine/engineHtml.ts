@@ -9,6 +9,7 @@ export function engineConfig(options: {
   active: boolean;
   platform: string;
   origin?: string;
+  reduceMotion?: boolean;
 }): EngineConfig {
   return {
     facing: options.facing,
@@ -17,6 +18,7 @@ export function engineConfig(options: {
     sources: engineAssetSources(options.platform, options.origin),
     hashes: engineHashes(),
     showLandmarks: true,
+    reduceMotion: options.reduceMotion ?? false,
   };
 }
 
