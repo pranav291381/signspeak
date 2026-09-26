@@ -100,5 +100,65 @@
   "a11y": {
     "selected": "Selected",
     "draftLanguage": "{{language}}, translation awaiting review"
+  },
+  "signToText": {
+    "loading": "Preparing sign recognition…",
+    "modelUnavailable": {
+      "title": "Sign recognition is not available yet",
+      "message": "No recognition model has been trained yet, so this app cannot read signs. You can try demo mode to see how this screen works. Demo results are simulated.",
+      "tryDemo": "Try demo mode (simulated)"
+    },
+    "modelError": {
+      "title": "Sign recognition stopped working",
+      "message": "Something went wrong with the recognition model. Please try again."
+    },
+    "permission": {
+      "checking": "Checking camera permission…",
+      "title": "Camera access needed",
+      "message": "The camera is used to see the signer. Video stays on this phone. It is never recorded or uploaded.",
+      "allow": "Allow camera",
+      "deniedTitle": "Camera access is turned off",
+      "deniedMessage": "To use Sign → Text, allow camera access for ISL Connect in your phone settings."
+    },
+    "cameraError": {
+      "title": "Camera not available",
+      "message": "The camera could not start. Another app may be using it, or this device may not have a camera."
+    },
+    "simulated": {
+      "title": "Demo mode: simulated results",
+      "message": "These results do not come from the camera. This is not real sign recognition.",
+      "turnOff": "Turn off demo mode"
+    },
+    "framing": "Position the signer inside the frame. Keep both hands and the upper body visible.",
+    "status": {
+      "paused": "Paused",
+      "noSigner": "No signer in view. Position the signer inside the frame.",
+      "analyzing": "Watching for signs…",
+      "uncertain": "Not sure what was signed. Please try again.",
+      "recognized": "Sign recognised"
+    },
+    "hints": {
+      "low_confidence": "Try signing a little more slowly, with hands clearly in view.",
+      "ambiguous": "It could be more than one sign.",
+      "unknown_sign": "This sign may not be in the app's vocabulary yet.",
+      "unstable": "Hold each sign clearly."
+    },
+    "result": {
+      "label": "Recognised",
+      "empty": "Recognised signs will appear here.",
+      "high": "High confidence",
+      "medium": "Medium confidence",
+      "emergency": "Emergency-related sign. If someone needs urgent help, call 112."
+    },
+    "controls": {
+      "pause": "Pause",
+      "resume": "Resume",
+      "switchCamera": "Switch camera",
+      "clear": "Clear"
+    },
+    "a11y": {
+      "cameraPreview": "Camera preview. {{framing}}",
+      "recognized": "Recognised: {{text}}"
+    }
   }
 }

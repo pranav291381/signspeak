@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { fireEvent, renderRouter, screen } from 'expo-router/testing-library';
+import { act, fireEvent, renderRouter, screen } from 'expo-router/testing-library';
 
 // Relative to the Jest root (the mobile/ directory).
 const APP_DIR = './src/app';
@@ -31,5 +31,7 @@ describe('app navigation', () => {
     const router = renderRouter(APP_DIR, { initialUrl: '/' });
     fireEvent.press(await screen.findByTestId(testID));
     expect(router.getPathname()).toBe(pathname);
+    // Let the destination screen finish its async start-up (e.g. recognition session).
+    await act(async () => undefined);
   });
 });

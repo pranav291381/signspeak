@@ -7,10 +7,10 @@ Legend: ✅ done · 🟡 partial / foundation only · ⏳ not started · 🔒 bl
 | # | Phase | Status | Deliverables | Exit criteria |
 | --- | --- | --- | --- | --- |
 | 1 | Repository audit + architecture | ✅ | Audit, `architecture.md`, `product-spec.md`, this plan, `privacy.md`, `contributing.md`, `.gitignore`, `.env.example` | Docs reviewed in PR |
-| 2 | Mobile shell + navigation + design system | ⏳ | Expo TS app, expo-router stack, theme tokens (light/dark), core components, Home | Typecheck + lint + tests green; home renders with a11y labels |
-| 3 | Localization | ⏳ | i18next, language registry, `en` complete, `hi` draft, others planned; app vs output language; persisted settings | Locale completeness test; language switch test |
-| 4 | Camera screen | ⏳ | Permission flow, front/back, framing guidance, pause/resume/clear, all error states | State tests with mocked camera |
-| 5 | Recognition interface + mock inference | ⏳ | `SignRecognizer`, `FrameSource`, `UnavailableRecognizer`, `MockSignRecognizer` (Demo mode), `PredictionStabilizer`, `RecognitionSession` | Stabilizer unit tests (stable, noisy, ambiguous, emergency, cooldown, duplicates) |
+| 2 | Mobile shell + navigation + design system | ✅ | Expo TS app, expo-router stack, theme tokens (light/dark), core components, Home | Typecheck + lint + tests green; home renders with a11y labels |
+| 3 | Localization | ✅ | i18next, language registry, `en` complete, `hi` draft, others planned; app vs output language; persisted settings | Locale completeness test; language switch test |
+| 4 | Camera screen | ✅ | Permission flow, front/back, framing guidance, pause/resume/clear, all error states | State tests with mocked camera |
+| 5 | Recognition interface + mock inference | ✅ | `SignRecognizer`, `FrameSource`, `UnavailableRecognizer`, `MockSignRecognizer` (Demo mode), `PredictionStabilizer`, `RecognitionSession` | Stabilizer unit tests (stable, noisy, ambiguous, emergency, cooldown, duplicates) |
 | 6 | Real ML pipeline | ⏳ | `signspeak_ml`: feature spec, MediaPipe extractor, dataset loader + signer splits, temporal model, trainer, evaluator, inference engine; `dataset.md`, `model-evaluation.md` | Pytest green on synthetic fixtures. **Real training 🔒 needs consented dataset** |
 | 7 | ISL → Text | ⏳ | Gloss → output-language text, transcript, history integration | Tests for mapping + transcript |
 | 8 | Text → ISL | ⏳ | Content model, phrase normalizer/matcher, screen with unavailable/related states | Matcher tests incl. Hindi |

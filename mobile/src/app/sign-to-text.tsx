@@ -1,3 +1,5 @@
-import { NotAvailableYetScreen } from '@/features/common/NotAvailableYetScreen';
+import { SignToTextScreen } from '@/features/sign-to-text/SignToTextScreen';
 
-export default NotAvailableYetScreen;
+export default function SignToTextRoute() {
+  return <SignToTextScreen />;
+}
