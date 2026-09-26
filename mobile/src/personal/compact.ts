@@ -33,6 +33,32 @@ export const COMPACT_DIM = HAND_DIMS * 2 + 4;
 
 const LEFT_ELBOW_SLOT = 3;
 const RIGHT_ELBOW_SLOT = 4;
+const LEFT_WRIST_SLOT = 5;
+const RIGHT_WRIST_SLOT = 6;
+
+function distanceTo(values: ArrayLike<number>, handStart: number, poseSlot: number): number {
+  const p = POSE_START + poseSlot * COORDS;
+  return Math.hypot(values[handStart]! - values[p]!, values[handStart + 1]! - values[p + 1]!);
+}
+
+/**
+ * True when MediaPipe's left/right hand labels disagree with the body pose.
+ * Hand labels can flip between frames (e.g. one hand in view, or hands near
+ * each other); the pose model's wrists are anatomical and stable, so each hand
+ * is assigned to the nearer wrist.
+ */
+export function handsSwapped(values: ArrayLike<number>): boolean {
+  const left = (values[LEFT_HAND_PRESENT_INDEX] ?? 0) > 0.5;
+  const right = (values[RIGHT_HAND_PRESENT_INDEX] ?? 0) > 0.5;
+  if (left && right) {
+    const keep = distanceTo(values, LEFT_HAND_START, LEFT_WRIST_SLOT) + distanceTo(values, RIGHT_HAND_START, RIGHT_WRIST_SLOT);
+    const swap = distanceTo(values, LEFT_HAND_START, RIGHT_WRIST_SLOT) + distanceTo(values, RIGHT_HAND_START, LEFT_WRIST_SLOT);
+    return swap < keep;
+  }
+  if (left) return distanceTo(values, LEFT_HAND_START, RIGHT_WRIST_SLOT) < distanceTo(values, LEFT_HAND_START, LEFT_WRIST_SLOT);
+  if (right) return distanceTo(values, RIGHT_HAND_START, LEFT_WRIST_SLOT) < distanceTo(values, RIGHT_HAND_START, RIGHT_WRIST_SLOT);
+  return false;
+}
 
 function writeHand(values: ArrayLike<number>, start: number, present: boolean, out: Float32Array, at: number, mirror: boolean) {
   if (!present) return; // zeros: absent
@@ -60,11 +86,13 @@ function writeHand(values: ArrayLike<number>, start: number, present: boolean, o
 export function compactFrame(values: ArrayLike<number>, mirror = false): Float32Array {
   const out = new Float32Array(COMPACT_DIM);
   if (values.length !== FRAME_DIM) return out;
-  const left = (values[LEFT_HAND_PRESENT_INDEX] ?? 0) > 0.5;
-  const right = (values[RIGHT_HAND_PRESENT_INDEX] ?? 0) > 0.5;
+  const labelledLeft = { start: LEFT_HAND_START, present: (values[LEFT_HAND_PRESENT_INDEX] ?? 0) > 0.5 };
+  const labelledRight = { start: RIGHT_HAND_START, present: (values[RIGHT_HAND_PRESENT_INDEX] ?? 0) > 0.5 };
+  const [left, right] = handsSwapped(values) ? [labelledRight, labelledLeft] : [labelledLeft, labelledRight];
   // Mirroring swaps which hand goes into which slot.
-  writeHand(values, mirror ? RIGHT_HAND_START : LEFT_HAND_START, mirror ? right : left, out, 0, mirror);
-  writeHand(values, mirror ? LEFT_HAND_START : RIGHT_HAND_START, mirror ? left : right, out, HAND_DIMS, mirror);
+  const [firstHand, secondHand] = mirror ? [right, left] : [left, right];
+  writeHand(values, firstHand.start, firstHand.present, out, 0, mirror);
+  writeHand(values, secondHand.start, secondHand.present, out, HAND_DIMS, mirror);
 
   const sx = mirror ? -1 : 1;
   const [first, second] = mirror ? [RIGHT_ELBOW_SLOT, LEFT_ELBOW_SLOT] : [LEFT_ELBOW_SLOT, RIGHT_ELBOW_SLOT];

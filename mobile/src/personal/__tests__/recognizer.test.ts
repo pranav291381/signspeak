@@ -1,7 +1,13 @@
 import { RecognitionSession } from '@/recognition/session';
 import { PredictionStabilizer } from '@/recognition/stabilizer';
 import { RecognizerUnavailableError, UNKNOWN_LABEL, type FrameSource, type LandmarkFrame, type Recognition } from '@/recognition/types';
-import { MOTIONS, perform, type PerformOptions } from '@/test-utils/landmarks';
+import {
+  LEFT_HAND_PRESENT_INDEX,
+  LEFT_HAND_START,
+  RIGHT_HAND_PRESENT_INDEX,
+  RIGHT_HAND_START,
+} from '@/recognition/featureSpec';
+import { MOTIONS, perform, rng, type PerformOptions } from '@/test-utils/landmarks';
 
 import { buildTemplate } from '../matcher';
 import { PersonalSignRecognizer } from '../PersonalSignRecognizer';
@@ -130,6 +136,21 @@ describe('live recognition of personal signs', () => {
 
   it('recognizes a left-handed signer from right-handed recordings', async () => {
     const { results } = await recognizeLive(live('point_arc', { mirror: true }));
+    expect(results.map((r) => r.label)).toEqual([labelOf('point_arc')]);
+  });
+
+  it('copes with MediaPipe swapping the hand labels on some frames', async () => {
+    const random = rng(3);
+    const frames = live('point_arc').map((frame) => {
+      if (!frame.values || random() > 0.3) return frame;
+      const v = Float32Array.from(frame.values);
+      const left = v.slice(LEFT_HAND_START, LEFT_HAND_START + 63);
+      v.copyWithin(LEFT_HAND_START, RIGHT_HAND_START, RIGHT_HAND_START + 63);
+      v.set(left, RIGHT_HAND_START);
+      [v[LEFT_HAND_PRESENT_INDEX], v[RIGHT_HAND_PRESENT_INDEX]] = [v[RIGHT_HAND_PRESENT_INDEX]!, v[LEFT_HAND_PRESENT_INDEX]!];
+      return { ...frame, values: v };
+    });
+    const { results } = await recognizeLive(frames);
     expect(results.map((r) => r.label)).toEqual([labelOf('point_arc')]);
   });
 

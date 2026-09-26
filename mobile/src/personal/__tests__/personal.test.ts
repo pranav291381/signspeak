@@ -1,8 +1,14 @@
-import { FRAME_DIM } from '@/recognition/featureSpec';
+import {
+  FRAME_DIM,
+  LEFT_HAND_PRESENT_INDEX,
+  LEFT_HAND_START,
+  RIGHT_HAND_PRESENT_INDEX,
+  RIGHT_HAND_START,
+} from '@/recognition/featureSpec';
 import { createMemoryStore } from '@/storage/keyValueStore';
 
 import { base64ToBytes, bytesToBase64, decodeFrames, encodeFrames } from '../codec';
-import { compactFrame, frameDistance } from '../compact';
+import { compactFrame, frameDistance, handsSwapped } from '../compact';
 import { subsequenceDtw } from '../dtw';
 import { compactSequence } from '../matcher';
 import { prepareSample, resampleByTime, SAMPLE_FPS } from '../sample';
@@ -100,6 +106,22 @@ describe('compact frames', () => {
     const right = compactFrame(frameFor({ right: hand }));
     const left = compactFrame(frameFor({ left: { ...hand, x: -hand.x, mirrored: true } }), true);
     expect(frameDistance(right, left)).toBeLessThan(0.05);
+  });
+
+  it('assigns hands by the body pose when MediaPipe mislabels them', () => {
+    const correct = frameFor({ right: hand });
+    // The same frame with the hand stored in the "left" slot (a label flip).
+    const flipped = Float32Array.from(correct);
+    flipped.copyWithin(LEFT_HAND_START, RIGHT_HAND_START, RIGHT_HAND_START + 63);
+    flipped.fill(0, RIGHT_HAND_START, RIGHT_HAND_START + 63);
+    flipped[LEFT_HAND_PRESENT_INDEX] = 1;
+    flipped[RIGHT_HAND_PRESENT_INDEX] = 0;
+    expect(handsSwapped(correct)).toBe(false);
+    expect(handsSwapped(flipped)).toBe(true);
+    expect(frameDistance(compactFrame(correct), compactFrame(flipped))).toBeLessThan(1e-6);
+
+    const both = frameFor({ right: hand, left: { ...hand, x: 0.35, mirrored: true } });
+    expect(handsSwapped(both)).toBe(false);
   });
 
   it('tells different handshapes apart', () => {
