@@ -35,6 +35,7 @@ function AppStack() {
         <Stack.Screen name="learn/quiz/[category]" options={{ title: t('screens.quiz') }} />
         <Stack.Screen name="history" options={{ title: t('screens.history') }} />
         <Stack.Screen name="settings" options={{ title: t('screens.settings') }} />
+        <Stack.Screen name="feedback" options={{ title: t('screens.feedback') }} />
       </Stack>
     </>
   );

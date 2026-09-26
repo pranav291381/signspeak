@@ -1,4 +1,5 @@
 import Constants from 'expo-constants';
+import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Alert } from 'react-native';
 
@@ -10,6 +11,7 @@ import type { CameraFacing, SpeechRate } from '@/settings/settings';
 
 export function SettingsScreen() {
   const { t } = useTranslation();
+  const router = useRouter();
   const { settings, updateSettings } = useSettings();
   const { reset: resetProgress } = useProgress();
 
@@ -125,6 +127,16 @@ export function SettingsScreen() {
           hint={t('settings.demoMode.hint')}
           value={settings.demoMode}
           onValueChange={(demoMode) => updateSettings({ demoMode })}
+        />
+      </Section>
+
+      <Section title={t('settings.sections.feedback')}>
+        <Button
+          testID="report-problem"
+          variant="secondary"
+          icon="message-alert-outline"
+          label={t('settings.reportProblem')}
+          onPress={() => router.push('/feedback')}
         />
       </Section>
 

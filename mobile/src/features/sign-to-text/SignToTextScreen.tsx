@@ -165,6 +165,25 @@ export function SignToTextScreen({ sessionFactory }: Props) {
         <RecognitionPanel snapshot={snapshot} latest={latest} outputLanguage={settings.outputLanguage} />
 
         <SpeakButton text={latestText} speech={speech} testID="speak-latest" />
+        {latest ? (
+          <Button
+            testID="report-wrong"
+            variant="secondary"
+            icon="message-alert-outline"
+            label={t('signToText.reportWrong')}
+            onPress={() =>
+              router.push({
+                pathname: '/feedback',
+                params: {
+                  feature: 'sign_to_text',
+                  issue: 'wrong_recognition',
+                  label: latest.label,
+                  simulated: String(snapshot.simulated),
+                },
+              })
+            }
+          />
+        ) : null}
 
         {meanings.length > 1 ? (
           <View testID="transcript" accessible style={{ gap: spacing.xs }}>

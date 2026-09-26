@@ -44,7 +44,8 @@
     "history": "History",
     "settings": "Settings",
     "lesson": "Lesson",
-    "quiz": "Quiz"
+    "quiz": "Quiz",
+    "feedback": "Report a problem"
   },
   "settings": {
     "sections": {
@@ -55,7 +56,8 @@
       "accessibility": "Accessibility",
       "demo": "Demo mode",
       "about": "About",
-      "learning": "Learning"
+      "learning": "Learning",
+      "feedback": "Feedback"
     },
     "appLanguage": {
       "label": "App language",
@@ -102,7 +104,8 @@
       "label": "Reset learning progress",
       "confirmTitle": "Reset learning progress?",
       "confirmMessage": "This clears lessons marked as learned and quiz results on this phone."
-    }
+    },
+    "reportProblem": "Report a problem"
   },
   "a11y": {
     "selected": "Selected",
@@ -170,7 +173,8 @@
     "transcript": {
       "label": "Signs recognised so far",
       "note": "Separate signs in the order they were recognised. This is not a translated sentence."
-    }
+    },
+    "reportWrong": "Report a wrong result"
   },
   "speech": {
     "speak": "Speak",
@@ -270,5 +274,43 @@
       "result": "You got {{correct}} of {{total}} right",
       "again": "Try again"
     }
+  },
+  "feedback": {
+    "privacyWarning": "Please do not include names, phone numbers, addresses or other personal details. No photos or video are sent.",
+    "featureLabel": "Which part of the app?",
+    "issueLabel": "What happened?",
+    "features": {
+      "sign_to_text": "Sign → Text",
+      "text_to_isl": "Text → ISL",
+      "learn": "Learn ISL",
+      "history": "History",
+      "settings": "Settings",
+      "other": "Something else"
+    },
+    "issues": {
+      "wrong_recognition": "Wrong sign recognised",
+      "not_recognized": "Sign not recognised",
+      "accessibility": "Hard to use or read",
+      "content": "Wrong or missing sign content",
+      "language": "Translation or language problem",
+      "crash": "App stopped or froze",
+      "performance": "Slow or battery drain",
+      "privacy": "Privacy concern",
+      "feature_request": "Idea or request",
+      "other": "Something else"
+    },
+    "descriptionLabel": "Describe the problem",
+    "descriptionRequired": "Please describe the problem.",
+    "expectedLabel": "What did you expect? (optional)",
+    "includedTitle": "Included with your report",
+    "included": "App version {{version}}, {{platform}} {{os}}, app language {{appLanguage}}, output language {{outputLanguage}}.",
+    "includedPrediction": "The recognised sign: {{label}}.",
+    "includedPredictionSimulated": "The recognised sign: {{label}} (demo mode, simulated).",
+    "share": "Share report",
+    "send": "Send to project team",
+    "sendHint": "Sends this report over the internet to the project's server.",
+    "sent": "Thank you. Report sent. Reference: {{id}}",
+    "offline": "No internet connection. The report was not sent. You can share it instead.",
+    "failed": "The report could not be sent. You can share it instead."
   }
 }
