@@ -15,7 +15,8 @@ Date: 2026-09-26. Scope: repository state at the end of the first build session.
 | Logging | One `console.warn` when settings cannot be saved (no user content). The backend never logs request bodies and error responses never echo submitted values |
 | Local storage | Settings, optional history (off by default, max 50 text entries) and learning progress in AsyncStorage (app sandbox). Clearing and reset are available in the app |
 | Backend input handling | Strict schemas (unknown fields rejected), bounded sizes, finite numbers only, `Content-Length` required, 1 MB limit, CORS allow-list, generic 500s |
-| Deep links (`islconnect://`) | Route params are validated: unknown lesson or category shows "not found". Feedback params only pre-fill a form the user reviews before sharing |
+| Deep links (`islconnect://`) | Route params are validated: an unknown sign shows "not found", invalid teach parameters show "nothing to record". Feedback params only pre-fill a form the user reviews before sharing |
+| Camera engine (WebView / iframe) | The page is bundled with the app (no remote HTML). It only fetches the MediaPipe WASM and model files, each checked against a SHA-256 pinned at build time (by role, so a swapped file fails), and posts only landmark numbers. Host ↔ engine messages are tagged and validated on both sides; the web host accepts messages only from its own iframe. Stored taught signs are validated field by field on load; damaged takes are dropped |
 | Dependency audit (shipped mobile dependencies) | 0 high/critical. 13 **moderate** findings, all inside Expo SDK packages (see below). CI fails on high/critical |
 
 ## Known issues and accepted risks
