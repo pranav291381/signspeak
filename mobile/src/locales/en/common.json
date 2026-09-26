@@ -189,5 +189,43 @@
     },
     "entryMeta": "{{kind}} · {{when}}",
     "entryA11y": "{{kind}}: {{text}}. {{when}}"
+  },
+  "textToIsl": {
+    "scopeNotice": "This looks up words and common phrases in the ISL sign library. It does not translate full sentences: ISL has its own grammar.",
+    "inputLabel": "Word or short phrase",
+    "placeholder": "For example: thank you",
+    "submit": "Show in ISL",
+    "empty": "Type a word or phrase first.",
+    "ambiguous": "This can mean more than one sign. Choose the one that fits what you mean.",
+    "noMatchTitle": "Not in the sign library yet",
+    "noMatchMessage": "This phrase has not been added to the library. Try a shorter or simpler phrase.",
+    "relatedTitle": "Signs for parts of your text",
+    "relatedWarning": "These are separate signs. Putting them together is not a translation of your sentence."
+  },
+  "content": {
+    "gloss": "Gloss: {{gloss}}",
+    "status": {
+      "verified": "Verified by ISL educators",
+      "unverified": "Not yet verified"
+    },
+    "openLesson": "Open lesson",
+    "demonstration": {
+      "unavailableTitle": "Demonstration not available yet",
+      "unavailableMessage": "A video of this sign will be added after qualified ISL educators have reviewed it.",
+      "pendingPlayer": "A verified demonstration exists, but video playback is not built yet."
+    }
+  },
+  "learn": {
+    "categories": {
+      "greetings": "Greetings",
+      "everyday": "Everyday",
+      "people": "People",
+      "food": "Food",
+      "numbers": "Numbers",
+      "places": "Places",
+      "questions": "Questions",
+      "emergency": "Emergency",
+      "phrases": "Common phrases"
+    }
   }
 }

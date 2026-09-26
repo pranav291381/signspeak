@@ -1,3 +1,3 @@
-import { NotAvailableYetScreen } from '@/features/common/NotAvailableYetScreen';
+import { TextToIslScreen } from '@/features/text-to-isl/TextToIslScreen';
 
-export default NotAvailableYetScreen;
+export default TextToIslScreen;
