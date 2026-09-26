@@ -1,3 +1,3 @@
-import { NotAvailableYetScreen } from '@/features/common/NotAvailableYetScreen';
+import { LearnHomeScreen } from '@/features/learn/LearnHomeScreen';
 
-export default NotAvailableYetScreen;
+export default LearnHomeScreen;

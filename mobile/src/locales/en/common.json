@@ -7,9 +7,7 @@
     "retry": "Try again",
     "openSettings": "Open settings",
     "goHome": "Go to home",
-    "cancel": "Cancel",
-    "notAvailableYet": "Not available yet",
-    "featureInProgress": "This part of the app is still being built."
+    "cancel": "Cancel"
   },
   "home": {
     "title": "ISL Connect",
@@ -44,7 +42,9 @@
     "textToIsl": "Text → ISL",
     "learn": "Learn ISL",
     "history": "History",
-    "settings": "Settings"
+    "settings": "Settings",
+    "lesson": "Lesson",
+    "quiz": "Quiz"
   },
   "settings": {
     "sections": {
@@ -54,7 +54,8 @@
       "privacy": "Privacy",
       "accessibility": "Accessibility",
       "demo": "Demo mode",
-      "about": "About"
+      "about": "About",
+      "learning": "Learning"
     },
     "appLanguage": {
       "label": "App language",
@@ -96,6 +97,11 @@
       "limitations": "Sign recognition is not available yet: no recognition model has been trained. ISL demonstrations will be added only after review by qualified ISL educators.",
       "notInterpreter": "This app is not a replacement for a qualified ISL interpreter, especially for medical, legal or emergency situations.",
       "privacy": "Camera video stays on your phone. It is never recorded or uploaded."
+    },
+    "resetProgress": {
+      "label": "Reset learning progress",
+      "confirmTitle": "Reset learning progress?",
+      "confirmMessage": "This clears lessons marked as learned and quiz results on this phone."
     }
   },
   "a11y": {
@@ -216,6 +222,10 @@
     }
   },
   "learn": {
+    "contentNotice": "Lessons are being prepared with qualified ISL educators. Sign demonstrations appear only after they have been verified.",
+    "progressSummary": "{{learned}} of {{total}} signs learned",
+    "categoryCount_one": "{{count}} sign · {{learned}} learned",
+    "categoryCount_other": "{{count}} signs · {{learned}} learned",
     "categories": {
       "greetings": "Greetings",
       "everyday": "Everyday",
@@ -226,6 +236,39 @@
       "questions": "Questions",
       "emergency": "Emergency",
       "phrases": "Common phrases"
+    },
+    "notFound": "Lesson not found",
+    "backToLessons": "Back to lessons",
+    "status": {
+      "learned": "Learned",
+      "ready": "Ready to learn",
+      "comingSoon": "Demonstration coming soon"
+    },
+    "lesson": {
+      "meaning": "Meaning",
+      "phraseNoGloss": "A phrase made of several signs. The sign order will come from ISL educators.",
+      "unverified": "This sign has not been reviewed by ISL educators yet. Please do not learn it from this app until it is verified.",
+      "learned": "Learned (tap to undo)",
+      "markLearned": "Mark as learned",
+      "markLearnedDisabled": "You can mark this sign as learned once its demonstration is available.",
+      "practice": "Practise with the camera",
+      "practiceUnavailable": "Practice with the camera will be available when sign recognition is ready.",
+      "next": "Next: {{name}}",
+      "inLanguage": "{{language}}: {{meaning}}"
+    },
+    "quiz": {
+      "start": "Start quiz",
+      "unavailableTitle": "Quiz not available yet",
+      "unavailable": "Quizzes use only signs with verified demonstrations. There are not enough in this category yet.",
+      "progress": "Question {{current}} of {{total}}",
+      "question": "What does this sign mean?",
+      "check": "Check answer",
+      "correct": "Correct!",
+      "incorrect": "Not quite. This sign means: {{answer}}",
+      "next": "Next question",
+      "finish": "See result",
+      "result": "You got {{correct}} of {{total}} right",
+      "again": "Try again"
     }
   }
 }

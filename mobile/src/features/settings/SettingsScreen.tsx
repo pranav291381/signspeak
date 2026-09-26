@@ -1,14 +1,23 @@
 import Constants from 'expo-constants';
 import { useTranslation } from 'react-i18next';
+import { Alert } from 'react-native';
 
-import { AppText, Notice, RadioGroup, Screen, Section, SwitchRow, type RadioOption } from '@/components';
+import { AppText, Button, Notice, RadioGroup, Screen, Section, SwitchRow, type RadioOption } from '@/components';
 import { selectableLanguages, type LanguageCode } from '@/i18n';
+import { useProgress } from '@/learn/ProgressProvider';
 import { useSettings } from '@/settings/SettingsProvider';
 import type { CameraFacing, SpeechRate } from '@/settings/settings';
 
 export function SettingsScreen() {
   const { t } = useTranslation();
   const { settings, updateSettings } = useSettings();
+  const { reset: resetProgress } = useProgress();
+
+  const confirmResetProgress = () =>
+    Alert.alert(t('settings.resetProgress.confirmTitle'), t('settings.resetProgress.confirmMessage'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('settings.resetProgress.label'), style: 'destructive', onPress: resetProgress },
+    ]);
 
   const languageOptions: RadioOption<LanguageCode>[] = selectableLanguages().map((lang) => {
     const draft = lang.status === 'draft';
@@ -87,6 +96,16 @@ export function SettingsScreen() {
           hint={t('settings.history.hint')}
           value={settings.historyEnabled}
           onValueChange={(historyEnabled) => updateSettings({ historyEnabled })}
+        />
+      </Section>
+
+      <Section title={t('settings.sections.learning')}>
+        <Button
+          testID="reset-progress"
+          variant="secondary"
+          icon="restore"
+          label={t('settings.resetProgress.label')}
+          onPress={confirmResetProgress}
         />
       </Section>
 
