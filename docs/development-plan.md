@@ -2,7 +2,9 @@
 
 Each phase ends with passing tests, updated documentation and logical commits. Status is kept current as work progresses.
 
-Legend: ✅ done · 🟡 partial / foundation only · ⏳ not started · 🔒 blocked on external input
+Legend: ✅ done · 🟡 built, but waiting for verified content, a dataset or a decision · ⏳ not started · 🔒 blocked on external input
+
+Phases 8 and 9 are complete as software. They show honest placeholders until verified ISL demonstrations exist. Phase 6 is complete as a pipeline, but no model can be trained until a consented dataset exists.
 
 | # | Phase | Status | Deliverables | Exit criteria |
 | --- | --- | --- | --- | --- |
@@ -12,10 +14,10 @@ Legend: ✅ done · 🟡 partial / foundation only · ⏳ not started · 🔒 bl
 | 4 | Camera screen | ✅ | Permission flow, front/back, framing guidance, pause/resume/clear, all error states | State tests with mocked camera |
 | 5 | Recognition interface + mock inference | ✅ | `SignRecognizer`, `FrameSource`, `UnavailableRecognizer`, `MockSignRecognizer` (Demo mode), `PredictionStabilizer`, `RecognitionSession` | Stabilizer unit tests (stable, noisy, ambiguous, emergency, cooldown, duplicates) |
 | 6 | Real ML pipeline | 🟡 | `signspeak_ml`: feature spec, MediaPipe extractor, dataset loader + signer splits, temporal model, trainer, evaluator, inference engine; `dataset.md`, `model-evaluation.md` | Pytest green on synthetic fixtures. **Real training 🔒 needs consented dataset** |
-| 7 | ISL → Text | ⏳ | Gloss → output-language text, transcript, history integration | Tests for mapping + transcript |
-| 8 | Text → ISL | ⏳ | Content model, phrase normalizer/matcher, screen with unavailable/related states | Matcher tests incl. Hindi |
-| 9 | Learn ISL | ⏳ | Categories, lessons, placeholders, progress, quiz engine (verified-only) | Quiz engine + progress tests |
-| 10 | Speech | ⏳ | `SpeechService` + expo-speech adapter, voice availability, error states | Service tests with mocked engine |
+| 7 | ISL → Text | ✅ | Gloss → output-language text, transcript, history integration | Tests for mapping + transcript |
+| 8 | Text → ISL | 🟡 | Content model, phrase normalizer/matcher, screen with unavailable/related states | Matcher tests incl. Hindi |
+| 9 | Learn ISL | 🟡 | Categories, lessons, placeholders, progress, quiz engine (verified-only) | Quiz engine + progress tests |
+| 10 | Speech | ✅ | `SpeechService` + expo-speech adapter, voice availability, error states | Service tests with mocked engine |
 | 11 | Testing | ⏳ | Coverage of navigation, localization, camera states, recognition, speech, errors; backend + ML suites; CI | CI green on PR |
 | 12 | Performance | ⏳ | Frame-rate throttling, background pause, model size budget, startup profiling | Measured on a low-end Android device 🔒 |
 | 13 | Privacy / security review | ⏳ | Secrets scan, data-flow review, `privacy.md` update, dependency audit | Checklist complete |
