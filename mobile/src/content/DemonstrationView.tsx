@@ -29,7 +29,7 @@ export function DemonstrationView({ sign }: { sign: SignEntry }) {
       }
       style={[
         styles.box,
-        { borderColor: colors.border, borderRadius: radii.lg, backgroundColor: colors.surfaceMuted, padding: spacing.lg, gap: spacing.sm },
+        { borderColor: colors.border, borderRadius: radii.lg, backgroundColor: colors.surfaceAlt, padding: spacing.lg, gap: spacing.sm },
       ]}
     >
       <Icon name={verified ? 'play-circle-outline' : 'video-off-outline'} size={40} color={colors.textSecondary} />

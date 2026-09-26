@@ -2,9 +2,9 @@ import Constants from 'expo-constants';
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Platform, Share, TextInput, View } from 'react-native';
+import { Platform, Share, View } from 'react-native';
 
-import { AppText, Button, Notice, RadioGroup, Screen, Section, type RadioOption } from '@/components';
+import { AppText, Button, Notice, RadioGroup, Screen, Section, TextField, type RadioOption } from '@/components';
 import {
   FEEDBACK_FEATURES,
   feedbackServerUrl,
@@ -22,7 +22,7 @@ import {
   type SubmitResult,
 } from '@/feedback/feedback';
 import { useSettings } from '@/settings/SettingsProvider';
-import { MIN_TOUCH_TARGET, useTheme } from '@/theme';
+import { useTheme } from '@/theme';
 
 type Params = { feature?: string; issue?: string; label?: string; simulated?: string };
 
@@ -38,7 +38,7 @@ interface Props {
 
 export function FeedbackScreen({ serverUrl = feedbackServerUrl(), fetchImpl }: Props) {
   const { t } = useTranslation();
-  const { colors, radii, spacing, typography } = useTheme();
+  const { spacing } = useTheme();
   const { settings } = useSettings();
   const params = useLocalSearchParams<Params>();
 
@@ -70,20 +70,6 @@ export function FeedbackScreen({ serverUrl = feedbackServerUrl(), fetchImpl }: P
     metadata: {},
   };
   const problems = validateFeedback(report);
-
-  const inputStyle = [
-    typography.body,
-    {
-      minHeight: MIN_TOUCH_TARGET,
-      borderWidth: 2,
-      borderColor: colors.border,
-      borderRadius: radii.md,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-      color: colors.text,
-      backgroundColor: colors.surface,
-    },
-  ];
 
   const guard = (action: () => void) => () => {
     setShowErrors(true);
@@ -119,28 +105,22 @@ export function FeedbackScreen({ serverUrl = feedbackServerUrl(), fetchImpl }: P
         <RadioGroup testID="feedback-issue" label={t('feedback.issueLabel')} options={issueOptions} value={issue} onChange={setIssue} />
       </Section>
 
-      <View style={{ gap: spacing.sm }}>
-        <AppText variant="bodyStrong">{t('feedback.descriptionLabel')}</AppText>
-        <TextInput
+      <View style={{ gap: spacing.lg }}>
+        <TextField
           testID="feedback-description"
-          accessibilityLabel={t('feedback.descriptionLabel')}
+          label={t('feedback.descriptionLabel')}
           value={description}
           onChangeText={setDescription}
           maxLength={MAX_DESCRIPTION}
           multiline
-          style={[inputStyle, { minHeight: 120, textAlignVertical: 'top' }]}
+          error={showErrors && problems.includes('description_required') ? t('feedback.descriptionRequired') : undefined}
         />
-        {showErrors && problems.includes('description_required') ? (
-          <Notice tone="danger" message={t('feedback.descriptionRequired')} testID="feedback-description-error" />
-        ) : null}
-        <AppText variant="bodyStrong">{t('feedback.expectedLabel')}</AppText>
-        <TextInput
+        <TextField
           testID="feedback-expected"
-          accessibilityLabel={t('feedback.expectedLabel')}
+          label={t('feedback.expectedLabel')}
           value={expected}
           onChangeText={setExpected}
           maxLength={MAX_EXPECTED}
-          style={inputStyle}
         />
       </View>
 

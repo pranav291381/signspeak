@@ -1,5 +1,6 @@
 import { isLanguageCode, isSelectable, type LanguageCode } from '@/i18n/languages';
 import { readJson, type KeyValueStore } from '@/storage/keyValueStore';
+import type { ThemePreference } from '@/theme';
 
 export type CameraFacing = 'front' | 'back';
 export type SpeechRate = 'slow' | 'normal' | 'fast';
@@ -17,6 +18,10 @@ export interface Settings {
   hapticsEnabled: boolean;
   /** Simulated recognition for demonstrations. Never on by default. */
   demoMode: boolean;
+  /** Light, dark, or follow the phone. */
+  theme: ThemePreference;
+  /** False until the first-launch welcome (language + appearance) has been completed. */
+  onboardingComplete: boolean;
 }
 
 export const SETTINGS_STORAGE_KEY = 'islconnect.settings.v1';
@@ -38,6 +43,8 @@ export function defaultSettings(language: LanguageCode): Settings {
     historyEnabled: false,
     hapticsEnabled: true,
     demoMode: false,
+    theme: 'system',
+    onboardingComplete: false,
   };
 }
 
@@ -68,6 +75,8 @@ export function sanitizeSettings(raw: unknown, defaults: Settings): Settings {
     historyEnabled: pickBoolean(r.historyEnabled, defaults.historyEnabled),
     hapticsEnabled: pickBoolean(r.hapticsEnabled, defaults.hapticsEnabled),
     demoMode: pickBoolean(r.demoMode, defaults.demoMode),
+    theme: pickOneOf(r.theme, ['system', 'light', 'dark'], defaults.theme),
+    onboardingComplete: pickBoolean(r.onboardingComplete, defaults.onboardingComplete),
   };
 }
 

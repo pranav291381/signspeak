@@ -23,7 +23,7 @@ export function CameraPreview({ facing, active, onReady, onError }: Props) {
       testID="camera-preview"
       accessible
       accessibilityLabel={t('signToText.a11y.cameraPreview', { framing: t('signToText.framing') })}
-      style={[styles.container, { borderRadius: radii.lg, backgroundColor: colors.surfaceMuted }]}
+      style={[styles.container, { borderRadius: radii.lg, backgroundColor: colors.surfaceAlt }]}
     >
       <CameraView
         style={StyleSheet.absoluteFill}

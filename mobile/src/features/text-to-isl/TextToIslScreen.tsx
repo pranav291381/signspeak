@@ -54,7 +54,7 @@ export function TextToIslScreen() {
             {
               minHeight: MIN_TOUCH_TARGET,
               borderWidth: 2,
-              borderColor: colors.border,
+              borderColor: colors.outline,
               borderRadius: radii.md,
               paddingHorizontal: spacing.md,
               paddingVertical: spacing.sm,

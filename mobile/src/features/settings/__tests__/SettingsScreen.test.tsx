@@ -36,6 +36,18 @@ describe('SettingsScreen', () => {
     });
   });
 
+  it('switches between system, light and dark appearance', async () => {
+    const store = createMemoryStore();
+    renderWithProviders(<SettingsScreen />, { store });
+
+    expect(await screen.findByTestId('theme-system')).toBeChecked();
+    fireEvent.press(screen.getByRole('radio', { name: 'Dark' }));
+    expect(screen.getByTestId('theme-dark')).toBeChecked();
+    await waitFor(async () => {
+      expect(await storedSettings(store)).toMatchObject({ theme: 'dark' });
+    });
+  });
+
   it('labels draft translations so users know they are unreviewed', async () => {
     renderWithProviders(<SettingsScreen />);
     const hindi = await screen.findByTestId('app-language-hi');

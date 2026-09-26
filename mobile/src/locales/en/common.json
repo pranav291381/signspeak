@@ -57,7 +57,8 @@
       "demo": "Demo mode",
       "about": "About",
       "learning": "Learning",
-      "feedback": "Feedback"
+      "feedback": "Feedback",
+      "appearance": "Appearance"
     },
     "appLanguage": {
       "label": "App language",
@@ -105,7 +106,14 @@
       "confirmTitle": "Reset learning progress?",
       "confirmMessage": "This clears lessons marked as learned and quiz results on this phone."
     },
-    "reportProblem": "Report a problem"
+    "reportProblem": "Report a problem",
+    "theme": {
+      "label": "Appearance",
+      "hint": "System follows your phone's light or dark setting.",
+      "system": "System",
+      "light": "Light",
+      "dark": "Dark"
+    }
   },
   "a11y": {
     "selected": "Selected",

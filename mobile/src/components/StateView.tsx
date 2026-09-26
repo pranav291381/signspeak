@@ -21,6 +21,8 @@ interface Props {
   tone?: 'neutral' | 'warning' | 'danger';
   action?: Action;
   secondaryAction?: Action;
+  /** Less padding, for use inside cards. */
+  compact?: boolean;
   testID?: string;
 }
 
@@ -36,20 +38,34 @@ export function StateView({
   tone = 'neutral',
   action,
   secondaryAction,
+  compact = false,
   testID,
 }: Props) {
   const { colors, spacing } = useTheme();
-  const iconColor = tone === 'danger' ? colors.danger : tone === 'warning' ? colors.warning : colors.primary;
+  const toneColors = {
+    neutral: { fg: colors.primary, bg: colors.primaryContainer },
+    warning: { fg: colors.warning, bg: colors.warningBackground },
+    danger: { fg: colors.danger, bg: colors.dangerBackground },
+  }[tone];
 
   return (
-    <View testID={testID} style={[styles.container, { padding: spacing.xl, gap: spacing.lg }]}>
+    <View
+      testID={testID}
+      style={[styles.container, { padding: compact ? spacing.md : spacing.xl, gap: spacing.lg }]}
+    >
       <View
         accessible
         accessibilityLiveRegion="polite"
         accessibilityLabel={message ? `${title}. ${message}` : title}
         style={[styles.text, { gap: spacing.sm }]}
       >
-        {loading ? <ActivityIndicator size="large" color={colors.primary} /> : <Icon name={icon} size={48} color={iconColor} />}
+        <View style={[styles.badge, { backgroundColor: toneColors.bg, marginBottom: spacing.sm }]}>
+          {loading ? (
+            <ActivityIndicator size="large" color={toneColors.fg} />
+          ) : (
+            <Icon name={icon} size={34} color={toneColors.fg} />
+          )}
+        </View>
         <AppText variant="heading" style={styles.center}>
           {title}
         </AppText>
@@ -59,14 +75,18 @@ export function StateView({
           </AppText>
         ) : null}
       </View>
-      {action ? <Button label={action.label} icon={action.icon} onPress={action.onPress} /> : null}
-      {secondaryAction ? (
-        <Button
-          variant="secondary"
-          label={secondaryAction.label}
-          icon={secondaryAction.icon}
-          onPress={secondaryAction.onPress}
-        />
+      {action || secondaryAction ? (
+        <View style={{ gap: spacing.sm, alignSelf: 'stretch' }}>
+          {action ? <Button label={action.label} icon={action.icon} onPress={action.onPress} /> : null}
+          {secondaryAction ? (
+            <Button
+              variant="secondary"
+              label={secondaryAction.label}
+              icon={secondaryAction.icon}
+              onPress={secondaryAction.onPress}
+            />
+          ) : null}
+        </View>
       ) : null}
     </View>
   );
@@ -80,6 +100,13 @@ const styles = StyleSheet.create({
   },
   text: {
     alignItems: 'center',
+  },
+  badge: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   center: {
     textAlign: 'center',

@@ -1,33 +1,37 @@
 import type { ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { useTheme } from '@/theme';
 
 import { AppText } from './AppText';
+import { Card } from './Card';
 
 interface Props {
   title?: string;
+  /** Short explanation under the title. */
+  description?: string;
   children: ReactNode;
+  testID?: string;
 }
 
-/** Titled group of related content on a surface card. */
-export function Section({ title, children }: Props) {
-  const { colors, radii, spacing } = useTheme();
+/** Titled group of related content on a card. */
+export function Section({ title, description, children, testID }: Props) {
+  const { spacing } = useTheme();
   return (
-    <View style={{ gap: spacing.sm }}>
-      {title ? <AppText variant="heading">{title}</AppText> : null}
-      <View
-        style={[
-          styles.card,
-          { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radii.lg, padding: spacing.lg, gap: spacing.lg },
-        ]}
-      >
-        {children}
-      </View>
+    <View style={{ gap: spacing.sm }} testID={testID}>
+      {title ? (
+        <View style={{ gap: 2, paddingHorizontal: spacing.xs }}>
+          <AppText variant="overline" color="textSecondary" accessibilityRole="header">
+            {title}
+          </AppText>
+          {description ? (
+            <AppText variant="caption" color="textSecondary">
+              {description}
+            </AppText>
+          ) : null}
+        </View>
+      ) : null}
+      <Card>{children}</Card>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  card: { borderWidth: 1 },
-});

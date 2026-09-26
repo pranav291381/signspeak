@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Alert } from 'react-native';
 
-import { AppText, Button, Notice, RadioGroup, Screen, Section, SwitchRow, type RadioOption } from '@/components';
+import { AppText, Button, Notice, RadioGroup, Screen, Section, SegmentedControl, SwitchRow, type RadioOption } from '@/components';
 import { selectableLanguages, type LanguageCode } from '@/i18n';
 import { useProgress } from '@/learn/ProgressProvider';
 import { useSettings } from '@/settings/SettingsProvider';
@@ -45,6 +45,20 @@ export function SettingsScreen() {
 
   return (
     <Screen testID="settings-screen">
+      <Section title={t('settings.sections.appearance')} description={t('settings.theme.hint')}>
+        <SegmentedControl
+          testID="theme"
+          label={t('settings.theme.label')}
+          value={settings.theme}
+          onChange={(theme) => updateSettings({ theme })}
+          segments={[
+            { value: 'system', label: t('settings.theme.system'), icon: 'theme-light-dark' },
+            { value: 'light', label: t('settings.theme.light'), icon: 'white-balance-sunny' },
+            { value: 'dark', label: t('settings.theme.dark'), icon: 'weather-night' },
+          ]}
+        />
+      </Section>
+
       <Section title={t('settings.sections.language')}>
         <RadioGroup
           testID="app-language"
