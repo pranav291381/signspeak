@@ -18,10 +18,26 @@ Phases 8 and 9 are complete as software. They show honest placeholders until ver
 | 8 | Text → ISL | 🟡 | Content model, phrase normalizer/matcher, screen with unavailable/related states | Matcher tests incl. Hindi |
 | 9 | Learn ISL | 🟡 | Categories, lessons, placeholders, progress, quiz engine (verified-only) | Quiz engine + progress tests |
 | 10 | Speech | ✅ | `SpeechService` + expo-speech adapter, voice availability, error states | Service tests with mocked engine |
-| 11 | Testing | ⏳ | Coverage of navigation, localization, camera states, recognition, speech, errors; backend + ML suites; CI | CI green on PR |
-| 12 | Performance | ⏳ | Frame-rate throttling, background pause, model size budget, startup profiling | Measured on a low-end Android device 🔒 |
-| 13 | Privacy / security review | ⏳ | Secrets scan, data-flow review, `privacy.md` update, dependency audit | Checklist complete |
-| 14 | Production build | ⏳ | EAS build profiles, app config, store listing drafts | 🔒 needs owner's Expo/Play/App Store accounts |
+| 11 | Testing | ✅ | Coverage of navigation, localization, camera states, recognition, speech, errors; backend + ML suites; CI | CI green on PR |
+| 12 | Performance | 🟡 | Frame-rate throttling, background pause, model size budget, startup profiling | Measured on a low-end Android device 🔒 |
+| 13 | Privacy / security review | ✅ | Secrets scan, data-flow review, `privacy.md` update, dependency audit | Checklist complete |
+| 14 | Production build | 🔒 | EAS build profiles, app config, store listing drafts | 🔒 needs owner's Expo/Play/App Store accounts |
+
+## Current test inventory
+
+| Suite | Tests | Covers |
+| --- | --- | --- |
+| Mobile (Jest + RNTL) | 217 | Navigation over the real route tree, localization completeness and placeholders, colour contrast, settings, camera permission/error states, recognition states, stabilizer, session, speech, history, Text → ISL, Learn, quiz, feedback |
+| ML (pytest) | 72 | Feature contract parity, normalization, resampling, augmentation, MediaPipe result conversion, annotation validation, signer-level splits, dataset loading, model, training, calibration, metrics, packs, inference, CLI |
+| Backend (pytest) | 35 | Validation, malformed input, model-unavailable, feedback privacy, size limits, CORS, error hygiene, retention |
+
+## Production build (Phase 14): what the owner needs to decide or provide
+
+`mobile/eas.json` has `preview` (internal APK) and `production` profiles. A production build needs:
+1. The app identifier (`ios.bundleIdentifier`, `android.package`), which should be based on a domain the project controls
+2. An Expo account/project (`eas init`) and signing credentials (managed by EAS or supplied)
+3. A store listing, and a public privacy policy URL based on `docs/privacy.md` after legal review
+4. The licence decision (D9) and the frame-processing decision (D4)
 
 ## Critical path items that code cannot solve
 

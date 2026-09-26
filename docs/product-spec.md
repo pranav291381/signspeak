@@ -72,7 +72,7 @@ Output/speech language is independent of UI language, and availability depends o
 
 A small set of high-value concepts, to be **selected and validated with ISL educators**. Candidate concepts (English meanings, not sign descriptions): hello, thank you, sorry, please, yes, no, help, water, food, toilet, doctor, pain, emergency, stop, wait, name, what, where, when, family, mother, father, numbers 0–10.
 
-Regional variation in ISL is real. Entries support `regionalVariantOf`, and the chosen variant must be documented with its source.
+Regional variation in ISL is real. Each entry records its variant in `verification.region`, and the chosen variant must be documented with its source.
 
 ## 7. Responsible-AI rules (product requirements)
 

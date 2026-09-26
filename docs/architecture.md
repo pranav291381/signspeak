@@ -33,7 +33,7 @@ Environment note: `download.pytorch.org` is blocked by this development environm
 
 1. **Honesty over fluency.** When recognition is uncertain the output is an explicit *uncertain* state, never a guess. Mock components always identify themselves as simulated.
 2. **On-device first.** Camera frames never leave the phone by default. Server components receive landmarks or text, never raw video, and only with consent.
-3. **Replaceable intelligence.** The UI depends on interfaces (`SignRecognizer`, `FrameSource`, `SpeechService`, `ContentRepository`), not on specific models.
+3. **Replaceable intelligence.** The UI depends on interfaces (`SignRecognizer`, `FrameSource`, `SpeechEngine`/`SpeechService`, `KeyValueStore`) and on the content library functions, not on specific models or platform modules.
 4. **Verified content only.** ISL demonstrations, glosses and meanings come from reviewed content. Unverified entries are data placeholders with an explicit `verification.status`.
 5. **Localization from day one.** No user-facing string is written inline. The app language and the speech/output language are separate settings.
 6. **Every state is designed.** Loading, empty, unknown, low confidence, no camera, no permission, no network, model error, speech error, unsupported language, content unavailable.
@@ -249,17 +249,18 @@ text ─▶ normalize (Unicode NFC, case, punctuation, whitespace)
 
 **MVP limit (stated in the UI):** this is a phrase lookup, not translation. ISL has its own grammar (word order, spatial reference, non-manual markers), so substituting signs word by word is not ISL.
 
-The designed extension point is `TextToIslPipeline`:
-`normalize → LinguisticTransformer (future: ISL grammar, reviewed by linguists) → SignSequence → Renderer (video | avatar)`.
-Only `normalize` and a phrase-lookup "transformer" exist today.
+Implemented in `mobile/src/content/matcher.ts` as `lookupPhrase()`, which returns `match` (one or more signs), `no_match` (with related separate signs) or `empty`.
+
+Planned extension (not implemented): put `lookupPhrase` behind a `TextToIslPipeline` interface with the stages
+`normalize → LinguisticTransformer (ISL grammar, designed and reviewed by ISL linguists) → SignSequence → Renderer (video | avatar)`, so the screen does not change when real translation arrives.
 
 ## 8. Learn ISL
 
 Content model (`mobile/src/content/types.ts`):
 
-- `SignEntry`: `id`, `gloss`, `category`, `meanings{lang}`, `phrases{lang}`, `media` (nullable), `verification{status, reviewedBy, reviewedAt, source, license}`, `regionalVariantOf`
-- `Lesson`: ordered `signIds`, `category`, `level`
-- `Progress`: per-sign `seen` / `practiced` / `quizCorrect` timestamps (on-device only)
+- `SignEntry`: `id` (also the recognition label), `gloss` (null for multi-sign phrases), `category`, `meaning{lang}`, `phrases{lang}`, `emergency`, `media` (nullable: `uri`, `license`, `consentRef`), `verification{status, reviewedBy, reviewedAt, source, region, notes}`
+- Lessons are the signs of a category in library order (a separate `Lesson` type with levels is planned once educators define a curriculum)
+- `SignProgress`: per-sign `learnedAt`, `quizCorrect`, `quizAttempts` (on-device only)
 
 A sign whose `media` is `null` or whose verification is not `verified` renders a **"Demonstration not yet available"** placeholder. Quizzes only use signs with verified media. This keeps the learning module safe to ship before content exists.
 
@@ -272,7 +273,7 @@ A sign whose `media` is `null` or whose verification is not `verified` renders a
 
 ## 10. Speech
 
-`SpeechService.speak(text, language)` returns a result union: `ok | unsupported_language | engine_unavailable | error`. The `expo-speech` adapter uses the platform's on-device TTS. It checks the installed voices for the requested language and reports `unsupported_language` rather than silently speaking with the wrong voice. Spoken output is always also shown as text, because sound alone never carries critical information.
+`SpeechService.speak(text, language, rate)` returns a result union: `ok | stopped | empty_text | unsupported_language | engine_unavailable | error`. The `expo-speech` adapter uses the platform's on-device TTS. It checks the installed voices for the requested language and reports `unsupported_language` rather than silently speaking with the wrong voice. Spoken output is always also shown as text, because sound alone never carries critical information.
 
 ## 11. Offline strategy
 
@@ -284,6 +285,18 @@ A sign whose `media` is `null` or whose verification is not `verified` renders a
 | Recognition | Yes, once an on-device model pack exists (none today) |
 | Feedback submission | Queued/exported locally, sent when online (planned) |
 
+## 11a. Performance and battery (Phase 12)
+
+Implemented:
+- Camera preview and inference **pause** when the screen loses focus, the app is backgrounded, or the user taps Pause. The camera also stays closed entirely when no model is installed
+- **Backpressure:** windows are skipped, never queued, while a prediction runs, so latency cannot build up on slow phones
+- The model is **not run** when fewer than half the frames in a window contain a person
+- Inference cadence is set by `stride` (default every 4 frames at 15 fps ≈ 3.75 predictions/s)
+- Model size budget is enforced by a test (< 1 M parameters, well under the 15 MB pack budget)
+- The evaluator reports per-window latency (median/p95)
+
+Not done yet, because it needs a real model and devices: on-device latency, thermal and battery measurements (`docs/model-evaluation.md` §5), adaptive stride when the device is hot, and startup profiling on a low-end Android phone.
+
 ## 12. Backend (`backend/`)
 
 The backend is optional, and the app works fully without it.
@@ -291,7 +304,8 @@ The backend is optional, and the app works fully without it.
 - `GET /health`
 - `GET /v1/model`: info about the server-side model, or "none installed"
 - `POST /v1/recognize`: accepts a **landmark sequence** (feature contract v1), never images or video. Returns ranked labels or `503 model_unavailable`. Intended for research/evaluation and opt-in use only
-- `POST /v1/feedback`: structured, minimal feedback (see `docs/pilot.md`)
+- `POST /v1/feedback`: structured, minimal feedback (see `docs/pilot.md`). No IP address, account or device ID is stored; retention is enforced by a purge job
+- Strict validation, a 1 MB body limit, CORS allow-list, and errors that never echo input (`docs/security-review.md`)
 
 Persistence: SQLAlchemy, with SQLite for local development/tests and PostgreSQL in deployment (`DATABASE_URL`). No accounts exist.
 
