@@ -6,7 +6,10 @@ import { createRecognitionSession } from '@/recognition/engine';
 import { RecognitionSession } from '@/recognition/session';
 import { PredictionStabilizer } from '@/recognition/stabilizer';
 import type { FrameSource, LandmarkFrame, RawPrediction, RecognizerInfo, SignRecognizer } from '@/recognition/types';
+import { HISTORY_STORAGE_KEY } from '@/history/history';
 import { SETTINGS_STORAGE_KEY } from '@/settings/settings';
+import { SpeechService, type SpeechEngine } from '@/speech/SpeechService';
+import { SpeechServiceContext } from '@/speech/useSpeech';
 import { createMemoryStore } from '@/storage/keyValueStore';
 import { renderWithProviders } from '@/test-utils/render';
 
@@ -246,5 +249,80 @@ describe('SignToTextScreen', () => {
     recognizer.loadError = null;
     fireEvent.press(screen.getByRole('button', { name: 'Try again' }));
     expect(await screen.findByTestId('camera-view')).toBeOnTheScreen();
+  });
+});
+
+describe('SignToTextScreen speech and history', () => {
+  function fakeSpeech(voices = [{ language: 'en-IN' }, { language: 'hi-IN' }]) {
+    const spoken: { text: string; language: string }[] = [];
+    const engine: SpeechEngine = {
+      speak: (text, options) => {
+        spoken.push({ text, language: options.language });
+        options.onDone();
+      },
+      stop: () => Promise.resolve(),
+      getVoices: () => Promise.resolve(voices),
+    };
+    return { service: new SpeechService(engine), spoken };
+  }
+
+  async function recognizeHello(settings: object, voices?: { language: string }[]) {
+    const { factory, source, recognizer } = testSession();
+    const speech = fakeSpeech(voices);
+    const store = settingsStore(settings);
+    renderWithProviders(
+      <SpeechServiceContext.Provider value={speech.service}>
+        <SignToTextScreen sessionFactory={factory} />
+      </SpeechServiceContext.Provider>,
+      { store },
+    );
+    await screen.findByTestId('camera-view');
+    act(() => mockCamera.props?.onCameraReady?.());
+    await pushFrames(source, 2);
+    return { ...speech, store, source, recognizer };
+  }
+
+  it('speaks the latest result in the output language on request', async () => {
+    const { spoken } = await recognizeHello({ outputLanguage: 'hi' });
+    expect(spoken).toEqual([]);
+    fireEvent.press(screen.getByRole('button', { name: 'Speak' }));
+    await waitFor(() => expect(spoken).toEqual([{ text: 'नमस्ते', language: 'hi-IN' }]));
+  });
+
+  it('speaks automatically when the user turned that on', async () => {
+    const { spoken } = await recognizeHello({ autoSpeak: true });
+    await waitFor(() => expect(spoken).toEqual([{ text: 'Hello', language: 'en-IN' }]));
+  });
+
+  it('shows a visible message when no voice exists for the output language', async () => {
+    await recognizeHello({ outputLanguage: 'hi' }, [{ language: 'en-IN' }]);
+    fireEvent.press(screen.getByRole('button', { name: 'Speak' }));
+    expect(await screen.findByTestId('speech-problem')).toHaveTextContent(/No हिन्दी voice is installed/);
+  });
+
+  it('saves real recognitions to history only when history is on', async () => {
+    const { store } = await recognizeHello({ historyEnabled: true });
+    await waitFor(() => expect(JSON.parse(store.data.get(HISTORY_STORAGE_KEY) ?? '[]')).toHaveLength(1));
+    expect(JSON.parse(store.data.get(HISTORY_STORAGE_KEY)!)[0]).toMatchObject({ kind: 'recognition', text: 'Hello' });
+  });
+
+  it('never saves simulated demo results', async () => {
+    const { store } = await recognizeHello({ historyEnabled: true, demoMode: true });
+    expect(screen.getByTestId('recognition-text')).toHaveTextContent('Hello');
+    expect(store.data.has(HISTORY_STORAGE_KEY)).toBe(false);
+  });
+
+  it('lists the signs recognised so far without presenting them as a sentence', async () => {
+    const { source, recognizer } = await recognizeHello({});
+    // A pause long enough to survive smoothing releases the first sign
+    // (a single unclear frame would not)…
+    recognizer.scores = { hello: 0.3, water: 0.3 };
+    await pushFrames(source, 4);
+    // …then the same sign again, after the duplicate-suppression window.
+    recognizer.scores = { hello: 0.95 };
+    source.t += 5000;
+    await pushFrames(source, 6);
+    expect(screen.getByTestId('transcript')).toHaveTextContent(/Hello · Hello/);
+    expect(screen.getByText(/not a translated sentence/)).toBeOnTheScreen();
   });
 });

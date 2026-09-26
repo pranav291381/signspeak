@@ -1,6 +1,7 @@
 import { render, type RenderOptions } from '@testing-library/react-native';
 import type { ReactElement, ReactNode } from 'react';
 
+import { HistoryProvider } from '@/history/HistoryProvider';
 import type { LanguageCode } from '@/i18n';
 import { SettingsProvider } from '@/settings/SettingsProvider';
 import { createMemoryStore, type KeyValueStore } from '@/storage/keyValueStore';
@@ -16,7 +17,7 @@ export function renderWithProviders(ui: ReactElement, { store, language = 'en', 
   function Wrapper({ children }: { children: ReactNode }) {
     return (
       <SettingsProvider store={memoryStore} initialLanguage={language}>
-        {children}
+        <HistoryProvider store={memoryStore}>{children}</HistoryProvider>
       </SettingsProvider>
     );
   }

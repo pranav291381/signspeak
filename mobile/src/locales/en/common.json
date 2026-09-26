@@ -7,6 +7,7 @@
     "retry": "Try again",
     "openSettings": "Open settings",
     "goHome": "Go to home",
+    "cancel": "Cancel",
     "notAvailableYet": "Not available yet",
     "featureInProgress": "This part of the app is still being built."
   },
@@ -159,6 +160,34 @@
     "a11y": {
       "cameraPreview": "Camera preview. {{framing}}",
       "recognized": "Recognised: {{text}}"
+    },
+    "transcript": {
+      "label": "Signs recognised so far",
+      "note": "Separate signs in the order they were recognised. This is not a translated sentence."
     }
+  },
+  "speech": {
+    "speak": "Speak",
+    "stop": "Stop speaking",
+    "a11yHint": "Reads the text aloud in {{language}}",
+    "unsupported": "No {{language}} voice is installed on this phone, so the text is only shown on screen. You can add a voice in your phone's text-to-speech settings.",
+    "engineUnavailable": "Speech is not available on this phone. The text is shown on screen.",
+    "error": "Could not speak. Please try again."
+  },
+  "history": {
+    "disabledTitle": "History is off",
+    "disabledMessage": "Turn on “Save history on this phone” in Settings to keep recent results. History never leaves this phone.",
+    "emptyTitle": "Nothing saved yet",
+    "emptyMessage": "Recognised signs and phrases you look up will appear here.",
+    "privacyNote": "Saved only on this phone. Demo mode results are never saved.",
+    "clear": "Clear history",
+    "confirmTitle": "Clear history?",
+    "confirmMessage": "This deletes all saved history on this phone. It cannot be undone.",
+    "kinds": {
+      "recognition": "Recognised sign",
+      "lookup": "Looked up"
+    },
+    "entryMeta": "{{kind}} · {{when}}",
+    "entryA11y": "{{kind}}: {{text}}. {{when}}"
   }
 }

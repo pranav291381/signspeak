@@ -1,3 +1,3 @@
-import { NotAvailableYetScreen } from '@/features/common/NotAvailableYetScreen';
+import { HistoryScreen } from '@/features/history/HistoryScreen';
 
-export default NotAvailableYetScreen;
+export default HistoryScreen;

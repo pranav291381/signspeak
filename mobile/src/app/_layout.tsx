@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { useReduceMotion } from '@/accessibility/useReduceMotion';
+import { HistoryProvider } from '@/history/HistoryProvider';
 import { SettingsProvider } from '@/settings/SettingsProvider';
 import { useTheme } from '@/theme';
 
@@ -39,7 +40,9 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <SettingsProvider>
-        <AppStack />
+        <HistoryProvider>
+          <AppStack />
+        </HistoryProvider>
       </SettingsProvider>
     </SafeAreaProvider>
   );
