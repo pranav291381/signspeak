@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "signspeak-ml"
+version = "0.1.0"
+description = "ISL Connect: landmark-based Indian Sign Language recognition pipeline (dataset, training, evaluation, inference)."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy>=1.26",
+  "torch>=2.2",
+]
+
+[project.optional-dependencies]
+# Landmark extraction from video. Needs MediaPipe model files (see README).
+mediapipe = ["mediapipe>=0.10.14", "opencv-python-headless>=4.9"]
+dev = ["pytest>=8", "ruff>=0.5"]
+
+[project.scripts]
+signspeak-ml = "signspeak_ml.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["signspeak_ml*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "N", "SIM"]
+ignore = ["N812"]
