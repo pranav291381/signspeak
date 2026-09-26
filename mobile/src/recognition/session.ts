@@ -152,9 +152,14 @@ export class RecognitionSession {
   }
 
   private onFrame(frame: LandmarkFrame): void {
-    const size = this.recognizer.info.windowSize;
+    const { windowSize: size, windowMs } = this.recognizer.info;
     this.window.push(frame);
-    if (this.window.length > size) this.window.shift();
+    if (windowMs) {
+      const cutoff = frame.timestampMs - windowMs;
+      while (this.window.length > 1 && this.window[0]!.timestampMs < cutoff) this.window.shift();
+    } else if (this.window.length > size) {
+      this.window.shift();
+    }
     this.framesSincePrediction += 1;
 
     if (this.window.length < size || this.framesSincePrediction < this.config.stride || this.inFlight) {

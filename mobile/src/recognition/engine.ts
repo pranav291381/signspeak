@@ -46,7 +46,13 @@ export const createRecognitionSession: SessionFactory = ({ demoMode, signs = [],
     return new RecognitionSession({
       source,
       recognizer,
-      stabilizer: new PredictionStabilizer({ isEmergency: isEmergencyLabel, calibrated: false }),
+      stabilizer: new PredictionStabilizer({
+        isEmergency: isEmergencyLabel,
+        calibrated: false,
+        // Predictions start early (time-based window), so a sign in progress
+        // briefly matches nothing; wait ~2.4 s before saying "not sure".
+        config: { uncertainAfterPredictions: 12 },
+      }),
       config: { stride: 3, requireHands: true },
     });
   }

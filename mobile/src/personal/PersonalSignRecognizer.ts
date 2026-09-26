@@ -11,10 +11,10 @@ import { buildTemplates, prepareQuery, relativeDistance, type SignTemplate } fro
 import { resampleByTime } from './sample';
 import type { PersonalSign } from './types';
 
-/** Frames per prediction window (≈ 2.4 s at 15 fps). */
-export const PERSONAL_WINDOW_FRAMES = 36;
-/** At most this much recent time is matched. */
-const QUERY_MS = 3000;
+/** Recent time that is matched: long enough for one sign with its lead-in. */
+export const PERSONAL_WINDOW_MS = 3000;
+/** Frames needed before the first prediction (≈ 0.5 s at 15 fps). */
+export const PERSONAL_MIN_FRAMES = 8;
 /**
  * Scores are a softmax over −SHARPNESS × relative distance, with "unknown" at
  * relative distance 1. A sign well inside its acceptance distance scores high;
@@ -42,7 +42,8 @@ export class PersonalSignRecognizer implements SignRecognizer {
       labels: signs.map((s) => s.id),
       calibrated: false,
       featureSpecVersion: 1,
-      windowSize: PERSONAL_WINDOW_FRAMES,
+      windowSize: PERSONAL_MIN_FRAMES,
+      windowMs: PERSONAL_WINDOW_MS,
     };
   }
 
@@ -56,7 +57,7 @@ export class PersonalSignRecognizer implements SignRecognizer {
   async predict(window: readonly LandmarkFrame[]): Promise<RawPrediction> {
     const started = now();
     const end = window.at(-1)?.timestampMs ?? 0;
-    const query = prepareQuery(resampleByTime(window, end - QUERY_MS, end));
+    const query = prepareQuery(resampleByTime(window, end - PERSONAL_WINDOW_MS, end));
     if (!query) {
       return { scores: [{ label: UNKNOWN_LABEL, score: 1 }], latencyMs: now() - started, idle: true };
     }

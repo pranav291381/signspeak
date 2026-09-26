@@ -54,8 +54,16 @@ export interface RecognizerInfo {
   calibrated: boolean;
   /** Feature contract version the model expects; null if it reads no features. */
   featureSpecVersion: number | null;
-  /** Frames per prediction window. */
+  /**
+   * Frames per prediction window; with `windowMs`, the minimum number of
+   * frames before the first prediction.
+   */
   windowSize: number;
+  /**
+   * Optional time-based window: keep the frames of the last `windowMs`
+   * milliseconds, however many that is, so slow phones are not left waiting.
+   */
+  windowMs?: number;
 }
 
 export interface SignRecognizer {

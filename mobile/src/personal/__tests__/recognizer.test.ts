@@ -109,7 +109,7 @@ describe('PersonalSignRecognizer', () => {
     await recognizer.load();
     for (const [, motion] of TAUGHT) {
       const frames = live(motion, { restAfterMs: 300 });
-      const prediction = await recognizer.predict(frames.slice(-36));
+      const prediction = await recognizer.predict(frames.slice(-45));
       const [first, second] = [...prediction.scores].sort((a, b) => b.score - a.score);
       expect({ motion, top: first!.label }).toEqual({ motion, top: labelOf(motion) });
       expect(first!.score - second!.score).toBeGreaterThan(0.15);
@@ -121,7 +121,7 @@ describe('PersonalSignRecognizer', () => {
     await recognizer.load();
     const rest = await recognizer.predict(perform([{}], { durationMs: 2000 }));
     expect(rest.idle).toBe(true);
-    const scratch = await recognizer.predict(live('scratch', { restAfterMs: 300 }).slice(-36));
+    const scratch = await recognizer.predict(live('scratch', { restAfterMs: 300 }).slice(-45));
     const top = [...scratch.scores].sort((a, b) => b.score - a.score)[0]!;
     expect(scratch.idle || top.label === UNKNOWN_LABEL).toBe(true);
   });
