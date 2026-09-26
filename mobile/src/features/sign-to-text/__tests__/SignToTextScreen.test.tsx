@@ -197,6 +197,18 @@ describe('SignToTextScreen camera', () => {
     expect(screen.getByTestId('landmark-camera')).toBeOnTheScreen();
   });
 
+  it('says straight away whether a person and hands are in view', async () => {
+    await renderScreen();
+    cameraRunning();
+    expect(screen.getByTestId('live-tracking')).toHaveTextContent('Step into view');
+    const [resting] = perform([{}], { durationMs: 100 });
+    act(() => fakeCamera.frame(resting!.timestampMs, resting!.values));
+    expect(screen.getByTestId('live-tracking')).toHaveTextContent('Show your hands');
+    const [signing] = perform(MOTIONS.wave!, { durationMs: 100 });
+    act(() => fakeCamera.frame(signing!.timestampMs, signing!.values));
+    expect(screen.getByTestId('live-tracking')).toHaveTextContent('Hands in view');
+  });
+
   it('switches between back and front cameras', async () => {
     await renderScreen();
     await waitFor(() => expect(fakeCamera.props?.facing).toBe('back'));

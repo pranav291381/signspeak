@@ -6,7 +6,6 @@
     "loading": "Loading…",
     "retry": "Try again",
     "openSettings": "Open settings",
-    "goHome": "Go to home",
     "cancel": "Cancel"
   },
   "home": {
@@ -118,7 +117,6 @@
     }
   },
   "a11y": {
-    "selected": "Selected",
     "draftLanguage": "{{language}}, translation awaiting review"
   },
   "signToText": {
@@ -171,7 +169,6 @@
       "clear": "Clear"
     },
     "a11y": {
-      "cameraPreview": "Camera preview. {{framing}}",
       "recognized": "Recognised: {{text}}"
     },
     "transcript": {
@@ -179,7 +176,6 @@
       "note": "Signs in the order they were recognized. Fingerspelled letters are joined into words. This is not a translated sentence."
     },
     "reportWrong": "Report a wrong result",
-    "live": "Live",
     "demoLive": "Demo",
     "knownSigns_one": "Recognizes {{count}} sign taught on this phone.",
     "knownSigns_other": "Recognizes {{count}} signs taught on this phone.",

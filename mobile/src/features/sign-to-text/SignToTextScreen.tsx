@@ -8,6 +8,7 @@ import { useAppActive } from '@/accessibility/useAppActive';
 import { AppText, Button, Card, IconButton, Notice, Pill, Screen } from '@/components';
 import { getSign, isEmergencySign, signMeaning } from '@/content/library';
 import { EngineFrameSource } from '@/engine/EngineFrameSource';
+import { handsVisible } from '@/recognition/features';
 import { useHistory } from '@/history/HistoryProvider';
 import { signText } from '@/personal/labels';
 import { usePersonalSigns } from '@/personal/PersonalSignsProvider';
@@ -43,6 +44,7 @@ export function SignToTextScreen({ sessionFactory }: Props) {
   const [userPaused, setUserPaused] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
   const [flash, setFlash] = useState(0);
+  const [live, setLive] = useState<'none' | 'person' | 'hands'>('none');
   const [source] = useState(() => new EngineFrameSource());
 
   const visible = focused && appActive;
@@ -134,16 +136,32 @@ export function SignToTextScreen({ sessionFactory }: Props) {
           testID="sign-camera"
           facing={facing}
           active={visible && !userPaused}
-          onFrame={(timestampMs, values) => source.push(timestampMs, values)}
+          onFrame={(timestampMs, values) => {
+            source.push(timestampMs, values);
+            // Instant feedback on what the camera sees, before recognition has enough frames.
+            const next = values === null ? 'none' : handsVisible(values) ? 'hands' : 'person';
+            setLive((current) => (current === next ? current : next));
+          }}
           onReadyChange={setCameraReady}
           flashSignal={flash}
           overlayTop={
             <>
-              <Pill
-                tone="overlay"
-                icon={userPaused ? 'pause' : 'circle'}
-                label={userPaused ? t('signToText.status.paused') : snapshot?.simulated ? t('signToText.demoLive') : t('signToText.live')}
-              />
+              {userPaused || snapshot?.simulated ? (
+                <Pill
+                  tone="overlay"
+                  icon={userPaused ? 'pause' : 'flask-outline'}
+                  label={userPaused ? t('signToText.status.paused') : t('signToText.demoLive')}
+                />
+              ) : (
+                <Pill
+                  testID="live-tracking"
+                  tone={live === 'hands' ? 'success' : 'warning'}
+                  icon={live === 'hands' ? 'check' : 'alert-outline'}
+                  label={
+                    live === 'hands' ? t('teach.live.hands') : live === 'person' ? t('teach.live.noHands') : t('teach.live.noPerson')
+                  }
+                />
+              )}
               <View style={styles.flex} />
             </>
           }

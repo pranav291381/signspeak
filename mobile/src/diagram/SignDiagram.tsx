@@ -119,9 +119,17 @@ const SkeletonShape = memo(function SkeletonShape({
     />
   );
 
+  // Close-ups of the hands show only the forearms: head and shoulders would be cut off.
+  const closeUp = focus === 'hands';
   return (
     <G>
-      {body ? (
+      {body && closeUp ? (
+        <G>
+          {arm(body.leftElbow, frame.left?.[0] ?? body.leftWrist, 'l-fore')}
+          {arm(body.rightElbow, frame.right?.[0] ?? body.rightWrist, 'r-fore')}
+        </G>
+      ) : null}
+      {body && !closeUp ? (
         <G>
           <Circle
             cx={body.nose[0]}
