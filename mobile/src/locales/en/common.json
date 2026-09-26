@@ -1,0 +1,316 @@
+{
+  "app": {
+    "name": "ISL Connect"
+  },
+  "common": {
+    "loading": "Loading…",
+    "retry": "Try again",
+    "openSettings": "Open settings",
+    "goHome": "Go to home",
+    "cancel": "Cancel"
+  },
+  "home": {
+    "title": "ISL Connect",
+    "intro": "Choose what you want to do.",
+    "signToText": {
+      "title": "Sign → Text",
+      "a11yLabel": "Sign to text",
+      "description": "Point the camera at a signer to see text."
+    },
+    "textToIsl": {
+      "title": "Text → ISL",
+      "a11yLabel": "Text to I S L",
+      "description": "Type a phrase to see how it is signed."
+    },
+    "learn": {
+      "title": "Learn ISL",
+      "a11yLabel": "Learn I S L",
+      "description": "Simple lessons for beginners."
+    },
+    "history": {
+      "title": "History",
+      "description": "Recent results saved on this phone."
+    },
+    "settings": {
+      "title": "Settings",
+      "description": "Language, speech, camera and privacy."
+    },
+    "disclaimer": "Early version. This app is not a replacement for a qualified ISL interpreter."
+  },
+  "screens": {
+    "signToText": "Sign → Text",
+    "textToIsl": "Text → ISL",
+    "learn": "Learn ISL",
+    "history": "History",
+    "settings": "Settings",
+    "lesson": "Lesson",
+    "quiz": "Quiz",
+    "feedback": "Report a problem"
+  },
+  "settings": {
+    "sections": {
+      "language": "Language",
+      "speech": "Speech",
+      "camera": "Camera",
+      "privacy": "Privacy",
+      "accessibility": "Accessibility",
+      "demo": "Demo mode",
+      "about": "About",
+      "learning": "Learning",
+      "feedback": "Feedback"
+    },
+    "appLanguage": {
+      "label": "App language",
+      "hint": "Language for menus and buttons."
+    },
+    "outputLanguage": {
+      "label": "Output and speech language",
+      "hint": "Language for recognised text and spoken output."
+    },
+    "draftTranslation": "Translation awaiting native-speaker review",
+    "autoSpeak": {
+      "label": "Speak results automatically",
+      "hint": "When off, tap Speak to hear a result."
+    },
+    "speechRate": {
+      "label": "Speaking speed",
+      "slow": "Slow",
+      "normal": "Normal",
+      "fast": "Fast"
+    },
+    "defaultCamera": {
+      "label": "Camera to use first",
+      "back": "Back camera",
+      "front": "Front camera"
+    },
+    "history": {
+      "label": "Save history on this phone",
+      "hint": "Off by default. History never leaves this phone. Turning this off deletes saved history."
+    },
+    "haptics": {
+      "label": "Vibrate when a sign is recognised"
+    },
+    "demoMode": {
+      "label": "Demo mode",
+      "hint": "Shows simulated results to demonstrate the app. It does not recognise real signs."
+    },
+    "about": {
+      "version": "Version {{version}}",
+      "limitations": "Sign recognition is not available yet: no recognition model has been trained. ISL demonstrations will be added only after review by qualified ISL educators.",
+      "notInterpreter": "This app is not a replacement for a qualified ISL interpreter, especially for medical, legal or emergency situations.",
+      "privacy": "Camera video stays on your phone. It is never recorded or uploaded."
+    },
+    "resetProgress": {
+      "label": "Reset learning progress",
+      "confirmTitle": "Reset learning progress?",
+      "confirmMessage": "This clears lessons marked as learned and quiz results on this phone."
+    },
+    "reportProblem": "Report a problem"
+  },
+  "a11y": {
+    "selected": "Selected",
+    "draftLanguage": "{{language}}, translation awaiting review"
+  },
+  "signToText": {
+    "loading": "Preparing sign recognition…",
+    "modelUnavailable": {
+      "title": "Sign recognition is not available yet",
+      "message": "No recognition model has been trained yet, so this app cannot read signs. You can try demo mode to see how this screen works. Demo results are simulated.",
+      "tryDemo": "Try demo mode (simulated)"
+    },
+    "modelError": {
+      "title": "Sign recognition stopped working",
+      "message": "Something went wrong with the recognition model. Please try again."
+    },
+    "permission": {
+      "checking": "Checking camera permission…",
+      "title": "Camera access needed",
+      "message": "The camera is used to see the signer. Video stays on this phone. It is never recorded or uploaded.",
+      "allow": "Allow camera",
+      "deniedTitle": "Camera access is turned off",
+      "deniedMessage": "To use Sign → Text, allow camera access for ISL Connect in your phone settings."
+    },
+    "cameraError": {
+      "title": "Camera not available",
+      "message": "The camera could not start. Another app may be using it, or this device may not have a camera."
+    },
+    "simulated": {
+      "title": "Demo mode: simulated results",
+      "message": "These results do not come from the camera. This is not real sign recognition.",
+      "turnOff": "Turn off demo mode"
+    },
+    "framing": "Position the signer inside the frame. Keep both hands and the upper body visible.",
+    "status": {
+      "paused": "Paused",
+      "noSigner": "No signer in view. Position the signer inside the frame.",
+      "analyzing": "Watching for signs…",
+      "uncertain": "Not sure what was signed. Please try again.",
+      "recognized": "Sign recognised"
+    },
+    "hints": {
+      "low_confidence": "Try signing a little more slowly, with hands clearly in view.",
+      "ambiguous": "It could be more than one sign.",
+      "unknown_sign": "This sign may not be in the app's vocabulary yet.",
+      "unstable": "Hold each sign clearly."
+    },
+    "result": {
+      "label": "Last recognised",
+      "empty": "Recognised signs will appear here.",
+      "high": "High confidence",
+      "medium": "Medium confidence",
+      "emergency": "Emergency-related sign. If someone needs urgent help, call 112."
+    },
+    "controls": {
+      "pause": "Pause",
+      "resume": "Resume",
+      "switchCamera": "Switch camera",
+      "clear": "Clear"
+    },
+    "a11y": {
+      "cameraPreview": "Camera preview. {{framing}}",
+      "recognized": "Recognised: {{text}}"
+    },
+    "transcript": {
+      "label": "Signs recognised so far",
+      "note": "Separate signs in the order they were recognised. This is not a translated sentence."
+    },
+    "reportWrong": "Report a wrong result"
+  },
+  "speech": {
+    "speak": "Speak",
+    "stop": "Stop speaking",
+    "a11yHint": "Reads the text aloud in {{language}}",
+    "unsupported": "No {{language}} voice is installed on this phone, so the text is only shown on screen. You can add a voice in your phone's text-to-speech settings.",
+    "engineUnavailable": "Speech is not available on this phone. The text is shown on screen.",
+    "error": "Could not speak. Please try again."
+  },
+  "history": {
+    "disabledTitle": "History is off",
+    "disabledMessage": "Turn on “Save history on this phone” in Settings to keep recent results. History never leaves this phone.",
+    "emptyTitle": "Nothing saved yet",
+    "emptyMessage": "Recognised signs and phrases you look up will appear here.",
+    "privacyNote": "Saved only on this phone. Demo mode results are never saved.",
+    "clear": "Clear history",
+    "confirmTitle": "Clear history?",
+    "confirmMessage": "This deletes all saved history on this phone. It cannot be undone.",
+    "kinds": {
+      "recognition": "Recognised sign",
+      "lookup": "Looked up"
+    },
+    "entryMeta": "{{kind}} · {{when}}",
+    "entryA11y": "{{kind}}: {{text}}. {{when}}"
+  },
+  "textToIsl": {
+    "scopeNotice": "This looks up words and common phrases in the ISL sign library. It does not translate full sentences: ISL has its own grammar.",
+    "inputLabel": "Word or short phrase",
+    "placeholder": "For example: thank you",
+    "submit": "Show in ISL",
+    "empty": "Type a word or phrase first.",
+    "ambiguous": "This can mean more than one sign. Choose the one that fits what you mean.",
+    "noMatchTitle": "Not in the sign library yet",
+    "noMatchMessage": "This phrase has not been added to the library. Try a shorter or simpler phrase.",
+    "relatedTitle": "Signs for parts of your text",
+    "relatedWarning": "These are separate signs. Putting them together is not a translation of your sentence."
+  },
+  "content": {
+    "gloss": "Gloss: {{gloss}}",
+    "status": {
+      "verified": "Verified by ISL educators",
+      "unverified": "Not yet verified"
+    },
+    "openLesson": "Open lesson",
+    "demonstration": {
+      "unavailableTitle": "Demonstration not available yet",
+      "unavailableMessage": "A video of this sign will be added after qualified ISL educators have reviewed it.",
+      "pendingPlayer": "A verified demonstration exists, but video playback is not built yet."
+    }
+  },
+  "learn": {
+    "contentNotice": "Lessons are being prepared with qualified ISL educators. Sign demonstrations appear only after they have been verified.",
+    "progressSummary": "{{learned}} of {{total}} signs learned",
+    "categoryCount_one": "{{count}} sign · {{learned}} learned",
+    "categoryCount_other": "{{count}} signs · {{learned}} learned",
+    "categories": {
+      "greetings": "Greetings",
+      "everyday": "Everyday",
+      "people": "People",
+      "food": "Food",
+      "numbers": "Numbers",
+      "places": "Places",
+      "questions": "Questions",
+      "emergency": "Emergency",
+      "phrases": "Common phrases"
+    },
+    "notFound": "Lesson not found",
+    "backToLessons": "Back to lessons",
+    "status": {
+      "learned": "Learned",
+      "ready": "Ready to learn",
+      "comingSoon": "Demonstration coming soon"
+    },
+    "lesson": {
+      "meaning": "Meaning",
+      "phraseNoGloss": "A phrase made of several signs. The sign order will come from ISL educators.",
+      "unverified": "This sign has not been reviewed by ISL educators yet. Please do not learn it from this app until it is verified.",
+      "learned": "Learned (tap to undo)",
+      "markLearned": "Mark as learned",
+      "markLearnedDisabled": "You can mark this sign as learned once its demonstration is available.",
+      "practice": "Practise with the camera",
+      "practiceUnavailable": "Practice with the camera will be available when sign recognition is ready.",
+      "next": "Next: {{name}}",
+      "inLanguage": "{{language}}: {{meaning}}"
+    },
+    "quiz": {
+      "start": "Start quiz",
+      "unavailableTitle": "Quiz not available yet",
+      "unavailable": "Quizzes use only signs with verified demonstrations. There are not enough in this category yet.",
+      "progress": "Question {{current}} of {{total}}",
+      "question": "What does this sign mean?",
+      "check": "Check answer",
+      "correct": "Correct!",
+      "incorrect": "Not quite. This sign means: {{answer}}",
+      "next": "Next question",
+      "finish": "See result",
+      "result": "You got {{correct}} of {{total}} right",
+      "again": "Try again"
+    }
+  },
+  "feedback": {
+    "privacyWarning": "Please do not include names, phone numbers, addresses or other personal details. No photos or video are sent.",
+    "featureLabel": "Which part of the app?",
+    "issueLabel": "What happened?",
+    "features": {
+      "sign_to_text": "Sign → Text",
+      "text_to_isl": "Text → ISL",
+      "learn": "Learn ISL",
+      "history": "History",
+      "settings": "Settings",
+      "other": "Something else"
+    },
+    "issues": {
+      "wrong_recognition": "Wrong sign recognised",
+      "not_recognized": "Sign not recognised",
+      "accessibility": "Hard to use or read",
+      "content": "Wrong or missing sign content",
+      "language": "Translation or language problem",
+      "crash": "App stopped or froze",
+      "performance": "Slow or battery drain",
+      "privacy": "Privacy concern",
+      "feature_request": "Idea or request",
+      "other": "Something else"
+    },
+    "descriptionLabel": "Describe the problem",
+    "descriptionRequired": "Please describe the problem.",
+    "expectedLabel": "What did you expect? (optional)",
+    "includedTitle": "Included with your report",
+    "included": "App version {{version}}, {{platform}} {{os}}, app language {{appLanguage}}, output language {{outputLanguage}}.",
+    "includedPrediction": "The recognised sign: {{label}}.",
+    "includedPredictionSimulated": "The recognised sign: {{label}} (demo mode, simulated).",
+    "share": "Share report",
+    "send": "Send to project team",
+    "sendHint": "Sends this report over the internet to the project's server.",
+    "sent": "Thank you. Report sent. Reference: {{id}}",
+    "offline": "No internet connection. The report was not sent. You can share it instead.",
+    "failed": "The report could not be sent. You can share it instead."
+  }
+}

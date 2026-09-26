@@ -1,0 +1,1440 @@
+{
+  "version": "0.1.0-candidates",
+  "notice": "Candidate concepts only. No entry contains verified ISL content. Glosses are conventional English labels, not descriptions of how a sign is made. Hindi text is a draft awaiting native-speaker review.",
+  "signs": [
+    {
+      "id": "hello",
+      "gloss": "HELLO",
+      "category": "greetings",
+      "meaning": {
+        "en": "Hello",
+        "hi": "नमस्ते"
+      },
+      "phrases": {
+        "en": [
+          "hello",
+          "hi"
+        ],
+        "hi": [
+          "नमस्ते",
+          "नमस्कार",
+          "हेलो"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "goodbye",
+      "gloss": "GOODBYE",
+      "category": "greetings",
+      "meaning": {
+        "en": "Goodbye",
+        "hi": "अलविदा"
+      },
+      "phrases": {
+        "en": [
+          "goodbye",
+          "bye"
+        ],
+        "hi": [
+          "अलविदा",
+          "फिर मिलेंगे",
+          "बाय"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "thank_you",
+      "gloss": "THANK-YOU",
+      "category": "greetings",
+      "meaning": {
+        "en": "Thank you",
+        "hi": "धन्यवाद"
+      },
+      "phrases": {
+        "en": [
+          "thank you",
+          "thanks"
+        ],
+        "hi": [
+          "धन्यवाद",
+          "शुक्रिया"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "sorry",
+      "gloss": "SORRY",
+      "category": "greetings",
+      "meaning": {
+        "en": "Sorry",
+        "hi": "माफ़ कीजिए"
+      },
+      "phrases": {
+        "en": [
+          "sorry",
+          "i am sorry"
+        ],
+        "hi": [
+          "माफ़ कीजिए",
+          "माफ़ करना",
+          "सॉरी"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "please",
+      "gloss": "PLEASE",
+      "category": "greetings",
+      "meaning": {
+        "en": "Please",
+        "hi": "कृपया"
+      },
+      "phrases": {
+        "en": [
+          "please"
+        ],
+        "hi": [
+          "कृपया"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "good_morning",
+      "gloss": "GOOD-MORNING",
+      "category": "greetings",
+      "meaning": {
+        "en": "Good morning",
+        "hi": "सुप्रभात"
+      },
+      "phrases": {
+        "en": [
+          "good morning"
+        ],
+        "hi": [
+          "सुप्रभात",
+          "गुड मॉर्निंग"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "yes",
+      "gloss": "YES",
+      "category": "everyday",
+      "meaning": {
+        "en": "Yes",
+        "hi": "हाँ"
+      },
+      "phrases": {
+        "en": [
+          "yes"
+        ],
+        "hi": [
+          "हाँ",
+          "हां",
+          "जी हाँ"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "no",
+      "gloss": "NO",
+      "category": "everyday",
+      "meaning": {
+        "en": "No",
+        "hi": "नहीं"
+      },
+      "phrases": {
+        "en": [
+          "no"
+        ],
+        "hi": [
+          "नहीं",
+          "ना"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "wait",
+      "gloss": "WAIT",
+      "category": "everyday",
+      "meaning": {
+        "en": "Wait",
+        "hi": "रुकिए"
+      },
+      "phrases": {
+        "en": [
+          "wait",
+          "please wait"
+        ],
+        "hi": [
+          "रुकिए",
+          "रुको",
+          "इंतज़ार कीजिए"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "stop",
+      "gloss": "STOP",
+      "category": "everyday",
+      "meaning": {
+        "en": "Stop",
+        "hi": "रोकिए"
+      },
+      "phrases": {
+        "en": [
+          "stop"
+        ],
+        "hi": [
+          "रोकिए",
+          "रोको",
+          "बस"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "understand",
+      "gloss": "UNDERSTAND",
+      "category": "everyday",
+      "meaning": {
+        "en": "I understand",
+        "hi": "मैं समझ गया"
+      },
+      "phrases": {
+        "en": [
+          "i understand",
+          "understand"
+        ],
+        "hi": [
+          "समझ गया",
+          "समझ गई",
+          "समझ गए"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "good",
+      "gloss": "GOOD",
+      "category": "everyday",
+      "meaning": {
+        "en": "Good",
+        "hi": "अच्छा"
+      },
+      "phrases": {
+        "en": [
+          "good"
+        ],
+        "hi": [
+          "अच्छा",
+          "बढ़िया"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "bad",
+      "gloss": "BAD",
+      "category": "everyday",
+      "meaning": {
+        "en": "Bad",
+        "hi": "बुरा"
+      },
+      "phrases": {
+        "en": [
+          "bad"
+        ],
+        "hi": [
+          "बुरा",
+          "ख़राब",
+          "खराब"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "mother",
+      "gloss": "MOTHER",
+      "category": "people",
+      "meaning": {
+        "en": "Mother",
+        "hi": "माँ"
+      },
+      "phrases": {
+        "en": [
+          "mother",
+          "mom",
+          "mum",
+          "mummy"
+        ],
+        "hi": [
+          "माँ",
+          "माता",
+          "मम्मी"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "father",
+      "gloss": "FATHER",
+      "category": "people",
+      "meaning": {
+        "en": "Father",
+        "hi": "पिता"
+      },
+      "phrases": {
+        "en": [
+          "father",
+          "dad",
+          "papa"
+        ],
+        "hi": [
+          "पिता",
+          "पापा",
+          "पिताजी"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "family",
+      "gloss": "FAMILY",
+      "category": "people",
+      "meaning": {
+        "en": "Family",
+        "hi": "परिवार"
+      },
+      "phrases": {
+        "en": [
+          "family"
+        ],
+        "hi": [
+          "परिवार"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "friend",
+      "gloss": "FRIEND",
+      "category": "people",
+      "meaning": {
+        "en": "Friend",
+        "hi": "दोस्त"
+      },
+      "phrases": {
+        "en": [
+          "friend"
+        ],
+        "hi": [
+          "दोस्त",
+          "मित्र"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "teacher",
+      "gloss": "TEACHER",
+      "category": "people",
+      "meaning": {
+        "en": "Teacher",
+        "hi": "शिक्षक"
+      },
+      "phrases": {
+        "en": [
+          "teacher"
+        ],
+        "hi": [
+          "शिक्षक",
+          "अध्यापक",
+          "टीचर"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "doctor",
+      "gloss": "DOCTOR",
+      "category": "people",
+      "meaning": {
+        "en": "Doctor",
+        "hi": "डॉक्टर"
+      },
+      "phrases": {
+        "en": [
+          "doctor"
+        ],
+        "hi": [
+          "डॉक्टर",
+          "चिकित्सक"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "water",
+      "gloss": "WATER",
+      "category": "food",
+      "meaning": {
+        "en": "Water",
+        "hi": "पानी"
+      },
+      "phrases": {
+        "en": [
+          "water"
+        ],
+        "hi": [
+          "पानी",
+          "जल"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "food",
+      "gloss": "FOOD",
+      "category": "food",
+      "meaning": {
+        "en": "Food",
+        "hi": "खाना"
+      },
+      "phrases": {
+        "en": [
+          "food"
+        ],
+        "hi": [
+          "खाना",
+          "भोजन"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "tea",
+      "gloss": "TEA",
+      "category": "food",
+      "meaning": {
+        "en": "Tea",
+        "hi": "चाय"
+      },
+      "phrases": {
+        "en": [
+          "tea",
+          "chai"
+        ],
+        "hi": [
+          "चाय"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "milk",
+      "gloss": "MILK",
+      "category": "food",
+      "meaning": {
+        "en": "Milk",
+        "hi": "दूध"
+      },
+      "phrases": {
+        "en": [
+          "milk"
+        ],
+        "hi": [
+          "दूध"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "hungry",
+      "gloss": "HUNGRY",
+      "category": "food",
+      "meaning": {
+        "en": "Hungry",
+        "hi": "भूख लगी है"
+      },
+      "phrases": {
+        "en": [
+          "hungry",
+          "i am hungry"
+        ],
+        "hi": [
+          "भूख लगी है",
+          "भूख",
+          "भूखा",
+          "भूखी"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "number_0",
+      "gloss": "ZERO",
+      "category": "numbers",
+      "meaning": {
+        "en": "Zero",
+        "hi": "शून्य"
+      },
+      "phrases": {
+        "en": [
+          "zero",
+          "0"
+        ],
+        "hi": [
+          "शून्य",
+          "०"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "number_1",
+      "gloss": "ONE",
+      "category": "numbers",
+      "meaning": {
+        "en": "One",
+        "hi": "एक"
+      },
+      "phrases": {
+        "en": [
+          "one",
+          "1"
+        ],
+        "hi": [
+          "एक",
+          "१"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "number_2",
+      "gloss": "TWO",
+      "category": "numbers",
+      "meaning": {
+        "en": "Two",
+        "hi": "दो"
+      },
+      "phrases": {
+        "en": [
+          "two",
+          "2"
+        ],
+        "hi": [
+          "दो",
+          "२"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "number_3",
+      "gloss": "THREE",
+      "category": "numbers",
+      "meaning": {
+        "en": "Three",
+        "hi": "तीन"
+      },
+      "phrases": {
+        "en": [
+          "three",
+          "3"
+        ],
+        "hi": [
+          "तीन",
+          "३"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "number_4",
+      "gloss": "FOUR",
+      "category": "numbers",
+      "meaning": {
+        "en": "Four",
+        "hi": "चार"
+      },
+      "phrases": {
+        "en": [
+          "four",
+          "4"
+        ],
+        "hi": [
+          "चार",
+          "४"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "number_5",
+      "gloss": "FIVE",
+      "category": "numbers",
+      "meaning": {
+        "en": "Five",
+        "hi": "पाँच"
+      },
+      "phrases": {
+        "en": [
+          "five",
+          "5"
+        ],
+        "hi": [
+          "पाँच",
+          "५",
+          "पांच"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "number_6",
+      "gloss": "SIX",
+      "category": "numbers",
+      "meaning": {
+        "en": "Six",
+        "hi": "छह"
+      },
+      "phrases": {
+        "en": [
+          "six",
+          "6"
+        ],
+        "hi": [
+          "छह",
+          "६",
+          "छः"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "number_7",
+      "gloss": "SEVEN",
+      "category": "numbers",
+      "meaning": {
+        "en": "Seven",
+        "hi": "सात"
+      },
+      "phrases": {
+        "en": [
+          "seven",
+          "7"
+        ],
+        "hi": [
+          "सात",
+          "७"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "number_8",
+      "gloss": "EIGHT",
+      "category": "numbers",
+      "meaning": {
+        "en": "Eight",
+        "hi": "आठ"
+      },
+      "phrases": {
+        "en": [
+          "eight",
+          "8"
+        ],
+        "hi": [
+          "आठ",
+          "८"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "number_9",
+      "gloss": "NINE",
+      "category": "numbers",
+      "meaning": {
+        "en": "Nine",
+        "hi": "नौ"
+      },
+      "phrases": {
+        "en": [
+          "nine",
+          "9"
+        ],
+        "hi": [
+          "नौ",
+          "९"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "number_10",
+      "gloss": "TEN",
+      "category": "numbers",
+      "meaning": {
+        "en": "Ten",
+        "hi": "दस"
+      },
+      "phrases": {
+        "en": [
+          "ten",
+          "10"
+        ],
+        "hi": [
+          "दस",
+          "१०"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "home",
+      "gloss": "HOME",
+      "category": "places",
+      "meaning": {
+        "en": "Home",
+        "hi": "घर"
+      },
+      "phrases": {
+        "en": [
+          "home",
+          "house"
+        ],
+        "hi": [
+          "घर"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "school",
+      "gloss": "SCHOOL",
+      "category": "places",
+      "meaning": {
+        "en": "School",
+        "hi": "स्कूल"
+      },
+      "phrases": {
+        "en": [
+          "school"
+        ],
+        "hi": [
+          "स्कूल",
+          "विद्यालय"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "hospital",
+      "gloss": "HOSPITAL",
+      "category": "places",
+      "meaning": {
+        "en": "Hospital",
+        "hi": "अस्पताल"
+      },
+      "phrases": {
+        "en": [
+          "hospital"
+        ],
+        "hi": [
+          "अस्पताल"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "toilet",
+      "gloss": "TOILET",
+      "category": "places",
+      "meaning": {
+        "en": "Toilet",
+        "hi": "शौचालय"
+      },
+      "phrases": {
+        "en": [
+          "toilet",
+          "bathroom",
+          "washroom"
+        ],
+        "hi": [
+          "शौचालय",
+          "टॉयलेट",
+          "बाथरूम"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "market",
+      "gloss": "MARKET",
+      "category": "places",
+      "meaning": {
+        "en": "Market",
+        "hi": "बाज़ार"
+      },
+      "phrases": {
+        "en": [
+          "market",
+          "shop"
+        ],
+        "hi": [
+          "बाज़ार",
+          "बाजार",
+          "दुकान"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "what",
+      "gloss": "WHAT",
+      "category": "questions",
+      "meaning": {
+        "en": "What?",
+        "hi": "क्या?"
+      },
+      "phrases": {
+        "en": [
+          "what"
+        ],
+        "hi": [
+          "क्या"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "where",
+      "gloss": "WHERE",
+      "category": "questions",
+      "meaning": {
+        "en": "Where?",
+        "hi": "कहाँ?"
+      },
+      "phrases": {
+        "en": [
+          "where"
+        ],
+        "hi": [
+          "कहाँ",
+          "कहां"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "when",
+      "gloss": "WHEN",
+      "category": "questions",
+      "meaning": {
+        "en": "When?",
+        "hi": "कब?"
+      },
+      "phrases": {
+        "en": [
+          "when"
+        ],
+        "hi": [
+          "कब"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "who",
+      "gloss": "WHO",
+      "category": "questions",
+      "meaning": {
+        "en": "Who?",
+        "hi": "कौन?"
+      },
+      "phrases": {
+        "en": [
+          "who"
+        ],
+        "hi": [
+          "कौन"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "why",
+      "gloss": "WHY",
+      "category": "questions",
+      "meaning": {
+        "en": "Why?",
+        "hi": "क्यों?"
+      },
+      "phrases": {
+        "en": [
+          "why"
+        ],
+        "hi": [
+          "क्यों"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "how",
+      "gloss": "HOW",
+      "category": "questions",
+      "meaning": {
+        "en": "How?",
+        "hi": "कैसे?"
+      },
+      "phrases": {
+        "en": [
+          "how"
+        ],
+        "hi": [
+          "कैसे"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "help",
+      "gloss": "HELP",
+      "category": "emergency",
+      "meaning": {
+        "en": "Help",
+        "hi": "मदद"
+      },
+      "phrases": {
+        "en": [
+          "help",
+          "help me"
+        ],
+        "hi": [
+          "मदद",
+          "मदद कीजिए",
+          "बचाओ"
+        ]
+      },
+      "emergency": true,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "pain",
+      "gloss": "PAIN",
+      "category": "emergency",
+      "meaning": {
+        "en": "Pain",
+        "hi": "दर्द"
+      },
+      "phrases": {
+        "en": [
+          "pain",
+          "it hurts",
+          "hurt"
+        ],
+        "hi": [
+          "दर्द",
+          "दर्द हो रहा है"
+        ]
+      },
+      "emergency": true,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "emergency",
+      "gloss": "EMERGENCY",
+      "category": "emergency",
+      "meaning": {
+        "en": "Emergency",
+        "hi": "आपातकाल"
+      },
+      "phrases": {
+        "en": [
+          "emergency"
+        ],
+        "hi": [
+          "आपातकाल",
+          "इमरजेंसी"
+        ]
+      },
+      "emergency": true,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "police",
+      "gloss": "POLICE",
+      "category": "emergency",
+      "meaning": {
+        "en": "Police",
+        "hi": "पुलिस"
+      },
+      "phrases": {
+        "en": [
+          "police"
+        ],
+        "hi": [
+          "पुलिस"
+        ]
+      },
+      "emergency": true,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "fire",
+      "gloss": "FIRE",
+      "category": "emergency",
+      "meaning": {
+        "en": "Fire",
+        "hi": "आग"
+      },
+      "phrases": {
+        "en": [
+          "fire"
+        ],
+        "hi": [
+          "आग"
+        ]
+      },
+      "emergency": true,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "ambulance",
+      "gloss": "AMBULANCE",
+      "category": "emergency",
+      "meaning": {
+        "en": "Ambulance",
+        "hi": "एम्बुलेंस"
+      },
+      "phrases": {
+        "en": [
+          "ambulance"
+        ],
+        "hi": [
+          "एम्बुलेंस",
+          "ऐम्बुलेंस"
+        ]
+      },
+      "emergency": true,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Candidate concept. Needs selection, a verified demonstration and review by qualified ISL educators."
+      }
+    },
+    {
+      "id": "how_are_you",
+      "gloss": null,
+      "category": "phrases",
+      "meaning": {
+        "en": "How are you?",
+        "hi": "आप कैसे हैं?"
+      },
+      "phrases": {
+        "en": [
+          "how are you"
+        ],
+        "hi": [
+          "आप कैसे हैं",
+          "आप कैसी हैं",
+          "कैसे हो"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Multi-sign phrase. ISL sign order (gloss sequence) and demonstration must be supplied by qualified ISL educators; do not derive them from English word order."
+      }
+    },
+    {
+      "id": "my_name_is",
+      "gloss": null,
+      "category": "phrases",
+      "meaning": {
+        "en": "My name is …",
+        "hi": "मेरा नाम … है"
+      },
+      "phrases": {
+        "en": [
+          "my name is"
+        ],
+        "hi": [
+          "मेरा नाम"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Multi-sign phrase. ISL sign order (gloss sequence) and demonstration must be supplied by qualified ISL educators; do not derive them from English word order."
+      }
+    },
+    {
+      "id": "dont_understand",
+      "gloss": null,
+      "category": "phrases",
+      "meaning": {
+        "en": "I don't understand",
+        "hi": "मुझे समझ नहीं आया"
+      },
+      "phrases": {
+        "en": [
+          "i don't understand",
+          "i dont understand",
+          "i do not understand"
+        ],
+        "hi": [
+          "मुझे समझ नहीं आया",
+          "समझ नहीं आया"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Multi-sign phrase. ISL sign order (gloss sequence) and demonstration must be supplied by qualified ISL educators; do not derive them from English word order."
+      }
+    },
+    {
+      "id": "please_repeat",
+      "gloss": null,
+      "category": "phrases",
+      "meaning": {
+        "en": "Please repeat",
+        "hi": "कृपया दोहराइए"
+      },
+      "phrases": {
+        "en": [
+          "please repeat",
+          "repeat please",
+          "say again"
+        ],
+        "hi": [
+          "कृपया दोहराइए",
+          "फिर से बताइए",
+          "दोबारा"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Multi-sign phrase. ISL sign order (gloss sequence) and demonstration must be supplied by qualified ISL educators; do not derive them from English word order."
+      }
+    },
+    {
+      "id": "please_sign_slowly",
+      "gloss": null,
+      "category": "phrases",
+      "meaning": {
+        "en": "Please sign slowly",
+        "hi": "कृपया धीरे साइन कीजिए"
+      },
+      "phrases": {
+        "en": [
+          "please sign slowly",
+          "sign slowly"
+        ],
+        "hi": [
+          "कृपया धीरे साइन कीजिए",
+          "धीरे साइन कीजिए"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Multi-sign phrase. ISL sign order (gloss sequence) and demonstration must be supplied by qualified ISL educators; do not derive them from English word order."
+      }
+    },
+    {
+      "id": "nice_to_meet_you",
+      "gloss": null,
+      "category": "phrases",
+      "meaning": {
+        "en": "Nice to meet you",
+        "hi": "आपसे मिलकर ख़ुशी हुई"
+      },
+      "phrases": {
+        "en": [
+          "nice to meet you"
+        ],
+        "hi": [
+          "आपसे मिलकर ख़ुशी हुई",
+          "आपसे मिलकर खुशी हुई"
+        ]
+      },
+      "emergency": false,
+      "media": null,
+      "verification": {
+        "status": "unverified",
+        "notes": "Multi-sign phrase. ISL sign order (gloss sequence) and demonstration must be supplied by qualified ISL educators; do not derive them from English word order."
+      }
+    }
+  ]
+}

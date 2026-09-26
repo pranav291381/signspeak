@@ -1,0 +1,28 @@
+import { render, type RenderOptions } from '@testing-library/react-native';
+import type { ReactElement, ReactNode } from 'react';
+
+import { HistoryProvider } from '@/history/HistoryProvider';
+import type { LanguageCode } from '@/i18n';
+import { ProgressProvider } from '@/learn/ProgressProvider';
+import { SettingsProvider } from '@/settings/SettingsProvider';
+import { createMemoryStore, type KeyValueStore } from '@/storage/keyValueStore';
+
+interface Options extends RenderOptions {
+  store?: KeyValueStore;
+  language?: LanguageCode;
+}
+
+/** Renders `ui` inside the app providers with in-memory storage. */
+export function renderWithProviders(ui: ReactElement, { store, language = 'en', ...options }: Options = {}) {
+  const memoryStore = store ?? createMemoryStore();
+  function Wrapper({ children }: { children: ReactNode }) {
+    return (
+      <SettingsProvider store={memoryStore} initialLanguage={language}>
+        <HistoryProvider store={memoryStore}>
+          <ProgressProvider store={memoryStore}>{children}</ProgressProvider>
+        </HistoryProvider>
+      </SettingsProvider>
+    );
+  }
+  return { store: memoryStore, ...render(ui, { wrapper: Wrapper, ...options }) };
+}
