@@ -13,3 +13,6 @@ jest.mock('react-native-safe-area-context', () => require('react-native-safe-are
 
 // Icon fonts load asynchronously; icons are decorative, so render nothing in tests.
 jest.mock('@expo/vector-icons', () => ({ MaterialCommunityIcons: () => null }));
+
+// The camera engine runs in a WebView; tests use a controllable stand-in.
+jest.mock('@/engine/LandmarkCamera', () => require('@/test-utils/fakeLandmarkCamera'));

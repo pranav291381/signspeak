@@ -14,3 +14,4 @@ export { SegmentedControl, type Segment } from './SegmentedControl';
 export { StateView } from './StateView';
 export { SwitchRow } from './SwitchRow';
 export { TextField } from './TextField';
+export { confirmAction } from './confirm';

@@ -85,6 +85,14 @@ describe('SettingsScreen', () => {
 
   it('states current limitations honestly', async () => {
     renderWithProviders(<SettingsScreen />);
-    expect(await screen.findByText(/no recognition model has been trained/)).toBeOnTheScreen();
+    expect(await screen.findByText(/works for the signs you teach on this phone/)).toBeOnTheScreen();
+    expect(screen.getByText(/not a replacement for a qualified ISL interpreter/)).toBeOnTheScreen();
+  });
+
+  it('shows how many signs are taught and links to them', async () => {
+    renderWithProviders(<SettingsScreen />);
+    expect(await screen.findByRole('button', { name: 'My signs. 0' })).toBeOnTheScreen();
+    // Nothing to delete yet.
+    expect(screen.queryByTestId('settings-delete-signs')).toBeNull();
   });
 });

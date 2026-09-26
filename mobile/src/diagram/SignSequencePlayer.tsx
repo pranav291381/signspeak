@@ -20,10 +20,10 @@ export interface SequenceItem {
   word?: string;
 }
 
-interface Props {
-  items: SequenceItem[];
+interface Props<T extends SequenceItem> {
+  items: T[];
   /** Offer to record a missing item. */
-  onRecordMissing?: (item: SequenceItem) => void;
+  onRecordMissing?: (item: T) => void;
   testID?: string;
 }
 
@@ -31,7 +31,7 @@ interface Props {
 const MISSING_ITEM_MS = 1400;
 
 /** Plays a sequence of sign diagrams one after another, with captions and controls. */
-export function SignSequencePlayer({ items, onRecordMissing, testID }: Props) {
+export function SignSequencePlayer<T extends SequenceItem>({ items, onRecordMissing, testID }: Props<T>) {
   const { t } = useTranslation();
   const { colors, radii, spacing } = useTheme();
   const reduceMotion = useReduceMotion();

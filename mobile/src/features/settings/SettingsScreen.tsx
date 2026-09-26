@@ -1,11 +1,21 @@
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Alert } from 'react-native';
 
-import { AppText, Button, Notice, RadioGroup, Screen, Section, SegmentedControl, SwitchRow, type RadioOption } from '@/components';
+import {
+  AppText,
+  confirmAction,
+  ListRow,
+  Notice,
+  RadioGroup,
+  Screen,
+  Section,
+  SegmentedControl,
+  SwitchRow,
+  type RadioOption,
+} from '@/components';
 import { selectableLanguages, type LanguageCode } from '@/i18n';
-import { useProgress } from '@/learn/ProgressProvider';
+import { usePersonalSigns } from '@/personal/PersonalSignsProvider';
 import { useSettings } from '@/settings/SettingsProvider';
 import type { CameraFacing, SpeechRate } from '@/settings/settings';
 
@@ -13,13 +23,7 @@ export function SettingsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { settings, updateSettings } = useSettings();
-  const { reset: resetProgress } = useProgress();
-
-  const confirmResetProgress = () =>
-    Alert.alert(t('settings.resetProgress.confirmTitle'), t('settings.resetProgress.confirmMessage'), [
-      { text: t('common.cancel'), style: 'cancel' },
-      { text: t('settings.resetProgress.label'), style: 'destructive', onPress: resetProgress },
-    ]);
+  const { signs, removeAll } = usePersonalSigns();
 
   const languageOptions: RadioOption<LanguageCode>[] = selectableLanguages().map((lang) => {
     const draft = lang.status === 'draft';
@@ -32,19 +36,19 @@ export function SettingsScreen() {
     };
   });
 
-  const speechRateOptions: RadioOption<SpeechRate>[] = [
+  const speechRates: { value: SpeechRate; label: string }[] = [
     { value: 'slow', label: t('settings.speechRate.slow') },
     { value: 'normal', label: t('settings.speechRate.normal') },
     { value: 'fast', label: t('settings.speechRate.fast') },
   ];
 
-  const cameraOptions: RadioOption<CameraFacing>[] = [
+  const cameras: { value: CameraFacing; label: string }[] = [
     { value: 'back', label: t('settings.defaultCamera.back') },
     { value: 'front', label: t('settings.defaultCamera.front') },
   ];
 
   return (
-    <Screen testID="settings-screen">
+    <Screen testID="settings-screen" title={t('screens.settings')}>
       <Section title={t('settings.sections.appearance')} description={t('settings.theme.hint')}>
         <SegmentedControl
           testID="theme"
@@ -86,23 +90,52 @@ export function SettingsScreen() {
           value={settings.autoSpeak}
           onValueChange={(autoSpeak) => updateSettings({ autoSpeak })}
         />
-        <RadioGroup
+        <AppText variant="bodyStrong">{t('settings.speechRate.label')}</AppText>
+        <SegmentedControl
           testID="speech-rate"
           label={t('settings.speechRate.label')}
-          options={speechRateOptions}
+          segments={speechRates}
           value={settings.speechRate}
           onChange={(speechRate) => updateSettings({ speechRate })}
         />
       </Section>
 
       <Section title={t('settings.sections.camera')}>
-        <RadioGroup
+        <AppText variant="bodyStrong">{t('settings.defaultCamera.label')}</AppText>
+        <SegmentedControl
           testID="default-camera"
           label={t('settings.defaultCamera.label')}
-          options={cameraOptions}
+          segments={cameras}
           value={settings.defaultCamera}
           onChange={(defaultCamera) => updateSettings({ defaultCamera })}
         />
+      </Section>
+
+      <Section title={t('settings.sections.signs')} description={t('settings.signs.hint')}>
+        <ListRow
+          testID="settings-my-signs"
+          icon="hand-back-right-outline"
+          label={t('screens.mySigns')}
+          value={String(signs.length)}
+          onPress={() => router.push('/signs')}
+        />
+        {signs.length > 0 ? (
+          <ListRow
+            testID="settings-delete-signs"
+            icon="delete-outline"
+            tone="danger"
+            label={t('signs.deleteAll')}
+            onPress={() =>
+              confirmAction({
+                title: t('signs.deleteAllTitle'),
+                message: t('signs.deleteAllMessage'),
+                confirmLabel: t('signs.deleteAll'),
+                cancelLabel: t('common.cancel'),
+                onConfirm: () => void removeAll(),
+              })
+            }
+          />
+        ) : null}
       </Section>
 
       <Section title={t('settings.sections.privacy')}>
@@ -113,16 +146,7 @@ export function SettingsScreen() {
           value={settings.historyEnabled}
           onValueChange={(historyEnabled) => updateSettings({ historyEnabled })}
         />
-      </Section>
-
-      <Section title={t('settings.sections.learning')}>
-        <Button
-          testID="reset-progress"
-          variant="secondary"
-          icon="restore"
-          label={t('settings.resetProgress.label')}
-          onPress={confirmResetProgress}
-        />
+        <ListRow testID="settings-history" icon="history" label={t('screens.history')} onPress={() => router.push('/history')} />
       </Section>
 
       <Section title={t('settings.sections.accessibility')}>
@@ -145,9 +169,8 @@ export function SettingsScreen() {
       </Section>
 
       <Section title={t('settings.sections.feedback')}>
-        <Button
+        <ListRow
           testID="report-problem"
-          variant="secondary"
           icon="message-alert-outline"
           label={t('settings.reportProblem')}
           onPress={() => router.push('/feedback')}

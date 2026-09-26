@@ -7,7 +7,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { useReduceMotion } from '@/accessibility/useReduceMotion';
 import { HistoryProvider } from '@/history/HistoryProvider';
-import { ProgressProvider } from '@/learn/ProgressProvider';
+import { PersonalSignsProvider } from '@/personal/PersonalSignsProvider';
 import { AppThemeProvider } from '@/settings/AppThemeProvider';
 import { SettingsProvider } from '@/settings/SettingsProvider';
 import { useTheme } from '@/theme';
@@ -56,15 +56,15 @@ function AppStack() {
           animation: reduceMotion ? 'none' : 'default',
         }}
       >
-        <Stack.Screen name="index" options={{ title: t('home.title') }} />
-        <Stack.Screen name="sign-to-text" options={{ title: t('screens.signToText') }} />
-        <Stack.Screen name="text-to-isl" options={{ title: t('screens.textToIsl') }} />
-        <Stack.Screen name="learn/index" options={{ title: t('screens.learn') }} />
-        <Stack.Screen name="learn/[category]" options={{ title: t('screens.learn') }} />
-        <Stack.Screen name="learn/sign/[id]" options={{ title: t('screens.lesson') }} />
-        <Stack.Screen name="learn/quiz/[category]" options={{ title: t('screens.quiz') }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false, title: t('home.title') }} />
+        <Stack.Screen
+          name="welcome"
+          options={{ headerShown: false, gestureEnabled: false, animation: reduceMotion ? 'none' : 'fade' }}
+        />
+        <Stack.Screen name="signs/index" options={{ title: t('screens.mySigns') }} />
+        <Stack.Screen name="signs/[id]" options={{ title: t('screens.sign') }} />
+        <Stack.Screen name="signs/teach" options={{ title: t('screens.teach') }} />
         <Stack.Screen name="history" options={{ title: t('screens.history') }} />
-        <Stack.Screen name="settings" options={{ title: t('screens.settings') }} />
         <Stack.Screen name="feedback" options={{ title: t('screens.feedback') }} />
       </Stack>
     </>
@@ -82,9 +82,9 @@ export default function RootLayout() {
         <AppThemeProvider customFont={!fontError}>
           <NavigationTheme>
             <HistoryProvider>
-              <ProgressProvider>
+              <PersonalSignsProvider>
                 <AppStack />
-              </ProgressProvider>
+              </PersonalSignsProvider>
             </HistoryProvider>
           </NavigationTheme>
         </AppThemeProvider>

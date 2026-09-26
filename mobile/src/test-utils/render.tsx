@@ -3,7 +3,7 @@ import type { ReactElement, ReactNode } from 'react';
 
 import { HistoryProvider } from '@/history/HistoryProvider';
 import type { LanguageCode } from '@/i18n';
-import { ProgressProvider } from '@/learn/ProgressProvider';
+import { PersonalSignsProvider } from '@/personal/PersonalSignsProvider';
 import { AppThemeProvider } from '@/settings/AppThemeProvider';
 import { SettingsProvider } from '@/settings/SettingsProvider';
 import { createMemoryStore, type KeyValueStore } from '@/storage/keyValueStore';
@@ -21,7 +21,7 @@ export function renderWithProviders(ui: ReactElement, { store, language = 'en', 
       <SettingsProvider store={memoryStore} initialLanguage={language}>
         <AppThemeProvider>
           <HistoryProvider store={memoryStore}>
-            <ProgressProvider store={memoryStore}>{children}</ProgressProvider>
+            <PersonalSignsProvider store={memoryStore}>{children}</PersonalSignsProvider>
           </HistoryProvider>
         </AppThemeProvider>
       </SettingsProvider>

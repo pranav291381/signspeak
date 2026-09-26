@@ -11,31 +11,34 @@
   },
   "home": {
     "title": "ISL Connect",
-    "intro": "Choose what you want to do.",
+    "intro": "Talk across sign and text.",
     "signToText": {
       "title": "Sign → Text",
       "a11yLabel": "Sign to text",
-      "description": "Point the camera at a signer to see text."
+      "description": "Point the camera at a signer and see their signs as text."
     },
     "textToIsl": {
       "title": "Text → ISL",
       "a11yLabel": "Text to I S L",
-      "description": "Type a phrase to see how it is signed."
+      "description": "Type words and watch them as hand-sign diagrams."
     },
     "learn": {
       "title": "Learn ISL",
       "a11yLabel": "Learn I S L",
-      "description": "Simple lessons for beginners."
+      "description": "The fingerspelling alphabet and tips for signing well."
     },
     "history": {
       "title": "History",
       "description": "Recent results saved on this phone."
     },
-    "settings": {
-      "title": "Settings",
-      "description": "Language, speech, camera and privacy."
-    },
-    "disclaimer": "Early version. This app is not a replacement for a qualified ISL interpreter."
+    "disclaimer": "Early version. This app is not a replacement for a qualified ISL interpreter.",
+    "signs": {
+      "title": "Your signs",
+      "empty": "Recognition learns from you. Teach a sign in about a minute.",
+      "summary": "{{words}} words · {{letters}} of {{total}} letters · {{ready}} ready to recognize",
+      "teach": "Teach a sign",
+      "manage": "My signs"
+    }
   },
   "screens": {
     "signToText": "Sign → Text",
@@ -43,9 +46,10 @@
     "learn": "Learn ISL",
     "history": "History",
     "settings": "Settings",
-    "lesson": "Lesson",
-    "quiz": "Quiz",
-    "feedback": "Report a problem"
+    "feedback": "Report a problem",
+    "mySigns": "My signs",
+    "sign": "Sign",
+    "teach": "Teach a sign"
   },
   "settings": {
     "sections": {
@@ -56,9 +60,9 @@
       "accessibility": "Accessibility",
       "demo": "Demo mode",
       "about": "About",
-      "learning": "Learning",
       "feedback": "Feedback",
-      "appearance": "Appearance"
+      "appearance": "Appearance",
+      "signs": "My signs"
     },
     "appLanguage": {
       "label": "App language",
@@ -97,14 +101,9 @@
     },
     "about": {
       "version": "Version {{version}}",
-      "limitations": "Sign recognition is not available yet: no recognition model has been trained. ISL demonstrations will be added only after review by qualified ISL educators.",
+      "limitations": "Sign recognition works for the signs you teach on this phone. It is not a general ISL recognizer yet, and the app shows “not sure” rather than guessing.",
       "notInterpreter": "This app is not a replacement for a qualified ISL interpreter, especially for medical, legal or emergency situations.",
-      "privacy": "Camera video stays on your phone. It is never recorded or uploaded."
-    },
-    "resetProgress": {
-      "label": "Reset learning progress",
-      "confirmTitle": "Reset learning progress?",
-      "confirmMessage": "This clears lessons marked as learned and quiz results on this phone."
+      "privacy": "Camera video stays on your phone. It is never recorded or uploaded. Hand tracking runs on the phone; its files are downloaded once from Google's model server."
     },
     "reportProblem": "Report a problem",
     "theme": {
@@ -113,6 +112,9 @@
       "system": "System",
       "light": "Light",
       "dark": "Dark"
+    },
+    "signs": {
+      "hint": "Signs you taught, stored only on this phone."
     }
   },
   "a11y": {
@@ -120,10 +122,7 @@
     "draftLanguage": "{{language}}, translation awaiting review"
   },
   "signToText": {
-    "loading": "Preparing sign recognition…",
     "modelUnavailable": {
-      "title": "Sign recognition is not available yet",
-      "message": "No recognition model has been trained yet, so this app cannot read signs. You can try demo mode to see how this screen works. Demo results are simulated.",
       "tryDemo": "Try demo mode (simulated)"
     },
     "modelError": {
@@ -138,27 +137,24 @@
       "deniedTitle": "Camera access is turned off",
       "deniedMessage": "To use Sign → Text, allow camera access for ISL Connect in your phone settings."
     },
-    "cameraError": {
-      "title": "Camera not available",
-      "message": "The camera could not start. Another app may be using it, or this device may not have a camera."
-    },
     "simulated": {
       "title": "Demo mode: simulated results",
       "message": "These results do not come from the camera. This is not real sign recognition.",
       "turnOff": "Turn off demo mode"
     },
-    "framing": "Position the signer inside the frame. Keep both hands and the upper body visible.",
     "status": {
       "paused": "Paused",
-      "noSigner": "No signer in view. Position the signer inside the frame.",
+      "noSigner": "No one in view. Keep your head, shoulders and hands in the frame.",
       "analyzing": "Watching for signs…",
       "uncertain": "Not sure what was signed. Please try again.",
-      "recognized": "Sign recognised"
+      "recognized": "Sign recognised",
+      "starting": "Getting ready…",
+      "noHands": "Raise your hands into view to sign."
     },
     "hints": {
       "low_confidence": "Try signing a little more slowly, with hands clearly in view.",
       "ambiguous": "It could be more than one sign.",
-      "unknown_sign": "This sign may not be in the app's vocabulary yet.",
+      "unknown_sign": "This sign may not be one you have taught yet.",
       "unstable": "Hold each sign clearly."
     },
     "result": {
@@ -179,10 +175,20 @@
       "recognized": "Recognised: {{text}}"
     },
     "transcript": {
-      "label": "Signs recognised so far",
-      "note": "Separate signs in the order they were recognised. This is not a translated sentence."
+      "label": "So far",
+      "note": "Signs in the order they were recognized. Fingerspelled letters are joined into words. This is not a translated sentence."
     },
-    "reportWrong": "Report a wrong result"
+    "reportWrong": "Report a wrong result",
+    "live": "Live",
+    "demoLive": "Demo",
+    "knownSigns_one": "Recognizes {{count}} sign taught on this phone.",
+    "knownSigns_other": "Recognizes {{count}} signs taught on this phone.",
+    "teachFirst": {
+      "title": "Teach your first sign",
+      "message": "Recognition works with signs recorded on this phone. Record a sign three times — ideally by someone who signs ISL fluently — and it will be recognized here.",
+      "teach": "Teach a sign",
+      "alphabet": "Record the alphabet"
+    }
   },
   "speech": {
     "speak": "Speak",
@@ -209,78 +215,81 @@
     "entryA11y": "{{kind}}: {{text}}. {{when}}"
   },
   "textToIsl": {
-    "scopeNotice": "This looks up words and common phrases in the ISL sign library. It does not translate full sentences: ISL has its own grammar.",
-    "inputLabel": "Word or short phrase",
-    "placeholder": "For example: thank you",
-    "submit": "Show in ISL",
+    "inputLabel": "Words to sign",
+    "placeholder": "For example: hello, my name is Ravi",
+    "submit": "Show signs",
     "empty": "Type a word or phrase first.",
-    "ambiguous": "This can mean more than one sign. Choose the one that fits what you mean.",
-    "noMatchTitle": "Not in the sign library yet",
-    "noMatchMessage": "This phrase has not been added to the library. Try a shorter or simpler phrase.",
-    "relatedTitle": "Signs for parts of your text",
-    "relatedWarning": "These are separate signs. Putting them together is not a translation of your sentence."
-  },
-  "content": {
-    "gloss": "Gloss: {{gloss}}",
-    "status": {
-      "verified": "Verified by ISL educators",
-      "unverified": "Not yet verified"
-    },
-    "openLesson": "Open lesson",
-    "demonstration": {
-      "unavailableTitle": "Demonstration not available yet",
-      "unavailableMessage": "A video of this sign will be added after qualified ISL educators have reviewed it.",
-      "pendingPlayer": "A verified demonstration exists, but video playback is not built yet."
-    }
+    "subtitle": "Type words to see them as hand-sign diagrams.",
+    "missing_one": "{{count}} sign or letter has not been recorded yet. Tap it to record it.",
+    "missing_other": "{{count}} signs or letters have not been recorded yet. Tap one to record it.",
+    "grammarNotice": "Shown sign by sign in the order you typed. ISL has its own grammar and word order, so use this as a guide, not a translation.",
+    "examples": "Your signs",
+    "tryExample": "Show {{text}}",
+    "howTitle": "Where the diagrams come from",
+    "howBody": "Each diagram is a sign recorded on this phone. Words you have taught are shown as signs; other words are fingerspelled with the alphabet. Record the alphabet once to fingerspell any name.",
+    "recordAlphabet": "Record the alphabet"
   },
   "learn": {
-    "contentNotice": "Lessons are being prepared with qualified ISL educators. Sign demonstrations appear only after they have been verified.",
-    "progressSummary": "{{learned}} of {{total}} signs learned",
-    "categoryCount_one": "{{count}} sign · {{learned}} learned",
-    "categoryCount_other": "{{count}} signs · {{learned}} learned",
-    "categories": {
-      "greetings": "Greetings",
-      "everyday": "Everyday",
-      "people": "People",
-      "food": "Food",
-      "numbers": "Numbers",
-      "places": "Places",
-      "questions": "Questions",
-      "emergency": "Emergency",
-      "phrases": "Common phrases"
+    "title": "Learn ISL",
+    "subtitle": "The fingerspelling alphabet and tips for signing well.",
+    "alphabet": {
+      "title": "Alphabet",
+      "progress": "{{count}} / {{total}}",
+      "description": "Every letter of the fingerspelling alphabet as a hand diagram. Tap a letter to see it move, or to record it.",
+      "recordAll": "Record the alphabet",
+      "recordRest": "Record the missing letters",
+      "sourceNotice": "Letter diagrams are recordings made on this phone. The app does not ship verified ISL alphabet images yet, so ask a fluent ISL signer or teacher to record or check them.",
+      "recordedA11y": "Letter {{letter}}",
+      "missingA11y": "Letter {{letter}}, not recorded. Record it"
     },
-    "notFound": "Lesson not found",
-    "backToLessons": "Back to lessons",
-    "status": {
-      "learned": "Learned",
-      "ready": "Ready to learn",
-      "comingSoon": "Demonstration coming soon"
-    },
-    "lesson": {
-      "meaning": "Meaning",
-      "phraseNoGloss": "A phrase made of several signs. The sign order will come from ISL educators.",
-      "unverified": "This sign has not been reviewed by ISL educators yet. Please do not learn it from this app until it is verified.",
-      "learned": "Learned (tap to undo)",
-      "markLearned": "Mark as learned",
-      "markLearnedDisabled": "You can mark this sign as learned once its demonstration is available.",
-      "practice": "Practise with the camera",
-      "practiceUnavailable": "Practice with the camera will be available when sign recognition is ready.",
-      "next": "Next: {{name}}",
-      "inLanguage": "{{language}}: {{meaning}}"
-    },
-    "quiz": {
-      "start": "Start quiz",
-      "unavailableTitle": "Quiz not available yet",
-      "unavailable": "Quizzes use only signs with verified demonstrations. There are not enough in this category yet.",
-      "progress": "Question {{current}} of {{total}}",
-      "question": "What does this sign mean?",
-      "check": "Check answer",
-      "correct": "Correct!",
-      "incorrect": "Not quite. This sign means: {{answer}}",
-      "next": "Next question",
-      "finish": "See result",
-      "result": "You got {{correct}} of {{total}} right",
-      "again": "Try again"
+    "tipsTitle": "Tips for signing",
+    "tipsIntro": "Good practice when you communicate in sign language.",
+    "tipsReview": "General guidance about communicating with Deaf people. Review by ISL educators is pending.",
+    "tips": {
+      "attention": {
+        "title": "Get attention the right way",
+        "body": "Wave your hand where the person can see it, or tap them lightly on the shoulder. Don't grab their hands or shout."
+      },
+      "face": {
+        "title": "Face each other",
+        "body": "Keep eye contact while signing. Sign language is visual: turning away or looking at your phone breaks the conversation."
+      },
+      "light": {
+        "title": "Light your face and hands",
+        "body": "Sit where light falls on you, not behind you. A bright window at your back makes your face and hands hard to see."
+      },
+      "expression": {
+        "title": "Use your face",
+        "body": "Facial expressions are part of sign language grammar: they show questions, emphasis and feeling. Don't keep a blank face."
+      },
+      "fingerspell": {
+        "title": "Fingerspell names clearly",
+        "body": "Fingerspell names and words that have no sign. Keep a steady pace, hold each letter briefly, and pause between words."
+      },
+      "language": {
+        "title": "ISL is its own language",
+        "body": "Indian Sign Language has its own grammar and word order. It is not Hindi or English word by word, so don't expect a sign for every word."
+      },
+      "regional": {
+        "title": "Signs vary by region",
+        "body": "Like spoken languages, ISL has regional variants. If someone uses a different sign, ask them to show you theirs."
+      },
+      "check": {
+        "title": "Check you understood",
+        "body": "It is fine to ask someone to repeat or to sign more slowly. Confirm important details such as numbers, dates and addresses."
+      },
+      "space": {
+        "title": "Keep your signing space clear",
+        "body": "Sign in front of your upper body, where your hands can be seen clearly. Put things in your hands down and avoid busy backgrounds."
+      },
+      "interpreter": {
+        "title": "Use an interpreter when it matters",
+        "body": "For medical, legal, police or emergency situations, use a qualified ISL interpreter. This app is not a substitute."
+      },
+      "community": {
+        "title": "Learn from Deaf people",
+        "body": "The best way to learn ISL is from Deaf teachers and the Deaf community. Apps and videos are a start, not a replacement."
+      }
     }
   },
   "feedback": {
@@ -334,5 +343,132 @@
     "previous": "Previous sign",
     "next": "Next sign",
     "slow": "Slow motion"
+  },
+  "tabs": {
+    "home": "Home",
+    "signToText": "Sign",
+    "textToIsl": "Text",
+    "learn": "Learn",
+    "settings": "Settings"
+  },
+  "welcome": {
+    "title": "Welcome to ISL Connect",
+    "languagePrompt": "First, choose the language for the app.",
+    "languageHint": "You can change this any time in Settings.",
+    "appearanceTitle": "Choose a look",
+    "appearanceHint": "Light, dark, or follow your phone's setting.",
+    "continue": "Continue",
+    "back": "Back",
+    "start": "Get started",
+    "step": "Step {{current}} of {{total}}",
+    "intro": {
+      "title": "How it works",
+      "subtitle": "Three things to know before you start.",
+      "signTitle": "Sign → Text learns from you",
+      "signBody": "Teach each sign once by recording it a few times. After that, the camera turns those signs into text and speech.",
+      "textTitle": "Text → ISL shows hand diagrams",
+      "textBody": "Type words to see the recorded signs as animated hand diagrams. Names are fingerspelled letter by letter.",
+      "privacyTitle": "Private by design",
+      "privacyBody": "Video never leaves your phone and is never saved. Only hand positions of the signs you teach are stored, on this phone."
+    }
+  },
+  "camera": {
+    "status": {
+      "loading": "Starting hand tracking…",
+      "downloading": "Downloading hand tracking (one time)… {{percent}}%",
+      "starting_camera": "Starting camera…",
+      "running": "Live",
+      "paused": "Camera paused"
+    },
+    "errors": {
+      "camera_denied": "Camera access is blocked. Allow camera access for ISL Connect (in a browser: the site settings), then try again.",
+      "no_camera": "No camera was found on this device.",
+      "camera_in_use": "Another app is using the camera. Close it, then try again.",
+      "insecure_context": "The camera only works on a secure (https) page.",
+      "unsupported": "This browser or phone cannot run hand tracking. Try an up-to-date Chrome, Edge or Safari.",
+      "model_load_failed": "Hand tracking could not be loaded. The first time, it needs an internet connection to download (about 25 MB).",
+      "integrity_failed": "The downloaded hand-tracking files failed a safety check and were not used. Please try again later."
+    }
+  },
+  "teach": {
+    "teaching": "Teaching",
+    "alphabetProgress": "Letter {{current}} of {{total}}",
+    "takes_one": "{{count}} of {{wanted}} takes recorded",
+    "takes_other": "{{count}} of {{wanted}} takes recorded",
+    "live": {
+      "hands": "Hands in view",
+      "noHands": "Show your hands",
+      "noPerson": "Step into view"
+    },
+    "recording": "Recording — sign now",
+    "instructions": "Keep your head, shoulders and hands in view. Press Record, wait for the countdown, sign once, then lower your hands.",
+    "instructionsLetter": "Keep your head, shoulders and hands in view. Press Record, wait for the countdown, then form the letter and hold it steady.",
+    "record": "Record",
+    "recordAgain": "Record next take",
+    "reviewTitle": "How did that look?",
+    "different": "This take looks quite different from your earlier ones. Keep it only if you signed the same sign.",
+    "good": "Hands were tracked clearly.",
+    "retake": "Retake",
+    "keep": "Keep",
+    "saving": "Saving…",
+    "problemTitle": "That take could not be used",
+    "problems": {
+      "no_signer": "No one was in view. Stand so your head and shoulders are inside the frame.",
+      "no_hands": "No hands were seen. Sign in front of your body, inside the frame.",
+      "too_short": "Hands were visible only briefly. Sign a little more slowly, keeping your hands in view."
+    },
+    "saveFailed": "The take could not be saved. The phone may be low on storage.",
+    "doneTitle": "Ready",
+    "doneMessage": "This sign can now be recognized in Sign → Text and shown in Text → ISL. More takes make recognition more reliable.",
+    "doneLetter": "This letter now appears in the alphabet and can be used to fingerspell.",
+    "nextLetter": "Next letter",
+    "finish": "Done",
+    "anotherTake": "Record another take",
+    "stop": "Stop for now",
+    "skipLetter": "Skip this letter",
+    "invalid": "There is nothing to record here.",
+    "chooser": {
+      "intro": "Choose what the sign means, then record it three times. The best recordings come from someone who signs ISL fluently.",
+      "label": "What does the sign mean?",
+      "placeholder": "For example: thank you",
+      "custom": "Teach “{{text}}”",
+      "takes_one": "{{count}} take",
+      "takes_other": "{{count}} takes",
+      "matches": "Matching words",
+      "common": "Common words",
+      "noMatches": "No common word matches. Teach it as a new word above.",
+      "alphabet": "Record the alphabet",
+      "alphabetHint": "Letter by letter, for fingerspelling names.",
+      "whoShouldRecord": "Recordings made here are not checked by ISL educators. For signs others will learn from, ask a fluent signer to record them."
+    }
+  },
+  "signs": {
+    "intro": "Signs taught on this phone. They are used to recognize signing and to draw diagrams.",
+    "emptyTitle": "No signs yet",
+    "emptyMessage": "Teach a sign by recording it a few times.",
+    "privacy": "Only hand and arm positions are stored, on this phone. No video is saved, and nothing is uploaded.",
+    "deleteAll": "Delete all my signs",
+    "deleteAllTitle": "Delete all your signs?",
+    "deleteAllMessage": "This deletes every sign and letter you recorded on this phone. It cannot be undone.",
+    "takes_one": "{{count}} take",
+    "takes_other": "{{count}} takes",
+    "ready": "Ready",
+    "needsMore_one": "Needs {{count}} more",
+    "needsMore_other": "Needs {{count}} more",
+    "notFound": "This sign no longer exists",
+    "back": "Go back",
+    "showTake": "Show take {{number}}",
+    "take": "Take {{number}}",
+    "deleteTake": "Delete take {{number}}",
+    "deleteTakeTitle": "Delete this take?",
+    "deleteTakeMessage": "The recording is removed from this phone.",
+    "delete": "Delete",
+    "readyMessage": "This sign is recognized in Sign → Text and shown in Text → ISL.",
+    "needsMoreMessage_one": "Record {{count}} more take so this sign can be recognized.",
+    "needsMoreMessage_other": "Record {{count}} more takes so this sign can be recognized.",
+    "addTake": "Record another take",
+    "deleteSign": "Delete sign",
+    "deleteSignTitle": "Delete “{{name}}”?",
+    "deleteSignMessage": "All takes of this sign are removed from this phone."
   }
 }

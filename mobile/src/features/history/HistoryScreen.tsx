@@ -1,8 +1,8 @@
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Alert, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { AppText, Button, Icon, Notice, Screen, StateView } from '@/components';
+import { AppText, Button, confirmAction, Icon, Notice, Screen, StateView } from '@/components';
 import { useHistory } from '@/history/HistoryProvider';
 import type { HistoryEntry } from '@/history/history';
 import { useTheme } from '@/theme';
@@ -16,9 +16,14 @@ function EntryRow({ entry }: { entry: HistoryEntry }) {
     <View
       accessible
       accessibilityLabel={t('history.entryA11y', { kind, text: entry.text, when })}
-      style={[styles.row, { borderColor: colors.border, borderRadius: radii.md, padding: spacing.md, gap: spacing.md, backgroundColor: colors.surface }]}
+      style={[
+        styles.row,
+        { borderColor: colors.border, borderRadius: radii.md, padding: spacing.md, gap: spacing.md, backgroundColor: colors.surface },
+      ]}
     >
-      <Icon name={entry.kind === 'recognition' ? 'camera-outline' : 'keyboard-outline'} color={colors.primary} />
+      <View style={[styles.icon, { backgroundColor: colors.primaryContainer, borderRadius: radii.sm }]}>
+        <Icon name={entry.kind === 'recognition' ? 'hand-wave-outline' : 'message-text-outline'} color={colors.primary} size={20} />
+      </View>
       <View style={styles.flex}>
         <AppText variant="bodyStrong">{entry.text}</AppText>
         <AppText variant="caption" color="textSecondary">
@@ -58,10 +63,13 @@ export function HistoryScreen() {
   }
 
   const confirmClear = () =>
-    Alert.alert(t('history.confirmTitle'), t('history.confirmMessage'), [
-      { text: t('common.cancel'), style: 'cancel' },
-      { text: t('history.clear'), style: 'destructive', onPress: clear },
-    ]);
+    confirmAction({
+      title: t('history.confirmTitle'),
+      message: t('history.confirmMessage'),
+      confirmLabel: t('history.clear'),
+      cancelLabel: t('common.cancel'),
+      onConfirm: clear,
+    });
 
   return (
     <Screen testID="history-screen">
@@ -78,5 +86,6 @@ export function HistoryScreen() {
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', borderWidth: 1 },
+  icon: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   flex: { flex: 1 },
 });
