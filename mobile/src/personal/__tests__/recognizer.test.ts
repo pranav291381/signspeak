@@ -101,7 +101,7 @@ describe('PersonalSignRecognizer', () => {
   it('derives each sign’s acceptance distance from its own repetitions', () => {
     const template = buildTemplate(signs[0]!)!;
     expect(template.threshold).toBeGreaterThanOrEqual(0.5);
-    expect(template.threshold).toBeLessThanOrEqual(2);
+    expect(template.threshold).toBeLessThanOrEqual(1.2);
   });
 
   it('scores a new repetition of a taught sign highest, with a clear margin', async () => {

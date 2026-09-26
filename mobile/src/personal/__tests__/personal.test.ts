@@ -8,7 +8,7 @@ import {
 import { createMemoryStore } from '@/storage/keyValueStore';
 
 import { base64ToBytes, bytesToBase64, decodeFrames, encodeFrames } from '../codec';
-import { compactFrame, frameDistance, handsSwapped } from '../compact';
+import { compactFrame, frameDistance } from '../compact';
 import { subsequenceDtw } from '../dtw';
 import { compactSequence } from '../matcher';
 import { prepareSample, resampleByTime, SAMPLE_FPS } from '../sample';
@@ -108,7 +108,7 @@ describe('compact frames', () => {
     expect(frameDistance(right, left)).toBeLessThan(0.05);
   });
 
-  it('assigns hands by the body pose when MediaPipe mislabels them', () => {
+  it('does not depend on which hand label MediaPipe used', () => {
     const correct = frameFor({ right: hand });
     // The same frame with the hand stored in the "left" slot (a label flip).
     const flipped = Float32Array.from(correct);
@@ -116,12 +116,12 @@ describe('compact frames', () => {
     flipped.fill(0, RIGHT_HAND_START, RIGHT_HAND_START + 63);
     flipped[LEFT_HAND_PRESENT_INDEX] = 1;
     flipped[RIGHT_HAND_PRESENT_INDEX] = 0;
-    expect(handsSwapped(correct)).toBe(false);
-    expect(handsSwapped(flipped)).toBe(true);
     expect(frameDistance(compactFrame(correct), compactFrame(flipped))).toBeLessThan(1e-6);
 
-    const both = frameFor({ right: hand, left: { ...hand, x: 0.35, mirrored: true } });
-    expect(handsSwapped(both)).toBe(false);
+    // Two hands still have to match hand for hand.
+    const two = frameFor({ right: hand, left: { ...hand, x: 0.35, curl: [0.8, 1, 1, 1, 1], mirrored: true } });
+    const twoOpen = frameFor({ right: hand, left: { ...hand, x: 0.35, curl: [0, 0, 0, 0, 0], mirrored: true } });
+    expect(frameDistance(compactFrame(two), compactFrame(twoOpen))).toBeGreaterThan(1);
   });
 
   it('tells different handshapes apart', () => {

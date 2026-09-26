@@ -19,7 +19,7 @@ const CORE_TRIM = { letter: 0.25, other: 0.1 } as const;
 /** Acceptance distance = clamp(SPREAD × median repeat distance, FLOOR, CAP). */
 const THRESHOLD_SPREAD = 1.8;
 const THRESHOLD_FLOOR = 0.5;
-const THRESHOLD_CAP = 2.0;
+const THRESHOLD_CAP = 1.2;
 /** Used when a sign has too few samples to measure (only for checks while teaching). */
 export const DEFAULT_THRESHOLD = 0.9;
 
