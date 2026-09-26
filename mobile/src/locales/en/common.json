@@ -1,0 +1,104 @@
+{
+  "app": {
+    "name": "ISL Connect"
+  },
+  "common": {
+    "loading": "Loading…",
+    "retry": "Try again",
+    "openSettings": "Open settings",
+    "goHome": "Go to home",
+    "notAvailableYet": "Not available yet",
+    "featureInProgress": "This part of the app is still being built."
+  },
+  "home": {
+    "title": "ISL Connect",
+    "intro": "Choose what you want to do.",
+    "signToText": {
+      "title": "Sign → Text",
+      "a11yLabel": "Sign to text",
+      "description": "Point the camera at a signer to see text."
+    },
+    "textToIsl": {
+      "title": "Text → ISL",
+      "a11yLabel": "Text to I S L",
+      "description": "Type a phrase to see how it is signed."
+    },
+    "learn": {
+      "title": "Learn ISL",
+      "a11yLabel": "Learn I S L",
+      "description": "Simple lessons for beginners."
+    },
+    "history": {
+      "title": "History",
+      "description": "Recent results saved on this phone."
+    },
+    "settings": {
+      "title": "Settings",
+      "description": "Language, speech, camera and privacy."
+    },
+    "disclaimer": "Early version. This app is not a replacement for a qualified ISL interpreter."
+  },
+  "screens": {
+    "signToText": "Sign → Text",
+    "textToIsl": "Text → ISL",
+    "learn": "Learn ISL",
+    "history": "History",
+    "settings": "Settings"
+  },
+  "settings": {
+    "sections": {
+      "language": "Language",
+      "speech": "Speech",
+      "camera": "Camera",
+      "privacy": "Privacy",
+      "accessibility": "Accessibility",
+      "demo": "Demo mode",
+      "about": "About"
+    },
+    "appLanguage": {
+      "label": "App language",
+      "hint": "Language for menus and buttons."
+    },
+    "outputLanguage": {
+      "label": "Output and speech language",
+      "hint": "Language for recognised text and spoken output."
+    },
+    "draftTranslation": "Translation awaiting native-speaker review",
+    "autoSpeak": {
+      "label": "Speak results automatically",
+      "hint": "When off, tap Speak to hear a result."
+    },
+    "speechRate": {
+      "label": "Speaking speed",
+      "slow": "Slow",
+      "normal": "Normal",
+      "fast": "Fast"
+    },
+    "defaultCamera": {
+      "label": "Camera to use first",
+      "back": "Back camera",
+      "front": "Front camera"
+    },
+    "history": {
+      "label": "Save history on this phone",
+      "hint": "Off by default. History never leaves this phone. Turning this off deletes saved history."
+    },
+    "haptics": {
+      "label": "Vibrate when a sign is recognised"
+    },
+    "demoMode": {
+      "label": "Demo mode",
+      "hint": "Shows simulated results to demonstrate the app. It does not recognise real signs."
+    },
+    "about": {
+      "version": "Version {{version}}",
+      "limitations": "Sign recognition is not available yet: no recognition model has been trained. ISL demonstrations will be added only after review by qualified ISL educators.",
+      "notInterpreter": "This app is not a replacement for a qualified ISL interpreter, especially for medical, legal or emergency situations.",
+      "privacy": "Camera video stays on your phone. It is never recorded or uploaded."
+    }
+  },
+  "a11y": {
+    "selected": "Selected",
+    "draftLanguage": "{{language}}, translation awaiting review"
+  }
+}
