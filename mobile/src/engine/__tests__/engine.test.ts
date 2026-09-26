@@ -3,7 +3,7 @@ import appPackage from '../../../package.json';
 import { cameraErrorCode, FrameMeter, frameValues, pickHands, wasmFiles } from '../../../engine/core';
 import { engineAssetSources, engineHashes, HAND_MODEL_KEY, POSE_MODEL_KEY, remoteSource } from '../assets';
 import { EngineFrameSource } from '../EngineFrameSource';
-import { buildEngineHtml, engineConfig } from '../engineHtml';
+import { buildEngineHtml, engineConfig, engineContentSecurityPolicy } from '../engineHtml';
 import manifest from '../mediapipeAssets.json';
 import { decodeEngineMessage, decodeHostMessage, encodeMessage } from '../protocol';
 
@@ -117,6 +117,19 @@ describe('engine assets and config', () => {
   it('passes the reduced-motion preference to the overlay', () => {
     expect(engineConfig({ facing: 'back', active: true, platform: 'ios' }).reduceMotion).toBe(false);
     expect(engineConfig({ facing: 'back', active: true, platform: 'ios', reduceMotion: true }).reduceMotion).toBe(true);
+  });
+
+  it('lets the engine connect only to the hosts that serve its files', () => {
+    const phone = engineConfig({ facing: 'back', active: true, platform: 'android' });
+    expect(engineContentSecurityPolicy(phone)).toBe(
+      "connect-src 'self' blob: https://cdn.jsdelivr.net https://storage.googleapis.com",
+    );
+    const web = engineConfig({ facing: 'back', active: true, platform: 'web', origin: 'http://localhost:8081' });
+    expect(engineContentSecurityPolicy(web)).toContain('http://localhost:8081');
+    const html = buildEngineHtml(phone);
+    expect(html).toContain(`<meta http-equiv="Content-Security-Policy" content="${engineContentSecurityPolicy(phone)}">`);
+    // MediaPipe's default usage logging host is not allowed.
+    expect(html).not.toMatch(/connect-src[^"]*odml\.pa\.googleapis\.com/);
   });
 
   it('embeds the configuration safely in the engine page', () => {
