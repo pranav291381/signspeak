@@ -180,7 +180,7 @@ interface RawPrediction { scores: { label: string; score: number }[]; latencyMs:
 
 | Implementation | Status | Notes |
 | --- | --- | --- |
-| `UnavailableRecognizer` | Implemented | Default. Reports `model_unavailable` honestly |
+| `UnavailableRecognizer` + `NoFrameSource` | Implemented | Default. Reports `model_unavailable` honestly, and the camera is not opened |
 | `MockSignRecognizer` + `SimulatedFrameSource` | Implemented | Scripted outputs, including uncertain and noisy sequences. Only reachable by switching on **Demo mode**, and the UI shows a persistent "Simulated — not real recognition" banner |
 | `OnDeviceSignRecognizer` | Planned (Phase 6→7) | Runs an exported model pack (TFLite or ONNX) |
 | `LandmarkFrameSource` | Planned | Needs per-frame camera access. See the decision in §14 |
@@ -198,26 +198,32 @@ Any change to the contract bumps its version. Model packs declare the version th
 
 ### 6.4 Stabilization layer (`PredictionStabilizer`)
 
-Frame-level outputs are noisy. The stabilizer turns them into a result a person can trust:
+Frame-level outputs are noisy. The stabilizer (`mobile/src/recognition/stabilizer.ts`, config in `config.ts`) turns them into a result a person can trust. All values are configurable and validated:
 
 | Parameter | Default | Purpose |
 | --- | --- | --- |
-| `smoothingWindow` | 5 | Exponential/mean smoothing of class scores over recent windows |
+| `smoothingWindow` | 5 | Mean of the class scores over the last N predictions |
 | `minConfidence` | 0.70 | Smoothed top score must reach this |
-| `minMargin` | 0.15 | Gap between top-1 and top-2 scores (guards against ambiguous ties) |
-| `minStableFrames` | 4 | Consecutive windows agreeing on the same top label |
-| `emergencyMinConfidence` | 0.85 | Stricter threshold for labels tagged `emergency` |
-| `emergencyMinStableFrames` | 6 | Stricter agreement for emergency labels |
-| `cooldownMs` | 1200 | After emitting, suppress new emissions for this long |
-| `duplicateSuppressionMs` | 2500 | Do not re-emit the same label within this window |
-| `unknownLabel` | `__unknown__` | Explicit class. It never gets emitted as text |
+| `minMargin` | 0.15 | Gap between the top-1 and top-2 smoothed scores (guards against ties) |
+| `minStablePredictions` | 4 | "Minimum stable frames": consecutive predictions whose raw top label agrees with the smoothed candidate |
+| `emergencyMinConfidence` | 0.85 | Stricter confidence threshold for signs flagged `emergency` in the library |
+| `emergencyMinStablePredictions` | 6 | Stricter agreement for emergency signs |
+| `cooldownMs` | 1200 | After a result, wait before showing a *different* sign |
+| `duplicateSuppressionMs` | 2500 | The same sign is shown again only after it was released (hands dropped or a different sign) **and** this much time passed |
+| `uncertainAfterPredictions` | 8 | Predictions of activity without a result before telling the user "not sure" |
+| `highConfidenceThreshold` | 0.90 | Calibrated recognizers only: boundary between "high" and "medium" bands |
 
-Output is one of:
-- `recognized`: label + confidence band
-- `uncertain`: reason `low_confidence | unstable | ambiguous | unknown_class | no_signer`
-- `listening`
+The unknown class (`__unknown__`) is never shown as text. Non-finite scores count as zero, so a malfunctioning model produces "not sure" rather than a sign.
 
-A confidence **band** (`high` / `medium`) is shown only when the recognizer reports `calibrated: true`. Uncalibrated or simulated recognizers show no numbers.
+Each prediction produces a `StabilizerStep`:
+- `no_signer`: nobody in view. Evidence is reset
+- `analyzing`: watching, not enough evidence yet (or a held sign that was already shown)
+- `uncertain` + reason (`low_confidence | ambiguous | unknown_sign | unstable`): shown as "Not sure what was signed. Please try again." with a hint
+- `recognized` + `Recognition { label, band, timestampMs }`
+
+A confidence **band** is reported only when the recognizer declares `calibrated: true`. Uncalibrated and simulated recognizers show no numbers and no bands.
+
+`RecognitionSession` adds backpressure: while a prediction is running, new windows are skipped rather than queued. It also skips the model entirely when fewer than half the frames in a window contain a person, and reports `model_error` after three consecutive inference failures.
 
 ### 6.5 Model packs (planned)
 
