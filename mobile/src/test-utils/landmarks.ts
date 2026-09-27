@@ -82,8 +82,9 @@ export function frameFor(pose: Pose, noise = 0, random: () => number = Math.rand
     [-0.5, 0],
     [0.6, 0.7],
     [-0.6, 0.7],
-    [0.55, 1.2],
-    [-0.55, 1.2],
+    // Arms hanging down: wrists about 1.6 shoulder widths below the shoulders.
+    [0.55, 1.6],
+    [-0.55, 1.6],
     [0.35, 1.8],
     [-0.35, 1.8],
   ];

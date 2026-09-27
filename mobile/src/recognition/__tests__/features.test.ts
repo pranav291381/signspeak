@@ -1,6 +1,6 @@
 import fixture from '../../../../shared/fixtures/feature_parity_v1.json';
-import { handsVisible, normalizeFrame, signerPresent, type Point3 } from '../features';
-import { FRAME_DIM } from '../featureSpec';
+import { handsRaised, handsVisible, normalizeFrame, POSE_LEFT_WRIST_Y, POSE_RIGHT_WRIST_Y, signerPresent, signing, type Point3 } from '../features';
+import { FRAME_DIM, LEFT_HAND_PRESENT_INDEX, POSE_PRESENT_INDEX, RIGHT_HAND_PRESENT_INDEX } from '../featureSpec';
 
 type RawPoint = { x: number | null; y: number | null; z: number | null };
 
@@ -36,5 +36,48 @@ describe('frame helpers', () => {
   it('treats missing or wrongly sized frames as nobody in view', () => {
     expect(signerPresent(null)).toBe(false);
     expect(handsVisible(new Float32Array([1]))).toBe(false);
+  });
+});
+
+describe('signing', () => {
+  // Arms hanging down: wrists 1.6 shoulder widths below the shoulders, no hands tracked.
+  const resting = () => {
+    const f = new Float32Array(FRAME_DIM);
+    f[POSE_PRESENT_INDEX] = 1;
+    f[POSE_LEFT_WRIST_Y] = 1.6;
+    f[POSE_RIGHT_WRIST_Y] = 1.6;
+    return f;
+  };
+
+  it('reads the pose wrists where the feature spec puts them', () => {
+    // Pose order: nose, shoulders, elbows, wrists, hips; x, y, z each.
+    expect(POSE_LEFT_WRIST_Y).toBe(16);
+    expect(POSE_RIGHT_WRIST_Y).toBe(19);
+  });
+
+  it('counts a raised wrist even when the hand tracker lost the hand (motion blur)', () => {
+    const f = resting();
+    f[POSE_RIGHT_WRIST_Y] = 0.4;
+    expect(handsRaised(f)).toBe(false);
+    expect(signing(f)).toBe(true);
+  });
+
+  it('is not signing with arms down, nobody in view, or a wrong frame', () => {
+    expect(signing(resting())).toBe(false);
+    const nobody = resting();
+    nobody[POSE_RIGHT_WRIST_Y] = 0.4;
+    nobody[POSE_PRESENT_INDEX] = 0;
+    expect(signing(nobody)).toBe(false);
+    expect(signing(null)).toBe(false);
+    expect(signing(new Float32Array(3))).toBe(false);
+  });
+
+  it('counts a raised tracked hand', () => {
+    const f = resting();
+    f[RIGHT_HAND_PRESENT_INDEX] = 1;
+    f[91] = 0.2; // right hand wrist y
+    expect(signing(f)).toBe(true);
+    f[LEFT_HAND_PRESENT_INDEX] = 0;
+    expect(handsRaised(f)).toBe(true);
   });
 });

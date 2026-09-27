@@ -27,14 +27,17 @@ from torch.utils.data import DataLoader
 from signspeak_ml.data.annotations import UNKNOWN_LABEL, Sample
 from signspeak_ml.data.dataset import LandmarkWindowDataset
 from signspeak_ml.evaluation.calibration import expected_calibration_error, fit_temperature, softmax
-from signspeak_ml.features.spec import FRAME_DIM, WINDOW_FRAMES
+from signspeak_ml.features.spec import COORDS, FRAME_DIM, POSE_LANDMARKS, WINDOW_FRAMES
 from signspeak_ml.inference.app_export import app_pack, save_app_pack
 from signspeak_ml.models.temporal import ModelConfig, TemporalSignClassifier
 from signspeak_ml.training.trainer import ModelTrainer, TrainConfig
 
 XY_DIM = 105  # x, y of 51 landmarks + 3 presence flags (the app's pack layout)
 LEFT_WRIST_Y, RIGHT_WRIST_Y, LEFT_PRESENT, RIGHT_PRESENT = 28, 91, 154, 155
-REST_WRIST_Y = 1.2  # as REST_WRIST_Y in mobile/src/recognition/features.ts
+POSE_PRESENT = 153
+POSE_LEFT_WRIST_Y = list(POSE_LANDMARKS).index("left_wrist") * COORDS + 1  # 16
+POSE_RIGHT_WRIST_Y = list(POSE_LANDMARKS).index("right_wrist") * COORDS + 1  # 19
+REST_WRIST_Y = 1.2  # as REST_WRIST_Y (and `signing`) in mobile/src/recognition/features.ts
 CONTEXT = 8  # frames after a sign's end at which windows still count as the sign
 MIN_SIGN_FRAMES = 4
 POSITIVES = 6  # windows per recording labelled with the sign
@@ -55,9 +58,17 @@ def decode(recording: dict) -> np.ndarray:
 
 
 def raised(frames: np.ndarray) -> np.ndarray:
+    """Frames where someone signs: a hand or a pose wrist raised (as `signing` in the app).
+
+    The hand tracker often loses fast-moving hands (motion blur) while the pose
+    tracker keeps the arm, so the pose wrist alone counts too.
+    """
     left = (frames[:, LEFT_PRESENT] > 0.5) & (frames[:, LEFT_WRIST_Y] < REST_WRIST_Y)
     right = (frames[:, RIGHT_PRESENT] > 0.5) & (frames[:, RIGHT_WRIST_Y] < REST_WRIST_Y)
-    return left | right
+    arms = (frames[:, POSE_PRESENT] > 0.5) & (
+        (frames[:, POSE_LEFT_WRIST_Y] < REST_WRIST_Y) | (frames[:, POSE_RIGHT_WRIST_Y] < REST_WRIST_Y)
+    )
+    return left | right | arms
 
 
 def live_windows(frames: np.ndarray, label: str, positives: int = POSITIVES) -> list[tuple[str, np.ndarray]]:
