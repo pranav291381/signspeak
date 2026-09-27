@@ -1,3 +1,4 @@
+import { handRaised } from '@/recognition/features';
 import {
   COORDS,
   FRAME_DIM,
@@ -13,8 +14,9 @@ import {
  *
  * Per hand: presence, wrist position (body-centred, shoulder widths) and ten
  * finger points relative to the wrist, scaled by hand size (so handshape does
- * not depend on distance to the camera). Plus both elbows. Only x/y are used:
- * MediaPipe's depth estimate is too noisy to compare repetitions.
+ * not depend on distance to the camera). A hand resting low counts as absent.
+ * Plus both elbows. Only x/y are used: MediaPipe's depth estimate is too noisy
+ * to compare repetitions.
  */
 
 /** Finger tips (4, 8, 12, 16, 20) and middle joints (3, 6, 10, 14, 18) of MediaPipe's hand model. */
@@ -28,7 +30,7 @@ const WEIGHT_WRIST = 1.5;
 const WEIGHT_SHAPE = 0.6;
 const WEIGHT_ELBOW = 0.5;
 
-const HAND_DIMS = 1 + 2 + HAND_POINTS.length * 2;
+export const HAND_DIMS = 1 + 2 + HAND_POINTS.length * 2;
 export const COMPACT_DIM = HAND_DIMS * 2 + 4;
 
 const LEFT_ELBOW_SLOT = 3;
@@ -60,8 +62,9 @@ function writeHand(values: ArrayLike<number>, start: number, present: boolean, o
 export function compactFrame(values: ArrayLike<number>, mirror = false): Float32Array {
   const out = new Float32Array(COMPACT_DIM);
   if (values.length !== FRAME_DIM) return out;
-  const left = (values[LEFT_HAND_PRESENT_INDEX] ?? 0) > 0.5;
-  const right = (values[RIGHT_HAND_PRESENT_INDEX] ?? 0) > 0.5;
+  // A hand resting low counts as absent: whether it is in view is not part of the sign.
+  const left = handRaised(values, LEFT_HAND_START, LEFT_HAND_PRESENT_INDEX);
+  const right = handRaised(values, RIGHT_HAND_START, RIGHT_HAND_PRESENT_INDEX);
   // Mirroring swaps which hand goes into which slot.
   writeHand(values, mirror ? RIGHT_HAND_START : LEFT_HAND_START, mirror ? right : left, out, 0, mirror);
   writeHand(values, mirror ? LEFT_HAND_START : RIGHT_HAND_START, mirror ? left : right, out, HAND_DIMS, mirror);
@@ -87,20 +90,26 @@ export function compactFrame(values: ArrayLike<number>, mirror = false): Float32
  * two-handed sign must still match hand for hand.
  */
 export function frameDistance(a: Float32Array, b: Float32Array): number {
+  return frameDistanceAt(a, 0, b, 0);
+}
+
+/** frameDistance of the frames starting at `ao` in `a` and `bo` in `b` (frames packed in one array). */
+export function frameDistanceAt(a: Float32Array, ao: number, b: Float32Array, bo: number): number {
   let keep = 0;
   let swap = 0;
   for (let i = 0; i < HAND_DIMS; i++) {
-    const a0 = a[i]!;
-    const a1 = a[i + HAND_DIMS]!;
-    const b0 = b[i]!;
-    const b1 = b[i + HAND_DIMS]!;
+    const a0 = a[ao + i]!;
+    const a1 = a[ao + i + HAND_DIMS]!;
+    const b0 = b[bo + i]!;
+    const b1 = b[bo + i + HAND_DIMS]!;
     keep += (a0 - b0) * (a0 - b0) + (a1 - b1) * (a1 - b1);
     swap += (a0 - b1) * (a0 - b1) + (a1 - b0) * (a1 - b0);
   }
   let rest = 0;
-  for (let i = HAND_DIMS * 2; i < a.length; i++) {
-    const d = a[i]! - b[i]!;
+  for (let i = HAND_DIMS * 2; i < COMPACT_DIM; i++) {
+    const d = a[ao + i]! - b[bo + i]!;
     rest += d * d;
   }
   return Math.sqrt(Math.min(keep, swap) + rest);
 }
+

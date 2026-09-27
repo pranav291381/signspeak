@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import type { ReferenceSign } from '@/personal/matcher';
 import type { PersonalSign } from '@/personal/types';
 
 import { createRecognitionSession, isDisplayableLabel, type SessionFactory } from './engine';
@@ -12,6 +13,8 @@ interface Options {
   demoMode: boolean;
   /** Personal signs to recognize (recreates the session when they change). */
   signs?: readonly PersonalSign[];
+  /** Sign-pack signs to recognize, instead of personal signs (recreates the session when they change). */
+  vocabulary?: readonly ReferenceSign[];
   source?: FrameSource | null;
   /** Labels that may be shown; anything else is dropped. */
   isDisplayable?: (label: string) => boolean;
@@ -32,6 +35,7 @@ export interface RecognitionController {
 export function useRecognition({
   demoMode,
   signs,
+  vocabulary,
   source,
   isDisplayable = isDisplayableLabel,
   active,
@@ -51,7 +55,7 @@ export function useRecognition({
   }, [onRecognition, isDisplayable]);
 
   useEffect(() => {
-    const session = factory({ demoMode, signs, source });
+    const session = factory({ demoMode, signs, vocabulary, source });
     sessionRef.current = session;
     const unsubscribe = session.subscribe({
       onSnapshot: setSnapshot,
@@ -67,7 +71,7 @@ export function useRecognition({
       session.stop();
       sessionRef.current = null;
     };
-  }, [demoMode, signs, source, factory, attempt]);
+  }, [demoMode, signs, vocabulary, source, factory, attempt]);
 
   const state = snapshot?.state;
   useEffect(() => {

@@ -111,20 +111,15 @@ export function SettingsScreen() {
         />
       </Section>
 
-      <Section title={t('settings.sections.signs')} description={t('settings.signs.hint')}>
-        <ListRow
-          testID="settings-my-signs"
-          icon="hand-back-right-outline"
-          label={t('screens.mySigns')}
-          value={String(signs.length)}
-          onPress={() => router.push('/signs')}
-        />
-        {signs.length > 0 ? (
+      {signs.length > 0 ? (
+        // Teaching signs is paused; signs taught earlier can still be deleted.
+        <Section title={t('settings.sections.signs')} description={t('settings.signs.hint')}>
           <ListRow
             testID="settings-delete-signs"
             icon="delete-outline"
             tone="danger"
             label={t('signs.deleteAll')}
+            value={String(signs.length)}
             onPress={() =>
               confirmAction({
                 title: t('signs.deleteAllTitle'),
@@ -135,8 +130,8 @@ export function SettingsScreen() {
               })
             }
           />
-        ) : null}
-      </Section>
+        </Section>
+      ) : null}
 
       <Section title={t('settings.sections.privacy')}>
         <SwitchRow

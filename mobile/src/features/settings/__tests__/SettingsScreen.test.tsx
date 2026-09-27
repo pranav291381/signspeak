@@ -1,9 +1,11 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { Alert } from 'react-native';
 
 import { i18n } from '@/i18n';
 import { SETTINGS_STORAGE_KEY } from '@/settings/settings';
 import { createMemoryStore } from '@/storage/keyValueStore';
 import { renderWithProviders } from '@/test-utils/render';
+import { seedSigns, taughtSign } from '@/test-utils/signs';
 
 import { SettingsScreen } from '../SettingsScreen';
 
@@ -83,16 +85,28 @@ describe('SettingsScreen', () => {
     expect(screen.getByTestId('default-camera-front')).toBeChecked();
   });
 
-  it('states current limitations honestly', async () => {
+  it('states current limitations honestly and credits the sign source', async () => {
     renderWithProviders(<SettingsScreen />);
-    expect(await screen.findByText(/works for the signs you teach on this phone/)).toBeOnTheScreen();
+    expect(await screen.findByText(/made from the videos of the Indian Sign Language dictionary at indiansignlanguage.org/)).toBeOnTheScreen();
+    expect(screen.getByText(/not yet been tested with many signers/)).toBeOnTheScreen();
     expect(screen.getByText(/not a replacement for a qualified ISL interpreter/)).toBeOnTheScreen();
   });
 
-  it('shows how many signs are taught and links to them', async () => {
+  it('has no sign-teaching section when nothing was taught', async () => {
     renderWithProviders(<SettingsScreen />);
-    expect(await screen.findByRole('button', { name: 'My signs. 0' })).toBeOnTheScreen();
-    // Nothing to delete yet.
+    await screen.findByText(/not a replacement for a qualified ISL interpreter/);
     expect(screen.queryByTestId('settings-delete-signs')).toBeNull();
+    expect(screen.queryByRole('button', { name: /^My signs/ })).toBeNull();
+  });
+
+  it('still lets the user delete signs taught earlier', async () => {
+    const store = createMemoryStore();
+    await seedSigns(store, [taughtSign({ kind: 'library', signId: 'hello' })]);
+    jest.spyOn(Alert, 'alert').mockImplementation((_title, _message, buttons) => {
+      buttons?.find((b) => b.style === 'destructive')?.onPress?.();
+    });
+    renderWithProviders(<SettingsScreen />, { store });
+    fireEvent.press(await screen.findByRole('button', { name: 'Delete all my signs. 1' }));
+    await waitFor(() => expect(screen.queryByTestId('settings-delete-signs')).toBeNull());
   });
 });
