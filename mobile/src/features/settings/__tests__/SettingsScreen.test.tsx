@@ -85,9 +85,9 @@ describe('SettingsScreen', () => {
     expect(screen.getByTestId('default-camera-front')).toBeChecked();
   });
 
-  it('states current limitations honestly and credits the sign source', async () => {
+  it('states current limitations honestly', async () => {
     renderWithProviders(<SettingsScreen />);
-    expect(await screen.findByText(/made from the videos of the Indian Sign Language dictionary at indiansignlanguage.org/)).toBeOnTheScreen();
+    expect(await screen.findByText(/recognizes only the signs of its installed vocabulary/)).toBeOnTheScreen();
     expect(screen.getByText(/not yet been tested with many signers/)).toBeOnTheScreen();
     expect(screen.getByText(/not a replacement for a qualified ISL interpreter/)).toBeOnTheScreen();
   });

@@ -3,8 +3,8 @@
 A mobile app to help people communicate using **Indian Sign Language (ISL)**, built with and for Deaf ISL users, their families, and the hearing people they meet every day.
 
 > **Honest status.**
-> - **Sign → Text recognizes the signs of an installed sign vocabulary**, built from the videos of the ISL dictionary at [indiansignlanguage.org](https://indiansignlanguage.org/) (used with its owners' permission) by a converter that runs the app's own hand tracking on each video. The converter and the app side work and are tested, but **the dictionary pack itself is not built yet**: this environment cannot reach the site yet. Until it is installed, Sign → Text says "Sign vocabulary not installed yet".
-> - Each dictionary sign is recorded once, by one signer. How well it recognizes **other** signers has not been measured; that needs testers. The app says "not sure" rather than guessing.
+> - **Sign → Text recognizes the signs of an installed sign vocabulary** ("sign pack"), built from sign videos by a converter that runs the app's own hand tracking on each video. The converter and the app side work and are tested, but **no vocabulary is included yet**: the videos must be ones we have the right to use (recordings by consenting signers, or videos whose owners give permission). Until one is installed, Sign → Text says "Sign vocabulary not installed yet".
+> - How well a vocabulary recognizes signers other than those recorded has not been measured; that needs testers. The app says "not sure" rather than guessing.
 > - Text → ISL, Learn and teaching your own signs are **parked** (the code is kept). The app ships no invented ISL content.
 > - The Hindi interface is a draft awaiting native-speaker review.
 >
@@ -20,8 +20,8 @@ A mobile app to help people communicate using **Indian Sign Language (ISL)**, bu
 | **Teach a sign / My signs** | **Parked** (owner's decision): no entry point, code kept. Signs taught earlier can be deleted in Settings |
 | **Text → ISL** | **In progress** (parked while Sign → Text is finished). The code is kept in `features/text-to-isl` |
 | **Learn** | **In progress** (parked). The alphabet map and tips are kept in `features/learn` |
-| **Settings** | Appearance, app and output languages (separate), speech, camera, history (off by default), haptics, demo mode, report a problem, about (limitations and credit to the sign source) |
-| **Privacy** | Video never leaves the phone and is never saved. Sign packs hold only landmark numbers; the dictionary videos stay on the computer that builds the pack |
+| **Settings** | Appearance, app and output languages (separate), speech, camera, history (off by default), haptics, demo mode, report a problem, about (limitations) |
+| **Privacy** | Video never leaves the phone and is never saved. Sign packs hold only landmark numbers; the source videos stay on the computer that builds the pack |
 | **ML pipeline** (`ml/`) | For a future general model: feature contract shared with the app, MediaPipe extraction, signer-level splits, temporal model, training, calibration, evaluation, checksummed model packs |
 | **Backend** (`backend/`, optional) | Feedback collection and a landmark-only recognition endpoint. Stores no IP addresses or device IDs |
 
@@ -41,18 +41,18 @@ npm ci          # also downloads the hand-tracking files for the web build
 ### How to use it
 
 1. **Sign → Text.** Point the camera at the signer: head, shoulders and hands in view, in good light. Recognized signs appear as text; press Speak to hear them.
-2. Until the dictionary pack is installed, the screen says the vocabulary is not installed yet. *Try demo mode* shows how the screen works with simulated, clearly labelled results.
+2. Until a sign pack is installed, the screen says the vocabulary is not installed yet. *Try demo mode* shows how the screen works with simulated, clearly labelled results.
 3. To build and install a pack yourself (on a PC with Chrome or Edge): see [`docs/sign-packs.md`](docs/sign-packs.md).
 
 ## How recognition works
 
-Hand and pose tracking (MediaPipe) runs on the phone inside the app's camera engine and produces body-centred hand and arm positions, about 15 times a second. Each sign of the vocabulary is a recording of those positions, made from the dictionary's video by the **same** tracking code. Live signing is compared with the recordings by dynamic time warping, which tolerates different speeds, and is also compared mirrored so left-handed signers match. With thousands of signs, a fast first pass picks the 24 closest and only those are compared in full. Hands resting low (on the lap) are ignored. The stabilizer only shows a sign after several agreeing, confident, unambiguous predictions; otherwise it says it is not sure. Details: [`docs/architecture.md`](docs/architecture.md) §6.6–6.8.
+Hand and pose tracking (MediaPipe) runs on the phone inside the app's camera engine and produces body-centred hand and arm positions, about 15 times a second. Each sign of the vocabulary is a recording of those positions, made from a sign video by the **same** tracking code. Live signing is compared with the recordings by dynamic time warping, which tolerates different speeds, and is also compared mirrored so left-handed signers match. With thousands of signs, a fast first pass picks the 24 closest and only those are compared in full. Hands resting low (on the lap) are ignored. The stabilizer only shows a sign after several agreeing, confident, unambiguous predictions; otherwise it says it is not sure. Details: [`docs/architecture.md`](docs/architecture.md) §6.6–6.8.
 
 Tested with synthetic landmark sequences (speed, position, noise, left-handed signers, mislabeled hands, resting and held hands, 250–2,000 signs), with **real MediaPipe output** from the app's engine on MediaPipe's own hand photos, and end to end in a browser: stand-in videos were turned into a pack by the converter, installed in the web app, and each was recognized live from a fake camera playing the same video. These stand-ins are not ISL; real ISL accuracy is unmeasured.
 
 ## Limitations
 
-- Recognizes only the signs in its vocabulary, as the dictionary's signer signs them; it has **not** been evaluated with real ISL signing across many signers, and "100%" accuracy cannot be promised by any recognizer. Acceptance distances are uncalibrated until testers' recordings exist.
+- Recognizes only the signs in its vocabulary, as its recorded signers sign them; it has **not** been evaluated with real ISL signing across many signers, and "100%" accuracy cannot be promised by any recognizer. Acceptance distances are uncalibrated until testers' recordings exist.
 - Signs that differ only in facial expression or mouthing cannot be told apart (face landmarks are not used yet).
 - Hands, head and shoulders must be in view (the tracker normalizes by shoulder width). Fast fingerspelling is too quick: spell slowly, about one letter per second.
 - Text → ISL (parked) is sign by sign in the order typed, not translation: ISL grammar is not modelled.
@@ -123,7 +123,8 @@ Read [`docs/contributing.md`](docs/contributing.md). In short: do not invent ISL
 ## Decisions waiting for the repository owner
 
 - **License** for code and content (none chosen yet)
-- **Testers** to sign known dictionary words, so recognition of other signers can be measured and calibrated
+- **Sign videos the project may use**: recordings by consenting fluent signers (for example with a Deaf association or ISL teachers), or permission from a dictionary's owners
+- **Testers** to sign known words, so recognition of other signers can be measured and calibrated
 - **How to ship a large dictionary pack**: inside the app (now) or downloaded on first use, once its size is known
 - **App identifier, Expo account and store listing** for production builds
 
