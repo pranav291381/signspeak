@@ -85,7 +85,7 @@ export const createRecognitionSession: SessionFactory = ({ demoMode, signs = [],
     });
   }
   if (model && source) {
-    return modelSession(new ModelSignRecognizer(model), source);
+    return modelSession(new ModelSignRecognizer(model, source.model), source);
   }
   if (vocabulary.length > 0 && source) {
     const recognizer = new ReferenceSignRecognizer(vocabulary, { id: 'sign-pack-dtw', version: '1', emptyMessage: 'No usable signs in the sign packs' });

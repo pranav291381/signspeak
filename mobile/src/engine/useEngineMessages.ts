@@ -26,6 +26,9 @@ export function useEngineMessages(handlers: EngineHandlers): (message: EngineToH
       case 'stats':
         h.onStats?.(message.fps, message.inferenceMs, message.delegate);
         break;
+      case 'prediction':
+        h.onPrediction?.(message);
+        break;
     }
   }, []);
 }

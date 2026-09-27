@@ -146,6 +146,7 @@ export function SignToTextScreen({ sessionFactory }: Props) {
           }}
           onReadyChange={setCameraReady}
           flashSignal={flash}
+          model={source.model}
           overlayTop={
             <>
               {userPaused || snapshot?.simulated ? (
