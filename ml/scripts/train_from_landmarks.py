@@ -121,7 +121,17 @@ def main() -> None:
     parser.add_argument("--conv-channels", type=int, default=128)
     parser.add_argument("--hidden-size", type=int, default=96)
     parser.add_argument("--dropout", type=float, default=0.3)
+    parser.add_argument(
+        "--train-all",
+        action="store_true",
+        help="final model: train on every recording for exactly --epochs (from a held-out run), "
+        "with that run's --temperature and --evaluation-from report",
+    )
+    parser.add_argument("--temperature", type=float)
+    parser.add_argument("--evaluation-from", type=Path, help="report.json of the held-out run")
     args = parser.parse_args()
+    if args.train_all and (args.temperature is None or args.evaluation_from is None):
+        parser.error("--train-all needs --temperature and --evaluation-from (from a held-out run)")
 
     lines = args.data.read_text(encoding="utf-8").splitlines()
     records = [json.loads(line) for line in lines if line.strip()]
@@ -139,7 +149,7 @@ def main() -> None:
     skipped = Counter()
     for i, record in enumerate(records):
         frames = decode(record["recording"])
-        part = splits[record["label"]][str(record.get("group") or "all")]
+        part = "train" if args.train_all else splits[record["label"]][str(record.get("group") or "all")]
         windows = live_windows(frames, record["label"], args.positives)
         if not windows:
             skipped["no sign seen"] += 1
@@ -167,7 +177,17 @@ def main() -> None:
     )
     config = TrainConfig(epochs=args.epochs, patience=args.patience, batch_size=64, seed=args.seed)
     trainer = ModelTrainer(config)
-    result = trainer.fit(model, datasets["train"], datasets["val"])
+    result = trainer.fit(model, datasets["train"], None if args.train_all else datasets["val"])
+    if args.train_all:
+        held_out = json.loads(args.evaluation_from.read_text(encoding="utf-8"))
+        held_out.pop("most_confused", None)
+        evaluation = {
+            **held_out,
+            "final_model": f"trained on every recording with the same settings after this evaluation "
+            f"({args.epochs} epochs, {len(datasets['train'])} windows)",
+        }
+        export(args, model, labels, texts, args.temperature, evaluation, [])
+        return
 
     @torch.no_grad()
     def logits_of(dataset: LandmarkWindowDataset) -> tuple[np.ndarray, np.ndarray]:
@@ -202,21 +222,25 @@ def main() -> None:
         "train_windows": len(datasets["train"]),
     }
     print(json.dumps(evaluation, indent=2))
+    export(args, model, labels, texts, temperature, evaluation, confusions.most_common(30))
 
+
+def export(args, model, labels, texts, temperature, evaluation, confused) -> None:
     pack = app_pack(
         model,
         [{"id": label, "text": texts.get(label, "")} for label in labels],
         pack_id=args.id,
         name=args.name,
         temperature=temperature,
-        calibrated=evaluation["test_ece"] <= 0.05,
+        # A final model trained on everything has no held-out data to verify its calibration.
+        calibrated=evaluation["test_ece"] <= 0.05 and not args.train_all,
         source={"name": args.source_name, "url": args.source_url, "permission": args.permission},
         evaluation=evaluation,
         language=args.language,
     )
     args.out.mkdir(parents=True, exist_ok=True)
     save_app_pack(args.out / f"{args.id}.signpack", pack)
-    report = {**evaluation, "most_confused": [[a, b, n] for (a, b), n in confusions.most_common(30)]}
+    report = {**evaluation, "most_confused": [[a, b, n] for (a, b), n in confused]}
     (args.out / "report.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     print(f"wrote {args.out / f'{args.id}.signpack'} and report.json")
 

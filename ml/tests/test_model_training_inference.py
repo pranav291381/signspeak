@@ -96,6 +96,23 @@ def test_training_is_reproducible(tmp_path):
         torch.testing.assert_close(a, b)
 
 
+def test_training_without_validation_runs_every_epoch(tmp_path):
+    """A final model on every recording: fixed epochs, last weights kept."""
+    samples = write_synthetic_dataset(tmp_path, signers=4, samples_per_signer_label=2, seed=0)
+    make_signer_split(samples, seed=1).save(tmp_path / "splits" / "v1.json")
+    splits = DatasetLoader(tmp_path).load(seed=0)
+    set_seed(0)
+    model = TemporalSignClassifier(ModelConfig(num_classes=len(splits.labels)))
+    before = [p.detach().clone() for p in model.parameters()]
+    result = ModelTrainer(TrainConfig(epochs=3, batch_size=8, seed=0), log=lambda _: None).fit(
+        model, splits.train, None
+    )
+    assert result.best_epoch == 2
+    assert [row["epoch"] for row in result.history] == [0, 1, 2]
+    assert all("val_macro_f1" not in row for row in result.history)
+    assert any(not torch.equal(a, b) for a, b in zip(before, model.parameters(), strict=True))
+
+
 def test_trainer_requires_held_out_signers(trained):
     _, splits, model, _ = trained
     empty = splits.val
