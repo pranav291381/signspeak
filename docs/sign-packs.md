@@ -36,6 +36,18 @@ You need Node.js 22, the repository with `npm ci` done in `mobile/`, and Chrome 
    - `text` is what the sign means, exactly as the source gives it. Videos with the same `text` become recordings of one sign (for example regional variants).
    - `video` is a URL or a path relative to the manifest. Optional: `sourceUrl` (the page showing the sign), `category`, and `letter: true` for fingerspelled letters.
 
+   **From a folder of videos** (for example the video owner's export from YouTube Studio or Google Takeout, where each file is named by its video title), write the manifest with:
+
+   ```bash
+   npm run manifest:signpack -- <videos folder> --out dictionary.json --id isl-dictionary \
+     --name "Indian Sign Language dictionary" --source-name indiansignlanguage.org \
+     --source-url https://indiansignlanguage.org/ --permission "Used with permission of the site owners (2026)."
+   ```
+
+   Each file name becomes the sign's meaning. Check them before building: titles often carry extra words ("Hello - ISL", "Hello (1)") to remove from `text`.
+
+   **Videos on YouTube** must come from their owner. YouTube's terms do not allow downloading videos from YouTube, even with the website's permission. The channel owner can export their own videos (YouTube Studio, or Google Takeout for a whole channel) and share the files.
+
 2. Run the builder from `mobile/`:
 
    ```bash

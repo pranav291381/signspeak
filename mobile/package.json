@@ -56,6 +56,7 @@
     "setup:mediapipe": "node scripts/setup-mediapipe-assets.mjs --strict",
     "build:engine": "node scripts/build-engine.mjs",
     "check:engine": "node scripts/build-engine.mjs --check",
+    "manifest:signpack": "node scripts/make-signpack-manifest.mjs",
     "build:signpack": "node scripts/build-sign-pack.mjs",
     "install:signpack": "node scripts/install-sign-pack.mjs"
   },
