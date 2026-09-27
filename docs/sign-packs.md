@@ -92,14 +92,25 @@ npm run eval:signpack -- --pack build/deaf-club-2026.signpack --manifest test.js
 With several videos per sign from several signers, a trained model recognizes new people far better than matching recordings (see `docs/architecture.md` §6.5):
 
 ```bash
-npm run export:landmarks -- --manifest videos.json --out landmarks.jsonl     # in mobile/: videos → hand positions
+# in mobile/: videos → hand positions
+npm run export:landmarks -- --manifest videos.json --out landmarks.jsonl
+# in ml/: train with whole groups held out; writes build/model/my-model.signpack and report.json
 python scripts/train_from_landmarks.py --data landmarks.jsonl --out build/model \
-  --id my-model --name "…" --source-name "…" --source-url "…" --permission "…"   # in ml/
+  --id my-model --name "…" --source-name "…" --source-url "…" --permission "…" --positives 10
+# optional, in ml/: the model to ship, trained on every recording with the same settings
+python scripts/train_from_landmarks.py --data landmarks.jsonl --out build/final --train-all \
+  --epochs <best_epoch + 1> --temperature <temperature> --evaluation-from build/model/report.json  --id my-model …
+# in mobile/: when to show a sign, chosen on the validation recordings
+npm run tune:model -- --pack build/model/my-model.signpack --data landmarks.jsonl --write --also build/final/my-model.signpack
+# in mobile/: accuracy on the test recordings, live, then install
 npm run eval:signpack -- --pack build/model/my-model.signpack --manifest test.json
-npm run install:signpack -- build/model/my-model.signpack
+npm run install:signpack -- build/final/my-model.signpack
 ```
 
-Give each video in `videos.json` a `group` (who signed it, or the recording session): whole groups are held out for testing. A model pack is installed and loaded like a sign pack; when one is installed, Sign → Text uses it.
+Give each video in `videos.json` a `group` (who signed it, or the recording session): for each sign the last group is held out for testing and the one before for validation. A model pack is installed and loaded like a sign pack; when one is installed, Sign → Text uses it.
+
+- **When a sign is shown.** `tune:model` plays the validation recordings through the app's own recognition session and tries settings for how sure the model must be (confidence, lead over the next sign, predictions in a row). It keeps the one that shows the right sign most often while showing a wrong sign for at most 5% of recordings (`--max-wrong`), and stores it in the pack. Without it the app's defaults apply.
+- **The shipped model.** `--train-all` trains on every recording (no held-out data) for the epoch count and with the temperature of the held-out run, which is what the accuracy figures describe. Signs with few recording sessions gain the most. Its calibration is never claimed.
 
 ## The included pack
 
