@@ -211,3 +211,11 @@ class TestMediaPipeConversion:
             SimpleNamespace(pose_landmarks=[]), self.result([(make_hand(), "Left", 0.9)])
         )
         assert not frame.any()
+
+
+def test_app_parity_fixture_is_current():
+    """shared/fixtures/feature_parity_v1.json pins the app's TypeScript port to this code."""
+    from signspeak_ml.features.fixtures import FIXTURE_PATH, fixture_json
+
+    assert FIXTURE_PATH.is_file(), "run: python scripts/make_feature_fixtures.py"
+    assert json.loads(FIXTURE_PATH.read_text()) == json.loads(fixture_json())

@@ -41,6 +41,17 @@ describe('sanitizeSettings', () => {
     expect(result).toMatchObject({ appLanguage: 'hi', outputLanguage: 'en' });
   });
 
+  it('accepts only known appearance choices', () => {
+    expect(sanitizeSettings({ theme: 'dark' }, defaults).theme).toBe('dark');
+    expect(sanitizeSettings({ theme: 'neon' }, defaults).theme).toBe('system');
+  });
+
+  it('shows the welcome again to people upgrading from a version without it', () => {
+    expect(defaults.onboardingComplete).toBe(false);
+    expect(sanitizeSettings({ appLanguage: 'hi' }, defaults).onboardingComplete).toBe(false);
+    expect(sanitizeSettings({ onboardingComplete: true }, defaults).onboardingComplete).toBe(true);
+  });
+
   it('rejects languages that are not yet translated', () => {
     expect(sanitizeSettings({ appLanguage: 'ta' }, defaults).appLanguage).toBe('en');
   });

@@ -98,11 +98,14 @@ Environment note: `download.pytorch.org` is blocked by this development environm
 │       ├── recognition/    # interfaces, mock recognizer, stabilizer, session
 │       ├── camera/         # camera state handling
 │       ├── speech/         # SpeechService abstraction
-│       ├── content/        # sign library, lessons, phrase matcher
-│       ├── learn/          # progress, quiz engine
+│       ├── content/        # sign library (candidate concepts), phrase normalization
+│       ├── engine/         # camera engine host: WebView/iframe, protocol, asset sources
+│       ├── personal/       # taught signs: storage, recording clean-up, DTW matcher, recognizer
+│       ├── diagram/        # hand-skeleton diagrams (SVG) and the sequence player
 │       ├── history/        # local history store
 │       ├── feedback/       # feedback schema + report composer
-│       └── features/       # screens: home, sign-to-text, text-to-isl, learn, history, settings
+│       └── features/       # screens: welcome, home, sign-to-text, text-to-isl, learn, teach, signs, history, settings
+│   └── engine/             # camera engine page (MediaPipe), bundled into one HTML string
 ├── backend/                # FastAPI service (optional; no raw video)
 ├── ml/                     # Python package `signspeak_ml` + dataset layout (data is gitignored)
 └── shared/                 # cross-component contracts (feature spec, schemas)
@@ -126,15 +129,18 @@ Plain-TypeScript services keep the logic testable and let a platform library be 
 
 ### 5.2 Navigation
 
-A stack rooted at Home, with no tabs, so there is one obvious way back:
+Bottom tabs for the five main places, with a root stack for everything opened from them:
 
 ```
-Home ─┬─ Sign → Text
-      ├─ Text → ISL
-      ├─ Learn ISL ── Category ── Lesson (── Quiz)
-      ├─ History
-      └─ Settings ── Report a problem
+Welcome (first launch only: language → appearance → how it works)
+
+Tabs: Home │ Sign → Text │ Text → ISL │ Learn │ Settings
+Stack on top: My signs ── Sign detail
+              Teach a sign (chooser → recorder; also ?kind=library|custom|letter|alphabet)
+              History, Report a problem
 ```
+
+`(tabs)/_layout.tsx` redirects to `/welcome` until `settings.onboardingComplete` is true.
 
 ### 5.3 Feature state model
 
@@ -180,10 +186,13 @@ interface RawPrediction { scores: { label: string; score: number }[]; latencyMs:
 
 | Implementation | Status | Notes |
 | --- | --- | --- |
-| `UnavailableRecognizer` + `NoFrameSource` | Implemented | Default. Reports `model_unavailable` honestly, and the camera is not opened |
+| `EngineFrameSource` | Implemented | Live landmark frames from the camera engine (§6.7) |
+| `PersonalSignRecognizer` | Implemented | Recognizes the signs taught on this phone (§6.6). Used whenever at least one taught sign has two or more takes |
+| `UnavailableRecognizer` + `NoFrameSource` | Implemented | With no taught signs: `model_unavailable`; the screen explains how to teach the first sign |
 | `MockSignRecognizer` + `SimulatedFrameSource` | Implemented | Scripted outputs, including uncertain and noisy sequences. Only reachable by switching on **Demo mode**, and the UI shows a persistent "Simulated — not real recognition" banner |
-| `OnDeviceSignRecognizer` | Planned (Phase 6→7) | Runs an exported model pack (TFLite or ONNX) |
-| `LandmarkFrameSource` | Planned | Needs per-frame camera access. See the decision in §14 |
+| `OnDeviceSignRecognizer` | Planned | Runs an exported, trained model pack (TFLite or ONNX) for a general vocabulary |
+
+`createRecognitionSession()` (`recognition/engine.ts`) picks one of these. Personal recognition uses a time-based window (`RecognizerInfo.windowMs`, last 3 s, first prediction after 8 frames), `requireHands` (status `no_hands` when a person is visible without hands) and `idle` predictions (resting hands never lead to "not sure").
 
 ### 6.3 Feature contract (train/serve parity)
 
@@ -234,7 +243,22 @@ model-pack/
   labels.json
 ```
 
-Packs are bundled or downloaded, verified by checksum, and cached for offline use. Label IDs match `content` entry IDs so a recognized sign can link to its lesson.
+Packs are bundled or downloaded, verified by checksum, and cached for offline use. Label IDs match `content` entry IDs, the same IDs taught signs use (`library:<id>`), so both kinds of recognition show the same text.
+
+### 6.6 Personal signs (`mobile/src/personal/`)
+
+Recognition that works without a trained model: the user (ideally a fluent signer) teaches each sign by recording it 2–3 times, and live signing is matched against those recordings.
+
+- **Recording** (`sample.ts`): frames are resampled to 15 fps by timestamp, trimmed to the part with hands visible (≥ 6 frames, ≤ 4 s), and stored as Int16 × 1000, base64 (`codec.ts`), one AsyncStorage key per sign (`store.ts`). Problems are explained: no signer, no hands, too short.
+- **Features for matching** (`compact.ts`): per hand, presence, wrist position (body-centred) and ten finger points relative to the wrist divided by hand size (handshape independent of distance); plus elbows. x/y only (MediaPipe depth is too noisy). The frame distance takes the better of "hands as labelled" and "hand slots exchanged", because MediaPipe's left/right labels can flip between frames.
+- **Matching** (`dtw.ts`, `matcher.ts`): subsequence DTW (symmetric steps, normalized by path weight) finds the best stretch of the live window for each take's core (the middle of the take). Queries are also compared mirrored, so a left-handed signer matches right-handed takes.
+- **Acceptance** per sign from its own takes: leave-one-out distance between takes, `θ = clamp(1.8 × median, 0.5, 1.2)`. Scores are a softmax over `−6 × distance / θ` with "unknown" at 1, fed to the existing `PredictionStabilizer`, so ambiguity and unknown movement still produce "not sure", never a guess.
+- **Evidence** (`personal/__tests__`): synthetic landmark sequences (speed, position, noise, left-handed, label flips) and real MediaPipe landmarks captured from the app's engine on MediaPipe's hand test photos (`fixtures/mediapipe_hands.json`): repeats of a handshape score 0.15–0.29 of θ, different handshapes ≥ 1.6, and an untaught handshape is rejected.
+- **Limits**: it recognizes only what was taught, as the teacher signed it; it has not been evaluated with real ISL signing across signers; see README.
+
+### 6.7 Camera engine (`mobile/engine/`, `mobile/src/engine/`)
+
+MediaPipe Tasks Vision (hand + pose landmarkers, VIDEO mode, GPU with CPU fallback) runs in a page that is bundled into one HTML string (`scripts/build-engine.mjs`, checked by `npm run check:engine`) and loaded in a WebView on phones (origin `https://localhost`, a secure context) or an iframe on the web. Only landmark numbers are posted to the app. Model and WASM files are fetched once from the configured sources, verified against pinned SHA-256 hashes (by role, so a swapped file is rejected), and cached. The page draws the tracked skeleton (coloured fingers with glow, joints, fingertip trails, a flash on recognition), honouring reduced motion.
 
 ---
 
@@ -242,27 +266,25 @@ Packs are bundled or downloaded, verified by checksum, and cached for offline us
 
 ```
 text ─▶ normalize (Unicode NFC, case, punctuation, whitespace)
-     ─▶ PhraseMatcher (MVP: whole-phrase match against verified library, per language)
-     ─▶ match     → SignEntry (gloss, demonstration media, verification status)
-     ─▶ no match  → "not available yet" + related entries clearly labelled as separate signs
+     ─▶ planSigns(): longest phrases first (≤ 5 words), matched against
+          signs the user taught (custom words) and the library concepts' phrases (all languages)
+     ─▶ unmatched Latin word → fingerspelled letter by letter (A–Z)
+        unmatched number     → digit by digit (library number concepts)
+        anything else        → shown as "not recorded" (never guessed)
+     ─▶ SignSequencePlayer: each item's first recorded take as an animated hand diagram
 ```
 
-**MVP limit (stated in the UI):** this is a phrase lookup, not translation. ISL has its own grammar (word order, spatial reference, non-manual markers), so substituting signs word by word is not ISL.
+Implemented in `mobile/src/features/text-to-isl/plan.ts` and `mobile/src/diagram/`. Diagrams come only from recordings made on the phone; an item without a recording is shown as such, with a button to record it.
 
-Implemented in `mobile/src/content/matcher.ts` as `lookupPhrase()`, which returns `match` (one or more signs), `no_match` (with related separate signs) or `empty`.
-
-Planned extension (not implemented): put `lookupPhrase` behind a `TextToIslPipeline` interface with the stages
-`normalize → LinguisticTransformer (ISL grammar, designed and reviewed by ISL linguists) → SignSequence → Renderer (video | avatar)`, so the screen does not change when real translation arrives.
+**Limit (stated in the UI):** this is sign by sign in the order typed, not translation. ISL has its own grammar (word order, spatial reference, non-manual markers). A future `TextToIslPipeline` could add an ISL grammar stage designed and reviewed by ISL linguists; the player does not need to change for that.
 
 ## 8. Learn ISL
 
-Content model (`mobile/src/content/types.ts`):
+- **Alphabet map** (`features/learn/LearnScreen.tsx`): A–Z tiles showing each recorded letter as a hand diagram, a progress count, and a guided "record the alphabet" flow (letter by letter, two takes each, skippable). The app ships no alphabet images: the notice asks for a fluent ISL signer or teacher to record or check them.
+- **Tips** (`features/learn/tips.ts`, text in the locale files): general guidance for communicating in sign language (getting attention, eye contact, lighting, facial expression, fingerspelling, ISL as its own language, regional variation, checking understanding, signing space, interpreters, learning from Deaf people). Labelled as pending review by ISL educators.
+- The earlier lessons, quizzes and progress were removed at the owner's request.
 
-- `SignEntry`: `id` (also the recognition label), `gloss` (null for multi-sign phrases), `category`, `meaning{lang}`, `phrases{lang}`, `emergency`, `media` (nullable: `uri`, `license`, `consentRef`), `verification{status, reviewedBy, reviewedAt, source, region, notes}`
-- Lessons are the signs of a category in library order (a separate `Lesson` type with levels is planned once educators define a curriculum)
-- `SignProgress`: per-sign `learnedAt`, `quizCorrect`, `quizAttempts` (on-device only)
-
-A sign whose `media` is `null` or whose verification is not `verified` renders a **"Demonstration not yet available"** placeholder. Quizzes only use signs with verified media. This keeps the learning module safe to ship before content exists.
+The sign library (`content/data/signs.json`) remains the list of candidate concepts (IDs, meanings and phrases in English and Hindi) used by the teach chooser and Text → ISL. None has verified content.
 
 ## 9. Localization
 
@@ -280,15 +302,17 @@ A sign whose `media` is `null` or whose verification is not `verified` renders a
 | Capability | Offline? |
 | --- | --- |
 | UI, settings, localization | Yes (bundled) |
-| Learning content, progress | Yes (bundled + local storage) |
+| Tips, sign library, taught signs, diagrams | Yes (bundled + local storage) |
+| Hand tracking | Yes, after its files were downloaded once (cached, hash-checked); the web build serves them itself |
+| Recognition of taught signs | Yes (on device) |
 | Speech | Yes, if the device has an on-device voice for the language |
-| Recognition | Yes, once an on-device model pack exists (none today) |
 | Feedback submission | Queued/exported locally, sent when online (planned) |
 
 ## 11a. Performance and battery (Phase 12)
 
 Implemented:
-- Camera preview and inference **pause** when the screen loses focus, the app is backgrounded, or the user taps Pause. The camera also stays closed entirely when no model is installed
+- Camera and tracking **pause** (the camera is released) when the screen loses focus, the app is backgrounded, or the user taps Pause
+- The engine processes at most 15 frames per second and never queues frames (a busy flag drops frames while one is processed)
 - **Backpressure:** windows are skipped, never queued, while a prediction runs, so latency cannot build up on slow phones
 - The model is **not run** when fewer than half the frames in a window contain a person
 - Inference cadence is set by `stride` (default every 4 frames at 15 fps ≈ 3.75 predictions/s)
@@ -330,12 +354,16 @@ The first model is a small temporal classifier (1D temporal convolutions + GRU, 
 | # | Decision | Rationale | Status |
 | --- | --- | --- | --- |
 | D1 | Expo + TypeScript for mobile | Brief's preferred stack. Managed builds, first-party camera/speech/localization modules | Accepted |
-| D2 | `expo-router` for navigation | Expo default. Typed routes and deep links (e.g. open a lesson from a recognized sign) | Accepted |
-| D3 | `expo-camera` for the camera preview and permission flow in the MVP | First-party and stable, and works in Expo Go. It does **not** expose per-frame processing | Accepted for MVP |
-| D4 | Real-time landmark extraction on device | Likely `react-native-vision-camera` frame processors + a MediaPipe/TFLite plugin in an Expo dev build. **Major dependency, so this needs owner sign-off before adoption** | **Open, needs owner decision** |
+| D2 | `expo-router` for navigation | Expo default. Typed routes and deep links (e.g. open a taught sign or the recorder for a letter) | Accepted |
+| D3 | `expo-camera` only for the camera **permission** flow | First-party, works in Expo Go | Accepted |
+| D4 | Real-time landmark extraction on device: MediaPipe Tasks Vision in an in-app web engine (WebView on phones, iframe on the web) | Chosen by the owner ("in-app web engine") over a native frame-processor plugin: works in Expo Go and on the web with one code path, no native build needed. Cost: WebView overhead, one-time model download | Accepted (owner) |
 | D5 | `i18next` + `react-i18next` + `expo-localization` | Mature, supports plurals/interpolation, and resources are statically bundled for offline use | Accepted |
 | D6 | No raw video leaves the device by default. The server accepts landmarks only | Privacy (see `docs/privacy.md`) | Accepted |
 | D7 | Recognition defaults to `UnavailableRecognizer`. The mock is opt-in "Demo mode" with a persistent banner | Never present simulated output as real | Accepted |
 | D8 | History is stored on device only and is **off by default** | Shared phones at NGO sites, and conversation text is sensitive | Accepted, revisit with pilot partners |
 | D9 | No license file added | Licensing is the owner's decision | **Open, needs owner decision** |
 | D10 | Content lives in the app bundle as typed JSON with verification metadata | Works offline. Can later be delivered by the backend as versioned packs | Accepted |
+| D11 | Recognition of **personal signs** (taught on the phone) until a trained model exists | Chosen by the owner ("personal signs mode"). Works today, honestly scoped to what was taught | Accepted (owner) |
+| D12 | Diagrams (Text → ISL, alphabet) are drawn from recordings made on the phone, never from invented handshapes | The project must not invent ISL content; no verified references were available | Accepted |
+| D13 | Bottom tabs + first-launch welcome (language, appearance), Inter font, light/dark/system theme | Owner request for a modern, low-clutter UI with a first-run menu | Accepted (owner) |
+| D14 | `react-native-svg` for diagrams, `@expo-google-fonts/inter` for type | Standard, in Expo Go; no native build needed | Accepted |

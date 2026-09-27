@@ -21,7 +21,7 @@ interface Props<T extends string> {
   testID?: string;
 }
 
-/** Single-choice list. Selection is shown with an icon and bold text, not colour alone. */
+/** Single-choice list. Selection is shown with a check icon and outline, not colour alone. */
 export function RadioGroup<T extends string>({ label, hint, options, value, onChange, testID }: Props<T>) {
   const { colors, radii, spacing } = useTheme();
   return (
@@ -44,7 +44,7 @@ export function RadioGroup<T extends string>({ label, hint, options, value, onCh
             accessibilityLabel={option.accessibilityLabel ?? option.label}
             accessibilityState={{ selected, checked: selected }}
             onPress={() => onChange(option.value)}
-            style={[
+            style={({ pressed }) => [
               styles.option,
               {
                 borderColor: selected ? colors.primary : colors.border,
@@ -52,14 +52,10 @@ export function RadioGroup<T extends string>({ label, hint, options, value, onCh
                 borderRadius: radii.md,
                 paddingHorizontal: spacing.md,
                 gap: spacing.md,
-                backgroundColor: selected ? colors.infoBackground : colors.surface,
+                backgroundColor: selected ? colors.primaryContainer : pressed ? colors.surfaceAlt : colors.surface,
               },
             ]}
           >
-            <Icon
-              name={selected ? 'radiobox-marked' : 'radiobox-blank'}
-              color={selected ? colors.primary : colors.textSecondary}
-            />
             <View style={styles.text}>
               <AppText variant={selected ? 'bodyStrong' : 'body'}>{option.label}</AppText>
               {option.description ? (
@@ -68,6 +64,11 @@ export function RadioGroup<T extends string>({ label, hint, options, value, onCh
                 </AppText>
               ) : null}
             </View>
+            <Icon
+              name={selected ? 'check-circle' : 'circle-outline'}
+              color={selected ? colors.primary : colors.outline}
+              size={22}
+            />
           </Pressable>
         );
       })}
@@ -79,7 +80,7 @@ const styles = StyleSheet.create({
   option: {
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: MIN_TOUCH_TARGET,
+    minHeight: MIN_TOUCH_TARGET + 4,
     paddingVertical: 8,
   },
   text: { flex: 1 },

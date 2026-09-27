@@ -2,33 +2,32 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { AppText, Icon, Notice, type IconName } from '@/components';
-import { getSign, signMeaning } from '@/content/library';
-import type { LanguageCode } from '@/i18n/languages';
 import type { SessionSnapshot } from '@/recognition/session';
 import type { Recognition } from '@/recognition/types';
 import { useTheme } from '@/theme';
 
-interface Props {
-  snapshot: SessionSnapshot;
-  latest: Recognition | null;
-  outputLanguage: LanguageCode;
-}
+import type { TranscriptWord } from './transcript';
 
-type StatusKey = 'paused' | 'noSigner' | 'analyzing' | 'uncertain' | 'recognized';
+type StatusKey = 'paused' | 'starting' | 'noSigner' | 'noHands' | 'analyzing' | 'uncertain' | 'recognized';
 
 const STATUS_ICONS: Record<StatusKey, IconName> = {
   paused: 'pause-circle-outline',
+  starting: 'progress-clock',
   noSigner: 'account-question-outline',
+  noHands: 'hand-back-right-outline',
   analyzing: 'eye-outline',
   uncertain: 'help-circle-outline',
   recognized: 'check-circle-outline',
 };
 
-function statusKey(snapshot: SessionSnapshot): StatusKey {
-  if (snapshot.state === 'paused') return 'paused';
+function statusKey(snapshot: SessionSnapshot | null, paused: boolean): StatusKey {
+  if (paused || snapshot?.state === 'paused') return 'paused';
+  if (!snapshot || snapshot.state !== 'running') return 'starting';
   switch (snapshot.status) {
     case 'no_signer':
       return 'noSigner';
+    case 'no_hands':
+      return 'noHands';
     case 'uncertain':
       return 'uncertain';
     case 'recognized':
@@ -38,14 +37,20 @@ function statusKey(snapshot: SessionSnapshot): StatusKey {
   }
 }
 
-/** Live status line plus the most recent trustworthy result. */
-export function RecognitionPanel({ snapshot, latest, outputLanguage }: Props) {
+interface Props {
+  snapshot: SessionSnapshot | null;
+  paused: boolean;
+  latest: { recognition: Recognition; text: string; emergency: boolean } | null;
+  transcript: TranscriptWord[];
+}
+
+/** Live status, the most recent trustworthy result, and everything recognized so far. */
+export function RecognitionPanel({ snapshot, paused, latest, transcript }: Props) {
   const { t } = useTranslation();
   const { colors, radii, spacing } = useTheme();
-  const key = statusKey(snapshot);
+  const key = statusKey(snapshot, paused);
   const uncertain = key === 'uncertain';
-  const sign = latest ? getSign(latest.label) : undefined;
-  const meaning = sign ? signMeaning(sign, outputLanguage) : null;
+  const hint = uncertain && snapshot?.reason ? t(`signToText.hints.${snapshot.reason}`) : null;
 
   return (
     <View style={{ gap: spacing.md }}>
@@ -53,60 +58,80 @@ export function RecognitionPanel({ snapshot, latest, outputLanguage }: Props) {
         testID="recognition-status"
         accessible
         accessibilityLiveRegion="polite"
-        accessibilityLabel={
-          uncertain && snapshot.reason
-            ? `${t(`signToText.status.${key}`)} ${t(`signToText.hints.${snapshot.reason}`)}`
-            : t(`signToText.status.${key}`)
-        }
+        accessibilityLabel={hint ? `${t(`signToText.status.${key}`)} ${hint}` : t(`signToText.status.${key}`)}
         style={[
           styles.status,
           {
-            backgroundColor: uncertain ? colors.warningBackground : colors.surface,
-            borderColor: uncertain ? colors.warning : colors.border,
+            backgroundColor: uncertain ? colors.warningBackground : colors.surfaceAlt,
             borderRadius: radii.md,
             padding: spacing.md,
             gap: spacing.md,
           },
         ]}
       >
-        <Icon name={STATUS_ICONS[key]} color={uncertain ? colors.warning : colors.primary} size={28} />
+        <Icon name={STATUS_ICONS[key]} color={uncertain ? colors.warning : colors.primary} size={22} />
         <View style={styles.flex}>
-          <AppText variant="bodyStrong">{t(`signToText.status.${key}`)}</AppText>
-          {uncertain && snapshot.reason ? <AppText variant="body">{t(`signToText.hints.${snapshot.reason}`)}</AppText> : null}
+          <AppText variant="label">{t(`signToText.status.${key}`)}</AppText>
+          {hint ? <AppText variant="caption">{hint}</AppText> : null}
         </View>
       </View>
 
-      <View
-        testID="recognition-result"
-        style={[styles.result, { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radii.lg, padding: spacing.lg, gap: spacing.xs }]}
-      >
-        {meaning && latest ? (
+      <View testID="recognition-result" style={{ gap: spacing.xs, minHeight: 72, justifyContent: 'center' }}>
+        {latest ? (
           <>
-            <AppText variant="caption" color="textSecondary">
+            <AppText variant="overline" color="textSecondary">
               {t('signToText.result.label')}
             </AppText>
-            <AppText variant="display" accessibilityRole="text" testID="recognition-text">
-              {meaning.text}
+            <AppText variant="display" accessibilityRole="text" testID="recognition-text" style={{ fontSize: 40, lineHeight: 48 }}>
+              {latest.text}
             </AppText>
-            {latest.band ? (
+            {latest.recognition.band ? (
               <AppText variant="caption" color="textSecondary">
-                {t(`signToText.result.${latest.band}`)}
+                {t(`signToText.result.${latest.recognition.band}`)}
               </AppText>
             ) : null}
-            {sign?.emergency ? <Notice tone="danger" message={t('signToText.result.emergency')} /> : null}
+            {latest.emergency ? <Notice tone="danger" message={t('signToText.result.emergency')} /> : null}
           </>
         ) : (
-          <AppText variant="body" color="textSecondary">
+          <AppText variant="body" color="textSecondary" style={styles.center}>
             {t('signToText.result.empty')}
           </AppText>
         )}
       </View>
+
+      {transcript.length > 1 ? (
+        <View testID="transcript" accessible accessibilityLabel={transcript.map((w) => w.text).join(' ')} style={{ gap: spacing.sm }}>
+          <AppText variant="overline" color="textSecondary">
+            {t('signToText.transcript.label')}
+          </AppText>
+          <View style={[styles.words, { gap: spacing.xs }]}>
+            {transcript.map((word, i) => (
+              <View
+                key={`${i}-${word.text}`}
+                style={[
+                  styles.word,
+                  { borderRadius: radii.pill, backgroundColor: word.spelled ? colors.surfaceAlt : colors.primaryContainer },
+                ]}
+              >
+                <AppText variant="label" style={{ color: word.spelled ? colors.text : colors.onPrimaryContainer }}>
+                  {word.text}
+                </AppText>
+              </View>
+            ))}
+          </View>
+          <AppText variant="caption" color="textSecondary">
+            {t('signToText.transcript.note')}
+          </AppText>
+        </View>
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  status: { flexDirection: 'row', alignItems: 'center', borderWidth: 1 },
-  result: { borderWidth: 1 },
+  status: { flexDirection: 'row', alignItems: 'center' },
   flex: { flex: 1 },
+  center: { textAlign: 'center' },
+  words: { flexDirection: 'row', flexWrap: 'wrap' },
+  word: { paddingHorizontal: 12, paddingVertical: 6 },
 });

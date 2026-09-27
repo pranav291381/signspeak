@@ -1,13 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import type { PersonalSign } from '@/personal/types';
+
 import { createRecognitionSession, isDisplayableLabel, type SessionFactory } from './engine';
 import type { RecognitionSession, SessionSnapshot } from './session';
-import type { Recognition } from './types';
+import type { FrameSource, Recognition } from './types';
 
 const MAX_RESULTS = 50;
 
 interface Options {
   demoMode: boolean;
+  /** Personal signs to recognize (recreates the session when they change). */
+  signs?: readonly PersonalSign[];
+  source?: FrameSource | null;
+  /** Labels that may be shown; anything else is dropped. */
+  isDisplayable?: (label: string) => boolean;
   /** False pauses recognition (screen hidden, app in background, user paused, camera not ready). */
   active: boolean;
   onRecognition?: (recognition: Recognition) => void;
@@ -24,6 +31,9 @@ export interface RecognitionController {
 
 export function useRecognition({
   demoMode,
+  signs,
+  source,
+  isDisplayable = isDisplayableLabel,
   active,
   onRecognition,
   factory = createRecognitionSession,
@@ -33,18 +43,20 @@ export function useRecognition({
   const [attempt, setAttempt] = useState(0);
   const sessionRef = useRef<RecognitionSession | null>(null);
   const onRecognitionRef = useRef(onRecognition);
+  const isDisplayableRef = useRef(isDisplayable);
 
   useEffect(() => {
     onRecognitionRef.current = onRecognition;
-  }, [onRecognition]);
+    isDisplayableRef.current = isDisplayable;
+  }, [onRecognition, isDisplayable]);
 
   useEffect(() => {
-    const session = factory({ demoMode });
+    const session = factory({ demoMode, signs, source });
     sessionRef.current = session;
     const unsubscribe = session.subscribe({
       onSnapshot: setSnapshot,
       onRecognition: (recognition) => {
-        if (!isDisplayableLabel(recognition.label)) return;
+        if (!isDisplayableRef.current(recognition.label)) return;
         setResults((prev) => [...prev, recognition].slice(-MAX_RESULTS));
         onRecognitionRef.current?.(recognition);
       },
@@ -55,7 +67,7 @@ export function useRecognition({
       session.stop();
       sessionRef.current = null;
     };
-  }, [demoMode, factory, attempt]);
+  }, [demoMode, signs, source, factory, attempt]);
 
   const state = snapshot?.state;
   useEffect(() => {

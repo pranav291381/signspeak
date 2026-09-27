@@ -2,9 +2,19 @@ import { Text, type TextProps } from 'react-native';
 
 import { useTheme, type ColorPalette, type TextVariant } from '@/theme';
 
-type TextColor = Extract<
+export type TextColor = Extract<
   keyof ColorPalette,
-  'text' | 'textSecondary' | 'primary' | 'danger' | 'success' | 'warning' | 'info' | 'onPrimary' | 'onDanger'
+  | 'text'
+  | 'textSecondary'
+  | 'primary'
+  | 'danger'
+  | 'success'
+  | 'warning'
+  | 'info'
+  | 'onPrimary'
+  | 'onDanger'
+  | 'onPrimaryContainer'
+  | 'onScrim'
 >;
 
 interface Props extends TextProps {

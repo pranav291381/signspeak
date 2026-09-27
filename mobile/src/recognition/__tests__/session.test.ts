@@ -37,13 +37,16 @@ class FakeRecognizer implements SignRecognizer {
     windowSize: 4,
   };
   calls = 0;
+  /** Frames in each predicted window. */
+  windows: number[] = [];
   loadError: Error | null = null;
   next: () => Promise<RawPrediction> = async () => ({ scores: [{ label: 'hello', score: 0.95 }], latencyMs: 1 });
   async load() {
     if (this.loadError) throw this.loadError;
   }
-  predict() {
+  predict(window: readonly LandmarkFrame[]) {
     this.calls += 1;
+    this.windows.push(window.length);
     return this.next();
   }
   dispose() {}
@@ -96,6 +99,17 @@ describe('RecognitionSession', () => {
     await feed(source, 6);
     expect(recognizer.calls).toBe(4);
     expect(recognitions.map((r) => r.label)).toEqual(['hello']);
+  });
+
+  it('keeps a time-based window when the recognizer asks for one', async () => {
+    const recognizer = new FakeRecognizer();
+    recognizer.info = { ...recognizer.info, windowSize: 2, windowMs: 500 };
+    const { source, session } = setup(recognizer);
+    await session.start();
+    await feed(source, 30);
+    // Starts after the minimum frames; never holds more than ~500 ms of frames (67 ms apart).
+    expect(recognizer.windows[0]).toBe(2);
+    expect(Math.max(...recognizer.windows)).toBe(8);
   });
 
   it('does not run the model when nobody is in view', async () => {

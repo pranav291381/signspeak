@@ -7,11 +7,12 @@ Status: **preparation document.** Adapt it with the partner NGO, Deaf community 
 | Area | Ready? | Notes |
 | --- | --- | --- |
 | App navigation, accessibility, languages (English, Hindi draft) | Yes | Collect usability and accessibility feedback |
-| Sign → Text | **Demo mode only** | Simulated results, clearly labelled. Useful for UX feedback, **not** for communication |
-| Text → ISL, Learn ISL | Structure only | Needs verified demonstrations before it can teach anything |
-| Real sign recognition | No | Needs a consented dataset and a model that passes `docs/model-evaluation.md` §4 |
+| Sign → Text with taught signs | Yes, for a small vocabulary | A fluent signer teaches each sign on the device (three takes). Recognizes only those signs; test with the people who taught them and with others, and record how often it is right, "not sure" or wrong |
+| Text → ISL, alphabet | After recording | Diagrams exist only for signs and letters recorded on the device; have an ISL educator check them before learners rely on them |
+| Tips | Yes | Pending educator review |
+| General sign recognition | No | Needs a consented dataset and a model that passes `docs/model-evaluation.md` §4 |
 
-Do not present the app to participants as working sign recognition until a model passes the release criteria.
+Do not present the app to participants as general sign recognition. Describe it as recognizing the signs taught on that phone.
 
 ## 2. Before the pilot
 
@@ -27,7 +28,7 @@ Do not present the app to participants as working sign recognition until a model
 1. Install the internal build (EAS internal distribution or APK).
 2. Settings: choose the app language and output language, leave **history off** (default), and leave **demo mode off** unless it is a demo session.
 3. Install an on-device text-to-speech voice for each output language (Android: Settings → Text-to-speech). The app tells users when a voice is missing.
-4. Clear history and reset learning progress between participants on shared devices.
+4. Clear history between participants on shared devices. Taught signs are shared by everyone using the phone; delete them (My signs → Delete all my signs) if a participant's recordings should not stay.
 
 ## 4. Collecting feedback
 
@@ -80,5 +81,5 @@ Recording signers for model training is a **separate, consented activity** (`doc
 - Task completion for scripted exchanges (with a human interpreter present)
 - How often participants found output confusing or misleading
 - Accessibility issues found, by severity
-- Learner engagement (once verified lessons exist)
+- Learner use of the alphabet and tips (once the alphabet is recorded and reviewed)
 - Trust: "Would you rely on this app for …?" (expected answer during early pilots: *no*, and that is fine)

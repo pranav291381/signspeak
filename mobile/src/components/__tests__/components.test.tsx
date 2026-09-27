@@ -1,8 +1,11 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 
 import { Button } from '../Button';
+import { IconButton } from '../IconButton';
+import { ListRow } from '../ListRow';
 import { Notice } from '../Notice';
 import { RadioGroup } from '../RadioGroup';
+import { SegmentedControl } from '../SegmentedControl';
 import { StateView } from '../StateView';
 import { SwitchRow } from '../SwitchRow';
 
@@ -82,5 +85,43 @@ describe('SwitchRow', () => {
     expect(row).not.toBeChecked();
     fireEvent.press(row);
     expect(onValueChange).toHaveBeenCalledWith(true);
+  });
+});
+
+describe('SegmentedControl', () => {
+  it('works as a radio group', () => {
+    const onChange = jest.fn();
+    render(
+      <SegmentedControl
+        label="Appearance"
+        value="dark"
+        onChange={onChange}
+        segments={[
+          { value: 'light', label: 'Light' },
+          { value: 'dark', label: 'Dark' },
+        ]}
+      />,
+    );
+    expect(screen.getByRole('radio', { name: 'Dark' })).toBeChecked();
+    fireEvent.press(screen.getByRole('radio', { name: 'Light' }));
+    expect(onChange).toHaveBeenCalledWith('light');
+  });
+});
+
+describe('IconButton', () => {
+  it('has a spoken name even though it shows only an icon', () => {
+    const onPress = jest.fn();
+    render(<IconButton icon="camera-flip-outline" accessibilityLabel="Switch camera" onPress={onPress} />);
+    fireEvent.press(screen.getByRole('button', { name: 'Switch camera' }));
+    expect(onPress).toHaveBeenCalled();
+  });
+});
+
+describe('ListRow', () => {
+  it('reads label, value and description as one button', () => {
+    const onPress = jest.fn();
+    render(<ListRow label="My signs" value="3" description="Signs taught on this phone" onPress={onPress} />);
+    fireEvent.press(screen.getByRole('button', { name: 'My signs. 3. Signs taught on this phone' }));
+    expect(onPress).toHaveBeenCalled();
   });
 });

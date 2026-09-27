@@ -23,7 +23,7 @@ const DEFAULT_ICONS: Record<NoticeTone, IconName> = {
 };
 
 /**
- * Inline message. Tone is shown by icon + text + border, never by colour alone,
+ * Inline message. Tone is shown by icon + text, never by colour alone,
  * and changes are announced to screen readers.
  */
 export function Notice({ tone = 'info', title, message, icon, testID }: Props) {
@@ -44,23 +44,17 @@ export function Notice({ tone = 'info', title, message, icon, testID }: Props) {
       accessibilityLabel={title ? `${title}. ${message}` : message}
       style={[
         styles.container,
-        {
-          backgroundColor: tones.bg,
-          borderColor: tones.fg,
-          borderRadius: radii.md,
-          padding: spacing.md,
-          gap: spacing.md,
-        },
+        { backgroundColor: tones.bg, borderRadius: radii.md, padding: spacing.md, gap: spacing.md },
       ]}
     >
-      <Icon name={icon ?? DEFAULT_ICONS[tone]} color={tones.fg} size={24} />
+      <Icon name={icon ?? DEFAULT_ICONS[tone]} color={tones.fg} size={20} />
       <View style={styles.text}>
         {title ? (
-          <AppText variant="bodyStrong" accessibilityRole="none">
+          <AppText variant="label" accessibilityRole="none">
             {title}
           </AppText>
         ) : null}
-        <AppText variant="body">{message}</AppText>
+        <AppText variant="caption">{message}</AppText>
       </View>
     </View>
   );
@@ -70,8 +64,6 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    borderWidth: 1,
-    borderLeftWidth: 4,
   },
   text: {
     flex: 1,

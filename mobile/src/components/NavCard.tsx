@@ -10,14 +10,20 @@ interface Props {
   description: string;
   icon: IconName;
   onPress: () => void;
+  /** `primary` is the filled hero style for the main actions. */
+  tone?: 'default' | 'primary';
   /** Spoken name when the visible title contains symbols (e.g. "→"). */
   accessibilityLabel?: string;
   testID?: string;
 }
 
-/** Large, full-width navigation card: icon + title + one-line description. */
-export function NavCard({ title, description, icon, onPress, accessibilityLabel, testID }: Props) {
-  const { colors, radii, spacing } = useTheme();
+/** Full-width navigation card: icon + title + one-line description. */
+export function NavCard({ title, description, icon, onPress, tone = 'default', accessibilityLabel, testID }: Props) {
+  const { colors, elevation, radii, spacing } = useTheme();
+  const hero = tone === 'primary';
+  const fg = hero ? colors.onPrimary : colors.text;
+  const fgSecondary = hero ? colors.onPrimary : colors.textSecondary;
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -26,27 +32,35 @@ export function NavCard({ title, description, icon, onPress, accessibilityLabel,
       testID={testID}
       style={({ pressed }) => [
         styles.card,
+        hero ? null : elevation.card,
         {
-          backgroundColor: pressed ? colors.surfaceMuted : colors.surface,
-          borderColor: colors.border,
+          backgroundColor: hero ? colors.primary : colors.surface,
+          borderColor: hero ? colors.primary : colors.border,
           borderRadius: radii.lg,
           padding: spacing.lg,
           gap: spacing.lg,
+          opacity: pressed ? 0.88 : 1,
+          transform: [{ scale: pressed ? 0.99 : 1 }],
         },
       ]}
     >
-      <View style={[styles.iconWrap, { backgroundColor: colors.infoBackground, borderRadius: radii.md }]}>
-        <Icon name={icon} size={30} color={colors.primary} />
+      <View
+        style={[
+          styles.iconWrap,
+          { backgroundColor: hero ? 'rgba(255,255,255,0.18)' : colors.primaryContainer, borderRadius: radii.md },
+        ]}
+      >
+        <Icon name={icon} size={26} color={hero ? colors.onPrimary : colors.primary} />
       </View>
       <View style={styles.text}>
-        <AppText variant="heading" accessibilityRole="none">
+        <AppText variant="heading" accessibilityRole="none" style={{ color: fg }}>
           {title}
         </AppText>
-        <AppText variant="caption" color="textSecondary">
+        <AppText variant="caption" style={{ color: fgSecondary, opacity: hero ? 0.9 : 1 }}>
           {description}
         </AppText>
       </View>
-      <Icon name="chevron-right" size={28} color={colors.textSecondary} />
+      <Icon name="chevron-right" size={24} color={fgSecondary} />
     </Pressable>
   );
 }
@@ -59,8 +73,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   iconWrap: {
-    width: 52,
-    height: 52,
+    width: 48,
+    height: 48,
     alignItems: 'center',
     justifyContent: 'center',
   },

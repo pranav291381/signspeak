@@ -44,10 +44,16 @@ export const DEFAULT_STABILIZER_CONFIG: StabilizerConfig = {
 export interface SessionConfig {
   /** Run a prediction every `stride` frames once the window is full. */
   stride: number;
+  /**
+   * For recognizers that read hands: when (almost) no frame in the window shows
+   * a hand, report `no_hands` instead of predicting.
+   */
+  requireHands: boolean;
 }
 
 export const DEFAULT_SESSION_CONFIG: SessionConfig = {
   stride: 4,
+  requireHands: false,
 };
 
 export function validateStabilizerConfig(config: StabilizerConfig): void {

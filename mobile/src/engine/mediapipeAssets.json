@@ -1,0 +1,23 @@
+{
+  "note": "MediaPipe files used by the landmark engine. Hashes are verified before use. Update together with the @mediapipe/tasks-vision version in package.json.",
+  "tasksVisionVersion": "1.0.1",
+  "remoteWasmBase": "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1/wasm/",
+  "models": {
+    "hand": {
+      "file": "hand_landmarker.task",
+      "url": "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+      "sha256": "fbc2a30080c3c557093b5ddfc334698132eb341044ccee322ccf8bcf3607cde1"
+    },
+    "pose": {
+      "file": "pose_landmarker_lite.task",
+      "url": "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
+      "sha256": "59929e1d1ee95287735ddd833b19cf4ac46d29bc7afddbbf6753c459690d574a"
+    }
+  },
+  "wasm": {
+    "vision_wasm_internal.js": "e170ee67dd4e16c1a6fcd8840a206687e5a59b22c20e4a902bc445b095454d73",
+    "vision_wasm_internal.wasm": "8da277a733926eacd0474b8704b36742d6ec3231c57a860c5b889dff8f1df886",
+    "vision_wasm_nosimd_internal.js": "e81d715a3d42cc3373602eb2f7aff795d164934db680e32496b65dab537f9658",
+    "vision_wasm_nosimd_internal.wasm": "a28483cd42e74e855bf5ebdb6b40d9b66a5b49e35e95020bc97669e6822a3192"
+  }
+}

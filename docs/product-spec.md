@@ -22,38 +22,39 @@ Many Deaf and hard-of-hearing people in India communicate primarily in Indian Si
 | --- | --- |
 | Deaf / HoH ISL user | Be understood quickly by a non-signer, trust that output is not wrong, use their own phone |
 | Hearing non-signer (family, shop, clinic front desk) | Understand simple signs, reply in a way the signer can follow |
-| Learner (family, teachers, NGO staff) | Structured beginner lessons, practice, progress |
+| Learner (family, teachers, NGO staff) | The fingerspelling alphabet, practical signing tips, and a way to record signs from a fluent signer |
 | NGO / pilot coordinator | Deploy on shared devices, collect feedback, trust privacy guarantees |
 
 ## 4. Core experiences
 
+### 4.0 First launch
+A welcome flow asks for the app language and the appearance (light, dark or follow the phone), then explains in three points how the app works, its privacy model and that it is not an interpreter.
+
 ### 4.1 Sign → Text (+ speech)
 1. The user opens **Sign → Text**, grants camera permission, and chooses the front or back camera.
-2. Framing guidance: "Position the signer inside the frame. Keep hands and upper body visible."
-3. Recognized signs appear as text in the **output language**, with an optional **Speak** button.
-4. Controls: pause/resume, clear, switch camera.
+2. Live hand and body tracking is drawn over the video as a hand skeleton; a status pill says at once whether a person and hands are in view.
+3. Recognized signs appear as text in the **output language**; fingerspelled letters are joined into words; **Speak** reads everything recognized so far.
+4. Controls: pause/resume, clear, switch camera, report a wrong result.
 5. When recognition is uncertain it shows *"Not sure what was signed. Please try again."* It never shows a guess.
 6. Emergency-category signs need stricter confidence and agreement before they are shown.
+7. Recognition covers the signs taught on the phone (§4.6). With none taught, the screen explains how to teach the first sign or record the alphabet; Demo mode remains available, clearly labelled.
 
 ### 4.2 Text → ISL
-1. The user types (or pastes) a phrase in their language.
-2. **Show ISL** looks up the phrase in the verified library.
-3. A match shows the gloss, the demonstration (video/animation when verified) and its meaning.
-4. No match shows *"This phrase is not in the verified library yet"* plus related signs, labelled "These are separate signs, not a translation of your sentence."
-5. The UI states that this is phrase lookup, not full ISL translation.
+1. The user types (or pastes) words in their language.
+2. **Show signs** splits the text into known phrases and words (longest first) and plays each recorded sign as an animated hand diagram with its caption; words without a sign are fingerspelled letter by letter.
+3. Anything not recorded yet is shown as "not recorded yet" with a button to record it. Nothing is guessed or invented.
+4. The UI states that this is sign by sign in the order typed, not ISL translation (ISL has its own grammar).
 
 ### 4.3 Learn ISL
-- Categories: Greetings, Everyday, People, Food, Numbers, Places, Questions, Emergency, Common phrases.
-- A lesson contains: title, meaning, demonstration, short explanation, practice, next.
-- Quizzes use only signs with verified demonstrations.
-- Progress is stored on the device.
-- Signs without verified content show a clear placeholder, never an invented demonstration.
+- **Alphabet map:** all 26 letters as hand diagrams from recordings made on the phone, with a guided flow to record the alphabet. Letters not yet recorded are shown as empty tiles. The screen asks for a fluent signer or ISL teacher to record or check the letters, because no verified alphabet is bundled.
+- **Tips** for communicating in sign language (attention, eye contact, light, facial expression, fingerspelling, ISL as its own language, regional variation, checking understanding, signing space, interpreters, learning from Deaf people), labelled as pending review by ISL educators.
 
 ### 4.4 History
 - On-device list of recent recognized text and phrase lookups.
 - **Off by default.** The user enables it in Settings and can clear it at any time.
 
 ### 4.5 Settings
+- Appearance: system, light or dark
 - App language (UI) and output language (text/speech), set separately
 - Speech on/off and rate
 - Camera default (front/back)
@@ -61,6 +62,11 @@ Many Deaf and hard-of-hearing people in India communicate primarily in Indian Si
 - Demo mode (simulated recognition, clearly labelled)
 - Report a problem / feedback
 - About: limitations, privacy summary, "not a replacement for interpreters"
+
+### 4.6 Teach a sign / My signs
+- Teach a common word from the library, any typed word or phrase, a single letter, or the whole alphabet.
+- Each take: countdown, a few seconds of recording (landmarks only), animated replay, and checks (no one in view, no hands, too short, unlike earlier takes). Words need three takes, letters two.
+- My signs lists every sign with its takes and readiness; takes, signs, or everything can be deleted.
 
 ## 5. Languages
 
@@ -112,7 +118,7 @@ Loading · Success · Empty · Unknown · Low confidence · No camera · No perm
 
 - Task completion for scripted everyday exchanges
 - Rate of *wrong* outputs shown (target: very low; uncertain is preferable to wrong)
-- Learner lesson completion
+- Alphabet recorded and signs taught per device (counted on the device only, never collected)
 - Accessibility feedback from Deaf users
 - Qualitative trust ratings
 

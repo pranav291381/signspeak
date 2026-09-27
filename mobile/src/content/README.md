@@ -1,8 +1,10 @@
 # Sign library content
 
-`data/signs.json` is the single source of sign content for Sign → Text (recognized label → text), Text → ISL (phrase lookup) and Learn ISL.
+`data/signs.json` lists the sign *concepts* the app knows by name: their IDs, meanings and the phrases that find them, in English and Hindi. It is used by the teach chooser (common words), by Sign → Text (a taught sign linked to a concept is shown in the output language) and by Text → ISL (phrases → concepts).
 
-**Current state:** 58 *candidate concepts*. None has verified ISL content. Every entry has `media: null` and `verification.status: "unverified"`, so the app shows "Demonstration not available yet" everywhere and quizzes are unavailable. `library.test.ts` asserts this, so adding verified content is a deliberate change.
+**Current state:** 58 *candidate concepts*. None has verified ISL content: every entry has `media: null` and `verification.status: "unverified"`. `library.test.ts` asserts this, so adding verified content is a deliberate change.
+
+What a sign looks like is never stored here. Diagrams come only from recordings made on the phone (`src/personal/`), so nothing in the app invents a handshape.
 
 ## Rules
 
@@ -18,5 +20,5 @@
 
 1. Record demonstrations with consent (`docs/dataset.md` §3, opt-in (b)).
 2. Add the media to a checksummed media pack or bundle it as an asset. Keep large files out of git.
-3. Implement playback in `DemonstrationView.tsx` (the verified branch). `expo-video` is the expected dependency. It is not installed yet because there is nothing to play.
+3. Decide how to show it: as a video (e.g. `expo-video`, not installed yet) or as a reviewed landmark recording played by `src/diagram/SignDiagram.tsx`, the same format as taught signs.
 4. Update the entry's `media` and `verification`, then update the assertion in `__tests__/library.test.ts`.
