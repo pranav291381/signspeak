@@ -8,10 +8,11 @@ import type { PersonalSign } from '@/personal/types';
 
 import { MockSignRecognizer } from './recognizers/MockSignRecognizer';
 import { UnavailableRecognizer } from './recognizers/UnavailableRecognizer';
+import { DEFAULT_STABILIZER_CONFIG, type StabilizerConfig } from './config';
 import { RecognitionSession } from './session';
 import { NoFrameSource, SimulatedFrameSource } from './sources';
 import { PredictionStabilizer } from './stabilizer';
-import type { FrameSource, SignRecognizer } from './types';
+import type { FrameSource, RecognizerInfo, SignRecognizer } from './types';
 
 export interface EngineOptions {
   demoMode: boolean;
@@ -54,15 +55,34 @@ export function referenceSession(recognizer: SignRecognizer, source: FrameSource
 }
 
 /**
- * Session for a trained model: a fixed window of frames, the default
- * stabilizer (with confidence bands only if the model's calibration was verified).
- * Also used by the model accuracy test (engine/extract.ts).
+ * Stabilizer settings for a recognizer: its tuned thresholds if it has them
+ * (emergency signs stay at least as strict as the defaults), else the defaults.
+ */
+export function stabilizerConfigFor(info: RecognizerInfo): Partial<StabilizerConfig> | undefined {
+  const tuned = info.stabilizer;
+  if (!tuned) return undefined;
+  return {
+    ...tuned,
+    emergencyMinConfidence: Math.max(DEFAULT_STABILIZER_CONFIG.emergencyMinConfidence, tuned.minConfidence),
+    emergencyMinStablePredictions: Math.max(DEFAULT_STABILIZER_CONFIG.emergencyMinStablePredictions, tuned.minStablePredictions),
+  };
+}
+
+/**
+ * Session for a trained model: a fixed window of frames, the model's tuned
+ * stabilizer settings or the defaults (with confidence bands only if the
+ * model's calibration was verified). Also used by the model accuracy test
+ * (engine/extract.ts).
  */
 export function modelSession(recognizer: SignRecognizer, source: FrameSource): RecognitionSession {
   return new RecognitionSession({
     source,
     recognizer,
-    stabilizer: new PredictionStabilizer({ isEmergency: isEmergencyLabel, calibrated: recognizer.info.calibrated }),
+    stabilizer: new PredictionStabilizer({
+      isEmergency: isEmergencyLabel,
+      calibrated: recognizer.info.calibrated,
+      config: stabilizerConfigFor(recognizer.info),
+    }),
     config: { stride: 2, requireHands: true },
   });
 }

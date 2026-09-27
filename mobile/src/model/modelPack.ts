@@ -30,6 +30,18 @@ export interface EncodedTensor {
   data: string;
 }
 
+/**
+ * When the app shows a sign, chosen for this model on held-out recordings
+ * (scripts/tune-model.mjs): the averaged score must reach `minConfidence`,
+ * lead the next sign by `minMargin`, and top `minStablePredictions`
+ * predictions in a row. Stricter means fewer wrong signs and more "not sure".
+ */
+export interface ModelStabilizerSettings {
+  minConfidence: number;
+  minMargin: number;
+  minStablePredictions: number;
+}
+
 export interface ModelPack {
   format: typeof MODEL_PACK_FORMAT;
   version: number;
@@ -50,6 +62,8 @@ export interface ModelPack {
   temperature: number;
   /** True only if calibration was verified on held-out data. */
   calibrated: boolean;
+  /** Settings for showing a sign; the app's defaults when absent. */
+  stabilizer: ModelStabilizerSettings | null;
   source: { name: string; url: string; permission: string };
   evaluation: Record<string, unknown>;
   weights: Record<string, EncodedTensor>;
@@ -127,6 +141,7 @@ export function parseModelPack(value: unknown): ModelPack {
   }
   if (unknownLabel !== null && !labels.some((l) => (l as ModelLabel).id === unknownLabel)) throw new ModelPackError('Unknown label is not a class');
   if (typeof temperature !== 'number' || !(temperature > 0.05 && temperature < 20)) throw new ModelPackError('Temperature is invalid');
+  const stabilizer = parseStabilizer(value.stabilizer);
   if (!isRecord(weights)) throw new ModelPackError('Model pack has no weights');
   for (const [key, shape] of Object.entries(weightShapes(modelConfig))) {
     const tensor = weights[key];
@@ -150,10 +165,26 @@ export function parseModelPack(value: unknown): ModelPack {
     unknownLabel: (unknownLabel as string | null) ?? null,
     temperature,
     calibrated: calibrated === true,
+    stabilizer,
     source: { name: source.name, url: source.url, permission: source.permission },
     evaluation: isRecord(evaluation) ? evaluation : {},
     weights: weights as Record<string, EncodedTensor>,
   };
+}
+
+function parseStabilizer(value: unknown): ModelStabilizerSettings | null {
+  if (value === undefined || value === null) return null;
+  const unit = (n: unknown): n is number => typeof n === 'number' && n >= 0 && n <= 1;
+  if (
+    !isRecord(value) ||
+    !unit(value.minConfidence) ||
+    !unit(value.minMargin) ||
+    !positiveInt(value.minStablePredictions) ||
+    value.minStablePredictions > 20
+  ) {
+    throw new ModelPackError('Model stabilizer settings are invalid');
+  }
+  return { minConfidence: value.minConfidence, minMargin: value.minMargin, minStablePredictions: value.minStablePredictions };
 }
 
 /** Decodes one weight tensor (little-endian float32). */

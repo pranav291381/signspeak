@@ -51,6 +51,7 @@ export class ModelSignRecognizer implements SignRecognizer {
       calibrated: pack.calibrated,
       featureSpecVersion: pack.featureSpecVersion,
       windowSize: pack.windowFrames,
+      stabilizer: pack.stabilizer,
     };
   }
 

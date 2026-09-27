@@ -1,8 +1,9 @@
 import fixture from '../../../../shared/fixtures/model_parity_v1.json';
 import { frameFor, MOTIONS, perform } from '@/test-utils/landmarks';
+import { stabilizerConfigFor } from '@/recognition/engine';
 import { UNKNOWN_LABEL } from '@/recognition/types';
 
-import { parseModelPack } from '../modelPack';
+import { ModelPackError, parseModelPack } from '../modelPack';
 import { ModelSignRecognizer, withoutDepth } from '../ModelSignRecognizer';
 
 const pack = () => parseModelPack(JSON.parse(JSON.stringify(fixture.pack)));
@@ -43,5 +44,28 @@ describe('ModelSignRecognizer', () => {
     expect(flat[92]).toBe(0);
     expect(flat[0]).toBe(frame[0]);
     expect(flat[155]).toBe(1);
+  });
+
+  it('carries the stabilizer settings tuned for the model', () => {
+    const raw = JSON.parse(JSON.stringify(fixture.pack));
+    expect(new ModelSignRecognizer(parseModelPack(raw)).info.stabilizer).toBeNull();
+    expect(stabilizerConfigFor(new ModelSignRecognizer(parseModelPack(raw)).info)).toBeUndefined();
+
+    raw.stabilizer = { minConfidence: 0.9, minMargin: 0.3, minStablePredictions: 7 };
+    const info = new ModelSignRecognizer(parseModelPack(raw)).info;
+    expect(info.stabilizer).toEqual({ minConfidence: 0.9, minMargin: 0.3, minStablePredictions: 7 });
+    // Emergency signs are never less strict than the defaults or the tuned settings.
+    expect(stabilizerConfigFor(info)).toEqual({
+      minConfidence: 0.9,
+      minMargin: 0.3,
+      minStablePredictions: 7,
+      emergencyMinConfidence: 0.9,
+      emergencyMinStablePredictions: 7,
+    });
+
+    for (const bad of [{ minConfidence: 1.5, minMargin: 0.3, minStablePredictions: 4 }, { minConfidence: 0.8, minMargin: 0.3, minStablePredictions: 0 }, 'strict']) {
+      raw.stabilizer = bad;
+      expect(() => parseModelPack(raw)).toThrow(ModelPackError);
+    }
   });
 });

@@ -69,12 +69,19 @@ class ModelTrainer:
             return {"accuracy": 0.0, "macro_f1": 0.0}
         return classification_report(np.concatenate(targets), np.concatenate(preds), dataset.labels)
 
-    def fit(self, model: nn.Module, train: LandmarkWindowDataset, val: LandmarkWindowDataset) -> TrainResult:
-        """Train ``model`` in place and leave it holding the best validation weights."""
+    def fit(
+        self, model: nn.Module, train: LandmarkWindowDataset, val: LandmarkWindowDataset | None
+    ) -> TrainResult:
+        """Train ``model`` in place and leave it holding the best validation weights.
+
+        With ``val=None`` it trains for exactly ``epochs`` and keeps the last
+        weights: for a final model trained on every recording, with the epoch
+        count found on a held-out split.
+        """
         cfg = self.config
         if len(train) == 0:
             raise ValueError("training set is empty")
-        if len(val) == 0:
+        if val is not None and len(val) == 0:
             raise ValueError("validation set is empty: need held-out signers for early stopping")
         set_seed(cfg.seed)
         model.to(cfg.device)
@@ -103,6 +110,10 @@ class ModelTrainer:
                 total += loss.item() * len(y)
                 count += len(y)
             scheduler.step()
+            if val is None:
+                history.append({"epoch": epoch, "train_loss": total / max(count, 1)})
+                self.log(f"epoch {epoch:3d}  loss {total / max(count, 1):.4f}")
+                continue
             val_report = self._validate(model, val)
             row = {
                 "epoch": epoch,
@@ -123,6 +134,8 @@ class ModelTrainer:
                 if stale >= cfg.patience:
                     self.log(f"early stop at epoch {epoch} (best {best_epoch})")
                     break
+        if val is None:
+            return TrainResult(best_epoch=cfg.epochs - 1, best_val_macro_f1=float("nan"), history=history)
         if best_state is not None:
             model.load_state_dict(best_state)
         return TrainResult(best_epoch=best_epoch, best_val_macro_f1=best_f1, history=history)

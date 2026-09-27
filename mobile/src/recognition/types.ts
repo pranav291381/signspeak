@@ -4,6 +4,7 @@
  * See docs/architecture.md §6.
  */
 
+import type { ModelStabilizerSettings } from '@/model/modelPack';
 import type { RemoteModel } from '@/model/remote';
 
 /** Label a model uses for "none of the known signs". Never shown as text. */
@@ -68,6 +69,8 @@ export interface RecognizerInfo {
    * milliseconds, however many that is, so slow phones are not left waiting.
    */
   windowMs?: number;
+  /** When to show a sign, tuned for this recognizer; the app's defaults otherwise. */
+  stabilizer?: ModelStabilizerSettings | null;
 }
 
 export interface SignRecognizer {
