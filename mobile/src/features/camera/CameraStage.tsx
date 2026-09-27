@@ -41,6 +41,7 @@ export function CameraStage({
   const [status, setStatus] = useState<EngineStatus>('loading');
   const [progress, setProgress] = useState<number | undefined>(undefined);
   const [error, setError] = useState<EngineErrorCode | null>(null);
+  const [stats, setStats] = useState<{ fps: number; delegate?: 'GPU' | 'CPU' } | null>(null);
   // Remounting the engine is the retry: it reloads models and reopens the camera.
   const [attempt, setAttempt] = useState(0);
   const running = status === 'running' && !error;
@@ -68,6 +69,7 @@ export function CameraStage({
         style={StyleSheet.absoluteFill}
         onFrame={onFrame}
         onStatus={update}
+        onStats={(fps, _inferenceMs, delegate) => setStats({ fps, delegate })}
         onError={(code) => {
           setError(code);
           onReadyChange?.(false);
@@ -83,6 +85,17 @@ export function CameraStage({
             </View>
           ) : null}
           {overlayBottom ? <View style={[styles.bottom, { padding: spacing.md }]}>{overlayBottom}</View> : null}
+          {stats && stats.fps > 0 ? (
+            <View
+              testID="tracking-rate"
+              pointerEvents="none"
+              style={[styles.rate, { backgroundColor: colors.scrim, borderRadius: radii.pill }]}
+            >
+              <AppText variant="caption" color="onScrim" style={styles.rateText}>
+                {t('camera.rate', { fps: Math.round(stats.fps), delegate: stats.delegate ?? '' })}
+              </AppText>
+            </View>
+          ) : null}
         </>
       ) : (
         <View
@@ -144,4 +157,6 @@ const styles = StyleSheet.create({
   text: { textAlign: 'center' },
   progressTrack: { width: '70%', height: 6, backgroundColor: 'rgba(255,255,255,0.25)', overflow: 'hidden' },
   progressFill: { height: 6 },
+  rate: { position: 'absolute', left: 12, bottom: 12, paddingHorizontal: 8, paddingVertical: 2 },
+  rateText: { fontSize: 11, lineHeight: 15 },
 });

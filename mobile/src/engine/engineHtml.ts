@@ -2,7 +2,8 @@ import { engineAssetSources, engineHashes } from './assets';
 import { ENGINE_HTML } from './engineHtml.generated';
 import type { EngineConfig, EngineFacing } from './protocol';
 
-export const ENGINE_TARGET_FPS = 15;
+/** Upper limit on hand detections per second (drawing runs at the display rate). */
+export const ENGINE_TARGET_FPS = 30;
 
 export function engineConfig(options: {
   facing: EngineFacing;
@@ -19,6 +20,7 @@ export function engineConfig(options: {
     hashes: engineHashes(),
     showLandmarks: true,
     reduceMotion: options.reduceMotion ?? false,
+    mirrorUnknown: options.platform === 'web',
   };
 }
 

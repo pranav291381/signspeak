@@ -209,6 +209,14 @@ describe('SignToTextScreen camera', () => {
     expect(screen.getByTestId('live-tracking')).toHaveTextContent('Hands in view');
   });
 
+  it('shows how fast hand tracking runs', async () => {
+    await renderScreen();
+    cameraRunning();
+    expect(screen.queryByTestId('tracking-rate')).toBeNull();
+    act(() => fakeCamera.stats(27.6, 18, 'GPU'));
+    expect(screen.getByTestId('tracking-rate')).toHaveTextContent('28 fps · GPU');
+  });
+
   it('switches between back and front cameras', async () => {
     await renderScreen();
     await waitFor(() => expect(fakeCamera.props?.facing).toBe('back'));

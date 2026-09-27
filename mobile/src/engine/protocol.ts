@@ -25,8 +25,13 @@ export interface EngineConfig {
   hashes: Record<string, string>;
   /** Draw the tracked hand skeleton and arms over the preview. */
   showLandmarks: boolean;
-  /** No motion trails or flashes (system "reduce motion" setting). */
+  /** No smoothing or flashes (system "reduce motion" setting). */
   reduceMotion: boolean;
+  /**
+   * Mirror cameras that do not report which way they face. True on the web,
+   * where that is a laptop webcam facing the user.
+   */
+  mirrorUnknown: boolean;
 }
 
 export type EngineStatus = 'loading' | 'downloading' | 'starting_camera' | 'running' | 'paused';
@@ -45,7 +50,8 @@ export type EngineToHost =
   | { type: 'error'; code: EngineErrorCode; detail?: string }
   /** One processed camera frame: feature spec v1 values, or null when nobody is in view. */
   | { type: 'frame'; t: number; v: number[] | null; hands: number }
-  | { type: 'stats'; fps: number; inferenceMs: number };
+  /** Detection rate, time per detection, and whether MediaPipe runs on the GPU or CPU. */
+  | { type: 'stats'; fps: number; inferenceMs: number; delegate?: 'GPU' | 'CPU' };
 
 export type HostToEngine =
   | { type: 'setActive'; active: boolean }
