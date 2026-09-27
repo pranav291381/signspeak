@@ -4,7 +4,7 @@ Each phase ends with passing tests, updated documentation and logical commits. S
 
 Legend: ✅ done · 🟡 built, but waiting for verified content, a dataset or a decision · ⏳ not started · 🔒 blocked on external input
 
-Sign → Text now recognizes an installed **sign vocabulary**, with a builder that turns sign videos into sign packs using the app's own hand tracking (`docs/sign-packs.md`). No vocabulary is included yet: it needs sign videos the project has the right to use (recordings by consenting signers, or an owner's permission). Teaching your own signs, Text → ISL and Learn are parked. Phase 6 is complete as a pipeline, but no general model can be trained until a consented dataset exists.
+Sign → Text now recognizes an installed **sign vocabulary**, with a builder that turns sign videos into sign packs using the app's own hand tracking (`docs/sign-packs.md`). The first model is included: 9 greetings trained on the public INCLUDE dataset (CC BY 4.0), 26 of 29 held-out recordings right live, none wrong (early test, not yet tried by users). A model for all 262 INCLUDE words is in progress. Teaching your own signs, Text → ISL and Learn are parked.
 
 | # | Phase | Status | Deliverables | Exit criteria |
 | --- | --- | --- | --- | --- |
@@ -13,7 +13,7 @@ Sign → Text now recognizes an installed **sign vocabulary**, with a builder th
 | 3 | Localization | ✅ | i18next, language registry, `en` complete, `hi` draft, others planned; app vs output language; persisted settings | Locale completeness test; language switch test |
 | 4 | Camera screen + tracking | ✅ | Permission flow, MediaPipe engine in a WebView/iframe with integrity-checked assets, skeleton overlay, front/back, pause/resume/clear, all error states | Engine protocol/asset tests, camera state tests with a fake engine, browser run with a fake camera |
 | 5 | Recognition interface + mock inference | ✅ | `SignRecognizer`, `FrameSource`, `UnavailableRecognizer`, `MockSignRecognizer` (Demo mode), `PredictionStabilizer`, `RecognitionSession` | Stabilizer unit tests (stable, noisy, ambiguous, emergency, cooldown, duplicates) |
-| 6 | Real ML pipeline | 🟡 | `signspeak_ml`: feature spec, MediaPipe extractor, dataset loader + signer splits, temporal model, trainer, evaluator, inference engine; `dataset.md`, `model-evaluation.md` | Pytest green on synthetic fixtures. **Real training 🔒 needs consented dataset** |
+| 6 | Real ML pipeline | 🟡 | `signspeak_ml`: feature spec, MediaPipe extractor, dataset loader + signer splits, temporal model, trainer, evaluator, inference engine; `dataset.md`, `model-evaluation.md` | Pytest green on synthetic fixtures. Trained on INCLUDE greetings (`train_from_landmarks.py`); full vocabulary in progress |
 | 7 | ISL → Text | 🟡 | Sign-pack vocabulary (builder, installer, loader, first-pass shortlist for thousands of signs), recording-based recognizer (DTW), clean camera + text + speech screen, transcript with fingerspelling, history. Personal signs parked | Pack, loader, shortlist and end-to-end screen tests; builder and live recognition checked in a browser with stand-in videos. **Needs sign videos the project may use, then testers to calibrate** |
 | 8 | Text → ISL | 🟡 | Phrase/word planner with fingerspelling, animated hand-diagram player | Planner + screen tests. **Needs recorded, reviewed signs** |
 | 9 | Learn ISL | 🟡 | Alphabet map with guided recording, signing tips | Screen tests. **Needs a fluent signer to record the alphabet; tips need educator review** |

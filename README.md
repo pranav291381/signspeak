@@ -3,8 +3,8 @@
 A mobile app to help people communicate using **Indian Sign Language (ISL)**, built with and for Deaf ISL users, their families, and the hearing people they meet every day.
 
 > **Honest status.**
-> - **Sign → Text recognizes the signs of an installed sign vocabulary** ("sign pack"), built from sign videos by a converter that runs the app's own hand tracking on each video. The converter and the app side work and are tested, but **no vocabulary is included yet**: the videos must be ones we have the right to use (recordings by consenting signers, or videos whose owners give permission). Until one is installed, Sign → Text says "Sign vocabulary not installed yet".
-> - How well a vocabulary recognizes signers other than those recorded has not been measured; that needs testers. The app says "not sure" rather than guessing.
+> - **Sign → Text recognizes 9 ISL greetings for now**: Alright, Good afternoon, Good evening, Good morning, Good night, Hello, How are you, Pleased, Thank you. This is an **early test**: a small model trained on the public [INCLUDE dataset](https://zenodo.org/records/4010759) (CC BY 4.0, signed by Deaf students). Played live into the app, 29 recordings from recording sessions the model never saw gave the right sign 26 times, a wrong sign 0 times and "not sure" 3 times. INCLUDE has few signers, so other people may see more "not sure"; whether it stays quiet for signs outside the 9 has not been measured. Testing with real users is still needed. The app says "not sure" rather than guessing.
+> - More vocabulary can be added as sign packs, built from sign videos by a converter that runs the app's own hand tracking, from videos we have the right to use (public licences such as INCLUDE's, recordings by consenting signers, or videos whose owners give permission).
 > - Text → ISL, Learn and teaching your own signs are **parked** (the code is kept). The app ships no invented ISL content.
 > - The Hindi interface is a draft awaiting native-speaker review.
 >
@@ -41,18 +41,20 @@ npm ci          # also downloads the hand-tracking files for the web build
 ### How to use it
 
 1. **Sign → Text.** Point the camera at the signer: head, shoulders and hands in view, in good light. Recognized signs appear as text; press Speak to hear them.
-2. Until a sign pack is installed, the screen says the vocabulary is not installed yet. *Try demo mode* shows how the screen works with simulated, clearly labelled results.
+2. Start with your hands down, sign one of the 9 greetings above, then lower your hands. The word appears when the sign is finished.
 3. To build and install a pack yourself (on a PC with Chrome or Edge): see [`docs/sign-packs.md`](docs/sign-packs.md).
 
 ## How recognition works
 
 Hand and pose tracking (MediaPipe) runs on the phone inside the app's camera engine and produces body-centred hand and arm positions, about 15 times a second. Each sign of the vocabulary is a recording of those positions, made from a sign video by the **same** tracking code. Live signing is compared with the recordings by dynamic time warping, which tolerates different speeds, and is also compared mirrored so left-handed signers match. With thousands of signs, a fast first pass picks the 24 closest and only those are compared in full. Hands resting low (on the lap) are ignored. The stabilizer only shows a sign after several agreeing, confident, unambiguous predictions; otherwise it says it is not sure. Details: [`docs/architecture.md`](docs/architecture.md) §6.6–6.8.
 
-Tested with synthetic landmark sequences (speed, position, noise, left-handed signers, mislabeled hands, resting and held hands, 250–2,000 signs), with **real MediaPipe output** from the app's engine on MediaPipe's own hand photos, and end to end in a browser: stand-in videos were turned into a pack by the converter, installed in the web app, and each was recognized live from a fake camera playing the same video. These stand-ins are not ISL; real ISL accuracy is unmeasured.
+Tested with synthetic landmark sequences (speed, position, noise, left-handed signers, mislabeled hands, resting and held hands, 250–2,000 signs), with **real MediaPipe output** from the app's engine on MediaPipe's own hand photos, and end to end in a browser: stand-in videos were turned into a pack by the converter, installed in the web app, and each was recognized live from a fake camera playing the same video. These stand-ins are not ISL.
+
+**Trained models.** Matching recordings works for signs recorded by the user but recognizes other signers poorly (28% on INCLUDE's greetings). When a trained model is installed, as now, Sign → Text uses it instead: a small network (convolutions and a GRU, run in the app's JavaScript) reads the last 2 seconds of hand and arm positions and names the sign or "none of these". It is trained from landmark recordings made by the same tracking code (`npm run export:landmarks`, then `ml/scripts/train_from_landmarks.py`), and tested by playing held-out recordings frame by frame into the same recognition session as the camera screen (`npm run eval:signpack`). Details: [`docs/sign-packs.md`](docs/sign-packs.md).
 
 ## Limitations
 
-- Recognizes only the signs in its vocabulary, as its recorded signers sign them; it has **not** been evaluated with real ISL signing across many signers, and "100%" accuracy cannot be promised by any recognizer. Acceptance distances are uncalibrated until testers' recordings exist.
+- Recognizes only 9 greetings for now, as INCLUDE's signers (Deaf students of one school in Chennai) sign them; regional variants and other signing styles may not be recognized. It has **not** been tested with users, and "100%" accuracy cannot be promised by any recognizer.
 - Signs that differ only in facial expression or mouthing cannot be told apart (face landmarks are not used yet).
 - Hands, head and shoulders must be in view (the tracker normalizes by shoulder width). Fast fingerspelling is too quick: spell slowly, about one letter per second.
 - Text → ISL (parked) is sign by sign in the order typed, not translation: ISL grammar is not modelled.
@@ -127,6 +129,10 @@ Read [`docs/contributing.md`](docs/contributing.md). In short: do not invent ISL
 - **Testers** to sign known words, so recognition of other signers can be measured and calibrated
 - **How to ship a large dictionary pack**: inside the app (now) or downloaded on first use, once its size is known
 - **App identifier, Expo account and store listing** for production builds
+
+## Credits
+
+Sign → Text's greetings model is trained on the **INCLUDE** dataset: A. Sridhar, R. G. Ganesan, P. Kumar, M. Khapra, "INCLUDE: A Large Scale Dataset for Indian Sign Language Recognition", ACM Multimedia 2020. AI4Bharat / IIT Madras, [zenodo.org/records/4010759](https://zenodo.org/records/4010759), licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Signed by Deaf students of St. Louis School for the Deaf, Chennai. Changes: the videos were reduced to hand and body landmarks, which were used to train the model; no video is included.
 
 ## License
 

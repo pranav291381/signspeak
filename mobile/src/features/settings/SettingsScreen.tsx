@@ -1,6 +1,7 @@
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { Linking } from 'react-native';
 
 import {
   AppText,
@@ -17,6 +18,7 @@ import {
 import { selectableLanguages, type LanguageCode } from '@/i18n';
 import { usePersonalSigns } from '@/personal/PersonalSignsProvider';
 import { useSettings } from '@/settings/SettingsProvider';
+import { useSignVocabulary } from '@/signpack/SignVocabularyProvider';
 import type { CameraFacing, SpeechRate } from '@/settings/settings';
 
 export function SettingsScreen() {
@@ -24,6 +26,8 @@ export function SettingsScreen() {
   const router = useRouter();
   const { settings, updateSettings } = useSettings();
   const { signs, removeAll } = usePersonalSigns();
+  const vocabulary = useSignVocabulary();
+  const vocabularyPacks = vocabulary.status === 'ready' ? vocabulary.vocabulary.packs : [];
 
   const languageOptions: RadioOption<LanguageCode>[] = selectableLanguages().map((lang) => {
     const draft = lang.status === 'draft';
@@ -177,6 +181,25 @@ export function SettingsScreen() {
         <Notice tone="warning" message={t('settings.about.limitations')} />
         <Notice tone="info" message={t('settings.about.notInterpreter')} />
         <Notice tone="info" icon="shield-lock-outline" message={t('settings.about.privacy')} />
+        <AppText variant="bodyStrong">{t('settings.about.vocabulary')}</AppText>
+        {vocabularyPacks.length === 0 ? (
+          <AppText variant="caption" color="textSecondary" testID="about-no-vocabulary">
+            {t('settings.about.noVocabulary')}
+          </AppText>
+        ) : (
+          // Credit for the sign data, with its licence and what was changed (e.g. CC BY).
+          vocabularyPacks.map((pack) => (
+            <ListRow
+              key={pack.id}
+              testID={`about-vocabulary-${pack.id}`}
+              icon="book-open-variant"
+              label={pack.name}
+              description={`${pack.source.name}. ${pack.source.permission}`}
+              value={t('settings.about.vocabularySigns', { count: pack.signCount })}
+              onPress={() => void Linking.openURL(pack.source.url)}
+            />
+          ))
+        )}
       </Section>
     </Screen>
   );
