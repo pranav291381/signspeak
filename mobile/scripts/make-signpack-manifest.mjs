@@ -4,14 +4,17 @@
  * sign, named by what the sign means (as in a YouTube Studio or Google Takeout
  * export, where each file is named by its video title).
  *
- *   npm run manifest:signpack -- <videos folder> --out dictionary.json \
- *     --id isl-dictionary --name "Indian Sign Language dictionary" \
- *     --source-name indiansignlanguage.org --source-url https://indiansignlanguage.org/ \
- *     --permission "Used with permission of the site owners (2026)."
+ *   npm run manifest:signpack -- <videos folder> --out vocabulary.json \
+ *     --id deaf-club-2026 --name "Deaf club recordings" \
+ *     --source-name "Example Deaf Club" --source-url https://example.org/ \
+ *     --permission "Recorded for ISL Connect by consenting signers (2026)."
+ *
+ * Only use videos you have the right to use: your own recordings, or videos
+ * whose owners gave permission. Do not download videos from YouTube.
  *
  * Review the manifest before building: file names often carry extra words
  * ("Hello - ISL", "Hello (1)") that should not be part of the sign's meaning.
- * Then: npm run build:signpack -- --manifest dictionary.json --out build/isl-dictionary.signpack
+ * Then: npm run build:signpack -- --manifest vocabulary.json --out build/deaf-club-2026.signpack
  */
 import { readdirSync, statSync, writeFileSync } from 'node:fs';
 import { basename, dirname, extname, join, relative, resolve, sep } from 'node:path';

@@ -37,7 +37,7 @@ A welcome flow asks for the app language and the appearance (light, dark or foll
 4. Controls: pause/resume, clear, switch camera, report a wrong result.
 5. When recognition is uncertain it shows *"Not sure what was signed. Please try again."* It never shows a guess.
 6. Emergency-category signs need stricter confidence and agreement before they are shown.
-7. Recognition covers the installed **sign vocabulary**: sign packs made from the videos of the ISL dictionary at indiansignlanguage.org, used with permission (`docs/sign-packs.md`). The screen says how many signs it knows and credits the source. With no pack installed it says "Sign vocabulary not installed yet"; Demo mode remains available, clearly labelled.
+7. Recognition covers the installed **sign vocabulary**: sign packs made from sign videos the project has the right to use (`docs/sign-packs.md`). The screen says how many signs it knows and names the source. With no pack installed it says "Sign vocabulary not installed yet"; Demo mode remains available, clearly labelled.
 
 ### 4.2 Text → ISL
 1. The user types (or pastes) words in their language.

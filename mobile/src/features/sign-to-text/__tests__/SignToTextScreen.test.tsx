@@ -144,7 +144,7 @@ describe('SignToTextScreen vocabulary', () => {
   it('says so when no sign vocabulary is installed, and offers the labelled demo', async () => {
     await renderScreen({ packs: [], factory: createRecognitionSession });
     expect(await screen.findByTestId('vocabulary-missing')).toBeOnTheScreen();
-    expect(screen.getByText(/Indian Sign Language dictionary at indiansignlanguage.org/)).toBeOnTheScreen();
+    expect(screen.getByText(/No vocabulary is included in this version of the app yet/)).toBeOnTheScreen();
     // Clean screen: no teaching or sign management from here.
     expect(screen.queryByRole('button', { name: 'Teach a sign' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'My signs' })).toBeNull();
