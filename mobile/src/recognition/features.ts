@@ -89,3 +89,24 @@ export function handsVisible(values: ArrayLike<number> | null): boolean {
     ((values[LEFT_HAND_PRESENT_INDEX] ?? 0) > 0.5 || (values[RIGHT_HAND_PRESENT_INDEX] ?? 0) > 0.5)
   );
 }
+
+/**
+ * Wrist height, in shoulder widths below the shoulders, from which a hand counts
+ * as resting (on the lap, or arms hanging down) rather than signing. The hips
+ * are about 1.4 below the shoulders.
+ */
+export const REST_WRIST_Y = 1.2;
+
+/** The hand starting at `start` is in view and raised into signing space. */
+export function handRaised(values: ArrayLike<number>, start: number, presentIndex: number): boolean {
+  return (values[presentIndex] ?? 0) > 0.5 && (values[start + 1] ?? Infinity) < REST_WRIST_Y;
+}
+
+/** At least one hand is in view and raised into signing space (not resting low). */
+export function handsRaised(values: ArrayLike<number> | null): boolean {
+  return (
+    values !== null &&
+    values.length === FRAME_DIM &&
+    (handRaised(values, LEFT_HAND_START, LEFT_HAND_PRESENT_INDEX) || handRaised(values, RIGHT_HAND_START, RIGHT_HAND_PRESENT_INDEX))
+  );
+}

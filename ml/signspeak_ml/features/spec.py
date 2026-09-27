@@ -93,7 +93,9 @@ def current_spec() -> FeatureSpec:
         },
         presence_flags=PRESENCE_FLAGS,
         normalization=(
-            "Input x, y in normalized image coordinates [0, 1]; z as reported by MediaPipe "
+            "Input x in normalized image coordinates (x / image width, as MediaPipe reports it); "
+            "y in the same units (MediaPipe's y x image height / image width), so features do not "
+            "depend on the image's shape (portrait or landscape); z as reported by MediaPipe "
             "(pose: relative to hip midpoint, hands: relative to the wrist). "
             "origin = midpoint(left_shoulder, right_shoulder) in (x, y); "
             "scale = euclidean distance between the shoulders in (x, y); "

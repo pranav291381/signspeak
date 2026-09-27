@@ -63,14 +63,28 @@ describe('engine core', () => {
 
   it('builds a rounded spec-v1 vector, or null when nobody usable is in view', () => {
     const hands = { landmarks: [hand], handedness: [[{ categoryName: 'Right', score: 0.9 }]] };
-    const { values } = frameValues(pts(both.pose), hands);
+    const { values } = frameValues(pts(both.pose), hands, 1);
     expect(values).toHaveLength(156);
     expect(values!.slice(153)).toEqual([1, 0, 1]);
     expect(values!.every((v) => Math.abs(v * 1e4 - Math.round(v * 1e4)) < 1e-6)).toBe(true);
-    expect(frameValues(undefined, hands)).toEqual({ values: null, hands: 1 });
+    expect(frameValues(undefined, hands, 1)).toEqual({ values: null, hands: 1 });
 
     const degenerate = fixture.cases.find((c) => c.name === 'degenerate shoulders')!;
-    expect(frameValues(pts(degenerate.pose), hands).values).toBeNull();
+    expect(frameValues(pts(degenerate.pose), hands, 1).values).toBeNull();
+  });
+
+  it('gives the same numbers for the same person in a portrait or a landscape image', () => {
+    const hands = (points: ReturnType<typeof pts>) => ({ landmarks: [points], handedness: [[{ categoryName: 'Right', score: 0.9 }]] });
+    // The same scene in pixels, seen through a 1280×720 and a 720×1280 image
+    // (MediaPipe gives x / width, y / height, and depth on the scale of x).
+    const inImage = (points: ReturnType<typeof pts>, width: number, height: number) =>
+      points.map((p) => ({ x: (p.x * 1000) / width, y: (p.y * 1000) / height, z: (p.z * 1000) / width }));
+    const landscape = frameValues(inImage(pts(both.pose), 1280, 720), hands(inImage(hand, 1280, 720)), 720 / 1280).values!;
+    const portrait = frameValues(inImage(pts(both.pose), 720, 1280), hands(inImage(hand, 720, 1280)), 1280 / 720).values!;
+    landscape.forEach((v, i) => expect(portrait[i]).toBeCloseTo(v, 3));
+    // Without the correction the two would disagree.
+    const uncorrected = frameValues(inImage(pts(both.pose), 720, 1280), hands(inImage(hand, 720, 1280)), 1).values!;
+    expect(uncorrected.some((v, i) => Math.abs(v - landscape[i]!) > 0.1)).toBe(true);
   });
 
   it.each([

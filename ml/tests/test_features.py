@@ -202,6 +202,20 @@ class TestMediaPipeConversion:
         expected = normalize_frame(make_pose(), None, high)
         np.testing.assert_allclose(frame, expected, atol=1e-6)
 
+    def test_same_scene_in_portrait_and_landscape_gives_the_same_frame(self):
+        from types import SimpleNamespace
+
+        from signspeak_ml.features.extractor import frame_from_mediapipe
+
+        pose_px, hand_px = make_pose()[:, :3] * 1000, make_hand((0.45, 0.6)) * 1000
+
+        def seen(width, height):
+            scale = np.array([1 / width, 1 / height, 1 / width])
+            pose = SimpleNamespace(pose_landmarks=[self.landmarks(pose_px * scale)])
+            return frame_from_mediapipe(pose, self.result([(hand_px * scale, "Right", 0.9)]), height / width)
+
+        np.testing.assert_allclose(seen(1280, 720), seen(720, 1280), atol=1e-5)
+
     def test_no_pose_means_no_signer(self):
         from types import SimpleNamespace
 

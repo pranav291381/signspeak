@@ -29,10 +29,33 @@ export function pickHands(result: HandsResultLike): { left: Point3[] | null; rig
 }
 
 /** Feature vector for one frame, or null when no usable person was found. */
-export function frameValues(pose: Point3[] | undefined, hands: HandsResultLike): { values: number[] | null; hands: number } {
+/**
+ * MediaPipe's normalized coordinates divide x by the image width and y by its
+ * height, so vertical distances would depend on the camera's shape (a portrait
+ * phone and a landscape video differ about 3×). Rescaling y by height / width
+ * makes both axes image-width units before body-centred normalization.
+ */
+export function isotropic(points: readonly Point3[], heightOverWidth: number): Point3[] {
+  return points.map((p) => ({ x: p.x, y: p.y * heightOverWidth, z: p.z }));
+}
+
+/**
+ * One feature-spec frame from MediaPipe results.
+ * @param heightOverWidth the analysed image's height / width (see isotropic).
+ */
+export function frameValues(
+  pose: Point3[] | undefined,
+  hands: HandsResultLike,
+  heightOverWidth: number,
+): { values: number[] | null; hands: number } {
   const { left, right, count } = pickHands(hands);
   if (!pose) return { values: null, hands: count };
-  const vector = normalizeFrame(pose, left, right);
+  const ratio = Number.isFinite(heightOverWidth) && heightOverWidth > 0 ? heightOverWidth : 1;
+  const vector = normalizeFrame(
+    isotropic(pose, ratio),
+    left && isotropic(left, ratio),
+    right && isotropic(right, ratio),
+  );
   // normalizeFrame returns all zeros for a degenerate pose: treat as nobody in view.
   if (vector[153] !== 1) return { values: null, hands: count };
   // 4 decimals keeps messages small; far below landmark noise.
