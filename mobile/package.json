@@ -58,7 +58,8 @@
     "check:engine": "node scripts/build-engine.mjs --check",
     "manifest:signpack": "node scripts/make-signpack-manifest.mjs",
     "build:signpack": "node scripts/build-sign-pack.mjs",
-    "install:signpack": "node scripts/install-sign-pack.mjs"
+    "install:signpack": "node scripts/install-sign-pack.mjs",
+    "eval:signpack": "node scripts/eval-sign-pack.mjs"
   },
   "private": true
 }

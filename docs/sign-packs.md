@@ -77,6 +77,16 @@ You need Node.js 22, the repository with `npm ci` done in `mobile/`, and Chrome 
 
    This copies the pack to `mobile/assets/signpacks/` and updates `mobile/src/signpack/bundled.ts`. The app reads packs when Sign → Text is first opened, and shows "Sign vocabulary not installed yet" when there is none.
 
+## Test accuracy on unseen signers
+
+Keep some videos out of the pack, ideally of **other signers**, and test with them:
+
+```bash
+npm run eval:signpack -- --pack build/deaf-club-2026.signpack --manifest test.json
+```
+
+`test.json` lists videos like the build manifest. Each video is analysed with the app's tracking and played, frame by frame at 15 fps, into **the same recognition session as Sign → Text** (window, stride, stabilizer). The result says how often the app showed the right sign, a wrong sign, or "not sure". Videos of signs that are not in the pack check that unknown signs are not shown as known ones. It also reports distances to the right sign and to the closest wrong sign, relative to the acceptance distance: the evidence for setting `--threshold` when building. Details go to `<pack>.eval.json`.
+
 ## Format
 
 `islconnect-sign-pack`, version 1 (`mobile/src/signpack/types.ts`, checked by `parse.ts`):
@@ -110,7 +120,7 @@ Size: about 7 KB per sign for a 1.5 s recording. A vocabulary of a few thousand 
 ## Calibration and limits
 
 - **Few signers per sign.** If each sign is recorded once, by one signer, other people's signing may not match: people sign differently (speed, size, handshape details, which hand), and recognition of other signers has **not been measured yet**. Expect more "not sure" results than with signs taught by the user.
-- **Acceptance distance.** With one recording per sign, how far a sign can drift and still count cannot be measured from repeats. Every sign uses the pack's `defaultThreshold` (0.9) until testers' recordings are available. The next step is to record testers signing known words, measure the distances, and set `threshold` per sign or per pack from that data (`docs/model-evaluation.md`).
+- **Acceptance distance.** With one recording per sign, how far a sign can drift and still count cannot be measured from repeats. Every sign uses the pack's `defaultThreshold` (0.9) until test videos are available: run `npm run eval:signpack` on videos of other signers and set `--threshold` from the distances it reports (`docs/model-evaluation.md`).
 - **Look-alike signs.** Signs that differ only in facial expression, mouthing or small details the hand tracker cannot see will be confused or rejected. The report lists close pairs.
 - **What the landmarks show.** Hand and upper-body landmarks only. Face landmarks, which carry grammar and some meanings in ISL, are not used yet.
 - **Phones.** Matching runs in the app's JavaScript. It is fast in browsers; on phones without a JIT (Hermes) a large vocabulary may be slower, which has not been measured on a device yet.
