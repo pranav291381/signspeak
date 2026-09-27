@@ -1,6 +1,6 @@
 # Sign packs
 
-A **sign pack** is the vocabulary Sign → Text recognizes: one or more reference recordings per sign, reduced to hand and body landmark numbers (no images, no video). Packs are made from sign videos **you have the right to use**: recordings made for the app by consenting signers, or videos whose owners have given permission. No pack is included yet. The ISL dictionary at indiansignlanguage.org (videos on the YouTube channel "Indian Sign Language RKMVU-CBE") was considered, but its owners have not given permission, so it is not used. YouTube's terms do not allow downloading videos from YouTube.
+A **sign pack** is the vocabulary Sign → Text recognizes: one or more reference recordings per sign, reduced to hand and body landmark numbers (no images, no video). Packs are made from sign videos **you have the right to use**: recordings made for the app by consenting signers, or videos whose owners have given permission. The app includes one pack: `include-greet`, a trained model for 9 greetings from the INCLUDE dataset (see [The included pack](#the-included-pack)). The ISL dictionary at indiansignlanguage.org (videos on the YouTube channel "Indian Sign Language RKMVU-CBE") was considered, but its owners have not given permission, so it is not used. YouTube's terms do not allow downloading videos from YouTube.
 
 ```
 sign videos         ──►  npm run build:signpack  ──►  deaf-club-2026.signpack  ──►  npm run install:signpack  ──►  the app
@@ -75,7 +75,7 @@ You need Node.js 22, the repository with `npm ci` done in `mobile/`, and Chrome 
    npm run install:signpack -- --remove deaf-club-2026
    ```
 
-   This copies the pack to `mobile/assets/signpacks/` and updates `mobile/src/signpack/bundled.ts`. The app reads packs when Sign → Text is first opened, and shows "Sign vocabulary not installed yet" when there is none.
+   This copies the pack to `mobile/assets/signpacks/` and updates `mobile/src/signpack/bundled.ts`. The app reads packs when Sign → Text is first opened, and shows "Sign vocabulary not installed yet" when there is none. When a model pack is installed, Sign → Text uses the model.
 
 ## Test accuracy on unseen signers
 
@@ -100,6 +100,19 @@ npm run install:signpack -- build/model/my-model.signpack
 ```
 
 Give each video in `videos.json` a `group` (who signed it, or the recording session): whole groups are held out for testing. A model pack is installed and loaded like a sign pack; when one is installed, Sign → Text uses it.
+
+## The included pack
+
+`mobile/assets/signpacks/include-greet.signpack` (1.7 MB) is a model trained on the **Greetings** of [INCLUDE](https://zenodo.org/records/4010759) (AI4Bharat / IIT Madras, ACM Multimedia 2020; CC BY 4.0; signed by Deaf students of St. Louis School for the Deaf, Chennai): Alright, Good afternoon, Good evening, Good Morning, Good night, Hello, How are you, Pleased, Thank you. It holds only model weights, labels and the source's name, licence and changes; no video and no landmark recordings.
+
+How it was made: the 182 Greetings videos were analysed with `npm run export:landmarks` (1280 px wide), grouped by recording session. For each sign the last session was held out for testing and the one before for validation. `train_from_landmarks.py` trained on the rest.
+
+| Test (held-out sessions) | Result |
+| --- | --- |
+| Windows, model alone | 95% right sign, 100% in the top 5; 83% of rest windows "none of these" |
+| Live, `npm run eval:signpack` (29 videos played into the app's session) | 26 right, 0 wrong, 3 "not sure" |
+
+Limits: recording sessions may share signers, so this overstates accuracy for new signers; signs outside the 9 were not in the test, so false alarms on them are unmeasured; calibration is not verified (ECE 0.08), so the app shows no confidence level with the result. It is an early test until users try it.
 
 ## Format
 
