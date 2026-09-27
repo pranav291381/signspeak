@@ -94,6 +94,7 @@ export function SignToTextScreen({ sessionFactory }: Props) {
   const { snapshot, results, clear, restart } = useRecognition({
     demoMode,
     vocabulary: vocabulary?.references ?? NO_REFERENCES,
+    model: vocabulary?.model ?? null,
     source,
     isDisplayable,
     active: visible && !userPaused && (demoMode || cameraReady),

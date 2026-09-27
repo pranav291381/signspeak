@@ -19,9 +19,17 @@ const USER_AGENT = 'ISLConnect-signpack-builder/1 (+https://github.com/pranav291
 /** A problem the person running the script can fix; printed without a stack trace. */
 export class RunnerError extends Error {}
 
-/** Stable cache key for a video (URL or absolute path). */
+/**
+ * Cache key for a video: its URL, or for a local file its path, size and
+ * modification time, so a replaced file is analysed again.
+ */
 export function videoKey(video) {
-  return createHash('sha1').update(video).digest('hex').slice(0, 16);
+  const hash = createHash('sha1').update(video);
+  if (!/^https?:\/\//.test(video) && existsSync(video)) {
+    const { size, mtimeMs } = statSync(video);
+    hash.update(`:${size}:${Math.round(mtimeMs)}`);
+  }
+  return hash.digest('hex').slice(0, 16);
 }
 
 function serveFile(request, response, path, type) {

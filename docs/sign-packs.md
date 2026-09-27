@@ -87,6 +87,20 @@ npm run eval:signpack -- --pack build/deaf-club-2026.signpack --manifest test.js
 
 `test.json` lists videos like the build manifest. Each video is analysed with the app's tracking and played, frame by frame at 15 fps, into **the same recognition session as Sign → Text** (window, stride, stabilizer). The result says how often the app showed the right sign, a wrong sign, or "not sure". Videos of signs that are not in the pack check that unknown signs are not shown as known ones. It also reports distances to the right sign and to the closest wrong sign, relative to the acceptance distance: the evidence for setting `--threshold` when building. Details go to `<pack>.eval.json`.
 
+## Trained models
+
+With several videos per sign from several signers, a trained model recognizes new people far better than matching recordings (see `docs/architecture.md` §6.5):
+
+```bash
+npm run export:landmarks -- --manifest videos.json --out landmarks.jsonl     # in mobile/: videos → hand positions
+python scripts/train_from_landmarks.py --data landmarks.jsonl --out build/model \
+  --id my-model --name "…" --source-name "…" --source-url "…" --permission "…"   # in ml/
+npm run eval:signpack -- --pack build/model/my-model.signpack --manifest test.json
+npm run install:signpack -- build/model/my-model.signpack
+```
+
+Give each video in `videos.json` a `group` (who signed it, or the recording session): whole groups are held out for testing. A model pack is installed and loaded like a sign pack; when one is installed, Sign → Text uses it.
+
 ## Format
 
 `islconnect-sign-pack`, version 1 (`mobile/src/signpack/types.ts`, checked by `parse.ts`):

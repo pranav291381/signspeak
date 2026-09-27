@@ -13,7 +13,9 @@ import { decodeSpecFrames, encodeFrames, toXY, XY_FRAME_DIM } from '../src/perso
 import { buildReferenceTemplates, prepareQuery, relativeDistance } from '../src/personal/matcher';
 import { PrefilterIndex } from '../src/personal/prefilter';
 import { ReferenceSignRecognizer } from '../src/personal/ReferenceSignRecognizer';
-import { referenceSession } from '../src/recognition/engine';
+import { MODEL_PACK_FORMAT, parseModelPack, type ModelPack } from '../src/model/modelPack';
+import { ModelSignRecognizer } from '../src/model/ModelSignRecognizer';
+import { modelSession, referenceSession } from '../src/recognition/engine';
 import { prepareSample, SAMPLE_FPS } from '../src/personal/sample';
 import { handsRaised, handsVisible } from '../src/recognition/features';
 import type { FrameSource, LandmarkFrame, SignRecognizer } from '../src/recognition/types';
@@ -70,7 +72,7 @@ declare global {
   interface Window {
     __extract?: (videoUrl: string) => Promise<ExtractResult>;
     __similar?: (pack: SignPack, count: number) => SimilarSigns[];
-    __evaluate?: (pack: SignPack, cases: EvaluationCase[]) => Promise<EvaluationResult[]>;
+    __evaluate?: (pack: SignPack | ModelPack, cases: EvaluationCase[]) => Promise<EvaluationResult[]>;
     __extractReady?: Promise<void>;
   }
 }
@@ -239,15 +241,21 @@ const nextTask = () =>
     channel.port2.postMessage(0);
   });
 
-/** Frames of rest appended after each video (1.5 s), as a person would keep standing after signing. */
+/**
+ * Rest around each video: 2 s before (the first frame held, as a person
+ * standing in view before signing, so the camera has been running) and 1.5 s
+ * after (the last frame held).
+ */
+const REST_BEFORE_FRAMES = 2 * SAMPLE_FPS;
 const REST_AFTER_FRAMES = Math.round(1.5 * SAMPLE_FPS);
 
 /**
  * Plays each recording, frame by frame at 15 fps, into the same recognition
  * session as Sign → Text (recognizer, window, stride, stabilizer) and reports
- * what the app would have shown.
+ * what the app would have shown. Works for sign packs and trained models.
  */
-async function evaluate(pack: SignPack, cases: EvaluationCase[]): Promise<EvaluationResult[]> {
+async function evaluate(pack: SignPack | ModelPack, cases: EvaluationCase[]): Promise<EvaluationResult[]> {
+  if (pack.format === MODEL_PACK_FORMAT) return evaluateModel(parseModelPack(pack), cases);
   const references = packReferences(pack);
   const recognizer = new ReferenceSignRecognizer(references, { id: 'sign-pack-dtw', version: '1', emptyMessage: 'No usable signs' });
   await recognizer.load();
@@ -265,20 +273,7 @@ async function evaluate(pack: SignPack, cases: EvaluationCase[]): Promise<Evalua
   const results: EvaluationResult[] = [];
   for (const test of cases) {
     const frames = decodeRecording(test.recording);
-    const source = new ManualSource();
-    const session = referenceSession(shared, source);
-    const recognized: string[] = [];
-    session.subscribe({ onRecognition: (r) => recognized.push(r.label) });
-    await session.start();
-    let t = 0;
-    for (const values of [...frames, ...Array.from({ length: REST_AFTER_FRAMES }, () => frames.at(-1) ?? null)]) {
-      source.push({ timestampMs: t, values });
-      t += 1000 / SAMPLE_FPS;
-      await nextTask();
-    }
-    session.stop();
-
-    const result: EvaluationResult = { recognized };
+    const result: EvaluationResult = { recognized: await play(frames, (source) => referenceSession(shared, source)) };
     const query = prepareQuery(frames);
     if (query) {
       const truth = test.label ? byId.get(test.label) : undefined;
@@ -291,6 +286,38 @@ async function evaluate(pack: SignPack, cases: EvaluationCase[]): Promise<Evalua
     }
     results.push(result);
   }
+  return results;
+}
+
+/** What the app shows while `frames` are signed, with rest before and after. */
+async function play(frames: (Float32Array | null)[], session: (source: ManualSource) => ReturnType<typeof referenceSession>): Promise<string[]> {
+  const source = new ManualSource();
+  const running = session(source);
+  const recognized: string[] = [];
+  running.subscribe({ onRecognition: (r) => recognized.push(r.label) });
+  await running.start();
+  let t = 0;
+  const held = (count: number, frame: Float32Array | null | undefined) => Array.from({ length: count }, () => frame ?? null);
+  for (const values of [...held(REST_BEFORE_FRAMES, frames[0]), ...frames, ...held(REST_AFTER_FRAMES, frames.at(-1))]) {
+    source.push({ timestampMs: t, values });
+    t += 1000 / SAMPLE_FPS;
+    await nextTask();
+  }
+  running.stop();
+  return recognized;
+}
+
+async function evaluateModel(pack: ModelPack, cases: EvaluationCase[]): Promise<EvaluationResult[]> {
+  const recognizer = new ModelSignRecognizer(pack);
+  await recognizer.load();
+  const shared: SignRecognizer = {
+    info: recognizer.info,
+    load: async () => undefined,
+    predict: (window) => recognizer.predict(window),
+    dispose: () => undefined,
+  };
+  const results: EvaluationResult[] = [];
+  for (const test of cases) results.push({ recognized: await play(decodeRecording(test.recording), (source) => modelSession(shared, source)) });
   return results;
 }
 

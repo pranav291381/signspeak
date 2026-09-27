@@ -191,7 +191,7 @@ interface RawPrediction { scores: { label: string; score: number }[]; latencyMs:
 | `PersonalSignRecognizer` | Implemented, parked | The same matching over signs taught on this phone (§6.6). Teaching is paused while the dictionary vocabulary is built; the code and routes are kept |
 | `UnavailableRecognizer` + `NoFrameSource` | Implemented | With no vocabulary: `model_unavailable`; the screen says the vocabulary is not installed yet |
 | `MockSignRecognizer` + `SimulatedFrameSource` | Implemented | Scripted outputs, including uncertain and noisy sequences. Only reachable by switching on **Demo mode**, and the UI shows a persistent "Simulated — not real recognition" banner |
-| `OnDeviceSignRecognizer` | Planned | Runs an exported, trained model pack (TFLite or ONNX) for a general vocabulary |
+| `ModelSignRecognizer` (`mobile/src/model/`) | Implemented; no model shipped yet | Runs a trained model pack (§6.5) in plain TypeScript on the last 32 frames (depth dropped, as in training); idle while no hand is raised. Chosen over sign packs when a model is installed |
 
 `createRecognitionSession()` (`recognition/engine.ts`) picks one of these: demo mode, else the sign-pack vocabulary, else personal signs, else unavailable. Both recording-based recognizers use a time-based window (`RecognizerInfo.windowMs`, last 3 s, first prediction after 8 frames), `requireHands` (status `no_hands` when a person is visible without hands) and `idle` predictions (resting hands never lead to "not sure").
 
@@ -235,16 +235,13 @@ A confidence **band** is reported only when the recognizer declares `calibrated:
 
 `RecognitionSession` adds backpressure: while a prediction is running, new windows are skipped rather than queued. It also skips the model entirely when fewer than half the frames in a window contain a person, and reports `model_error` after three consecutive inference failures.
 
-### 6.5 Model packs (planned)
+### 6.5 Model packs
 
-```
-model-pack/
-  manifest.json   # id, version, feature_spec_version, labels, calibration, metrics summary, license
-  model.tflite | model.onnx
-  labels.json
-```
+A trained `TemporalSignClassifier` (per-frame LayerNorm, two 1D convolutions, bidirectional GRU, attention pooling; about 0.5 M parameters) is exported by `ml/signspeak_ml/inference/app_export.py` as one JSON file, `islconnect-model-pack` v1: configuration, labels with their text, language, softmax temperature, whether calibration was verified, source and licence, headline evaluation, and the weights (float32, base64; batch norm folded into the convolutions). It is installed like a sign pack (`npm run install:signpack`) and loaded by the same provider. The app runs it without any native runtime (`mobile/src/model/temporalModel.ts`); a parity fixture (`shared/fixtures/model_parity_v1.json`) pins the TypeScript forward pass to PyTorch (logits equal to 4 decimals), and a NumPy reference (`app_forward`) checks the folding.
 
-Packs are bundled or downloaded, verified by checksum, and cached for offline use. Label IDs match `content` entry IDs, the same IDs taught signs use (`library:<id>`), so both kinds of recognition show the same text.
+**Training from landmarks** (`ml/scripts/train_from_landmarks.py`): recordings exported with the app's own tracking (`npm run export:landmarks`, one JSON line per video with a group: signer or session) are cut into the windows the app sees live: 32 frames, with the person in view before and after (first and last frame held). A window holding most of a sign is that sign; a window where a sign has only begun, or with only rest, is "none of these" (`__unknown__`), so the model does not guess from a sign's first movements. Augmentation mirrors hands, scales, rotates, shifts and time-warps. For each sign whole groups are held out (validation, test); temperature is fitted on validation.
+
+Early evidence (INCLUDE Greetings, 9 signs, about 20 videos each, held-out recording sessions, played through the app's live session by `npm run eval:signpack`): 90% correct, 0% wrong, 10% "not sure", against 28% correct for sign-pack matching on the same videos. Sessions may share signers, so this overstates accuracy for new signers.
 
 ### 6.6 Personal signs (`mobile/src/personal/`)
 

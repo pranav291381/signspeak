@@ -2,6 +2,9 @@ import { decodeSpecFrames, encodeFrames, fromXY, toXY, XY_FRAME_DIM } from '@/pe
 import { FRAME_DIM } from '@/recognition/featureSpec';
 import { testPack } from '@/test-utils/packs';
 
+import modelFixture from '../../../../shared/fixtures/model_parity_v1.json';
+import { parseModelPack } from '@/model/modelPack';
+
 import { loadBundledPacks } from '../loader';
 import { packReferences, parseSignPack, SignPackError } from '../parse';
 import { buildVocabulary } from '../vocabulary';
@@ -126,6 +129,16 @@ describe('buildVocabulary', () => {
     ]);
   });
 
+  it('includes the signs of a trained model, without its unknown class', () => {
+    const model = parseModelPack(JSON.parse(JSON.stringify(modelFixture.pack)));
+    const vocabulary = buildVocabulary([pack], [model]);
+    expect(vocabulary.model?.id).toBe('parity');
+    expect(vocabulary.size).toBe(6);
+    expect(vocabulary.describe('test:2')).toEqual({ text: 'Sign 2', language: 'en', letter: false, packId: 'parity' });
+    expect(vocabulary.describe('__unknown__')).toBeUndefined();
+    expect(vocabulary.packs[0]).toMatchObject({ id: 'parity', signCount: 3, source: { name: 'random weights' } });
+  });
+
   it('keeps the first of two packs that use the same sign id', () => {
     const vocabulary = buildVocabulary([pack, pack]);
     expect(vocabulary.size).toBe(3);
@@ -152,9 +165,15 @@ describe('loadBundledPacks', () => {
     expect(result.failed).toEqual(['wrong', 'broken', 'missing']);
   });
 
+  it('reads trained models installed next to sign packs', async () => {
+    const result = await loadBundledPacks([{ id: 'model', asset: 1 }], async () => JSON.stringify(modelFixture.pack));
+    expect(result.models?.map((m) => m.id)).toEqual(['parity']);
+    expect(result.packs).toEqual([]);
+  });
+
   it('has nothing to read when no pack is installed', async () => {
     const read = jest.fn();
-    expect(await loadBundledPacks([], read)).toEqual({ packs: [], failed: [] });
+    expect(await loadBundledPacks([], read)).toEqual({ packs: [], models: [], failed: [] });
     expect(read).not.toHaveBeenCalled();
   });
 });

@@ -65,13 +65,16 @@ const readJson = (path, what) => {
 };
 const packPath = resolve(args.pack);
 const pack = readJson(packPath, 'pack');
-if (pack?.format !== 'islconnect-sign-pack' || !Array.isArray(pack.signs)) fail(`${packPath} is not a sign pack`);
+const isModel = pack?.format === 'islconnect-model-pack';
+if (!isModel && (pack?.format !== 'islconnect-sign-pack' || !Array.isArray(pack.signs))) fail(`${packPath} is not a sign pack or model`);
+// The signs it knows, as { id, text }.
+const known = isModel ? pack.labels.filter((l) => l.id !== pack.unknownLabel) : pack.signs;
 const manifestPath = resolve(args.manifest);
 const manifest = readJson(manifestPath, 'manifest');
 if (!Array.isArray(manifest?.signs) || manifest.signs.length === 0) fail('the test manifest has no signs');
 
-const idByText = new Map(pack.signs.map((s) => [s.text.trim().toLowerCase(), s.id]));
-const textById = new Map(pack.signs.map((s) => [s.id, s.text]));
+const idByText = new Map(known.map((s) => [s.text.trim().toLowerCase(), s.id]));
+const textById = new Map(known.map((s) => [s.id, s.text]));
 const entries = manifest.signs.map((sign, i) => {
   if (typeof sign?.text !== 'string' || typeof sign?.video !== 'string') fail(`signs[${i}] needs text and video`);
   const video = /^https?:\/\//.test(sign.video) ? sign.video : resolve(dirname(manifestPath), sign.video);
@@ -91,8 +94,8 @@ try {
   fail(error instanceof RunnerError ? error.message : String(error));
 }
 
-const known = entries.filter((e) => e.label).length;
-console.log(`Testing ${pack.name} (${pack.signs.length} signs) on ${entries.length} videos (${entries.length - known} of signs not in the pack) with ${runner.browserLabel}…`);
+const inPackCount = entries.filter((e) => e.label).length;
+console.log(`Testing ${pack.name} (${known.length} signs) on ${entries.length} videos (${entries.length - inPackCount} of signs not in the pack) with ${runner.browserLabel}…`);
 let outcomes;
 let results;
 try {
@@ -148,7 +151,7 @@ const outside = rows.filter((r) => !r.inPack && r.verdict !== 'not analysed');
 const trueDistances = inPack.map((r) => r.trueDistance).filter((d) => d !== undefined);
 const otherDistances = inPack.map((r) => r.closestOther?.distance).filter((d) => d !== undefined);
 const summary = {
-  pack: { id: pack.id, name: pack.name, signs: pack.signs.length, defaultThreshold: pack.defaultThreshold },
+  pack: { id: pack.id, name: pack.name, kind: isModel ? 'model' : 'sign pack', signs: known.length, defaultThreshold: pack.defaultThreshold },
   videos: entries.length,
   notAnalysed: count(rows, 'not analysed'),
   signsInPack: { videos: inPack.length, correct: count(inPack, 'correct'), wrong: count(inPack, 'wrong'), notSure: count(inPack, 'not sure') },

@@ -1,4 +1,6 @@
 import { getSign, isEmergencySign } from '@/content/library';
+import type { ModelPack } from '@/model/modelPack';
+import { ModelSignRecognizer } from '@/model/ModelSignRecognizer';
 import type { ReferenceSign } from '@/personal/matcher';
 import { PersonalSignRecognizer } from '@/personal/PersonalSignRecognizer';
 import { ReferenceSignRecognizer } from '@/personal/ReferenceSignRecognizer';
@@ -17,6 +19,8 @@ export interface EngineOptions {
   signs?: readonly PersonalSign[];
   /** Signs of the installed sign packs (the dictionary vocabulary). Used instead of `signs`. */
   vocabulary?: readonly ReferenceSign[];
+  /** An installed trained model. Used instead of `vocabulary` and `signs`. */
+  model?: ModelPack | null;
   /** Live landmark frames from the camera engine. */
   source?: FrameSource | null;
 }
@@ -50,14 +54,28 @@ export function referenceSession(recognizer: SignRecognizer, source: FrameSource
 }
 
 /**
+ * Session for a trained model: a fixed window of frames, the default
+ * stabilizer (with confidence bands only if the model's calibration was verified).
+ * Also used by the model accuracy test (engine/extract.ts).
+ */
+export function modelSession(recognizer: SignRecognizer, source: FrameSource): RecognitionSession {
+  return new RecognitionSession({
+    source,
+    recognizer,
+    stabilizer: new PredictionStabilizer({ isEmergency: isEmergencyLabel, calibrated: recognizer.info.calibrated }),
+    config: { stride: 2, requireHands: true },
+  });
+}
+
+/**
  * Chooses the recognizer:
  * - demo mode: simulated results, clearly labelled as such;
- * - otherwise the installed sign vocabulary (dictionary sign packs), or the
- *   signs taught on this phone, fed by live camera landmarks;
+ * - otherwise an installed trained model, the installed sign vocabulary
+ *   (sign packs), or the signs taught on this phone, fed by live camera landmarks;
  * - with neither, a session that reports `model_unavailable`.
  * A trained on-device model would be added here (docs/architecture.md §6.2).
  */
-export const createRecognitionSession: SessionFactory = ({ demoMode, signs = [], vocabulary = [], source = null }) => {
+export const createRecognitionSession: SessionFactory = ({ demoMode, signs = [], vocabulary = [], model = null, source = null }) => {
   if (demoMode) {
     const recognizer = new MockSignRecognizer();
     return new RecognitionSession({
@@ -65,6 +83,9 @@ export const createRecognitionSession: SessionFactory = ({ demoMode, signs = [],
       recognizer,
       stabilizer: new PredictionStabilizer({ isEmergency: isEmergencySign, calibrated: recognizer.info.calibrated }),
     });
+  }
+  if (model && source) {
+    return modelSession(new ModelSignRecognizer(model), source);
   }
   if (vocabulary.length > 0 && source) {
     const recognizer = new ReferenceSignRecognizer(vocabulary, { id: 'sign-pack-dtw', version: '1', emptyMessage: 'No usable signs in the sign packs' });
