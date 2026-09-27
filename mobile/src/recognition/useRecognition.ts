@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import type { ModelPack } from '@/model/modelPack';
 import type { ReferenceSign } from '@/personal/matcher';
 import type { PersonalSign } from '@/personal/types';
 
@@ -15,6 +16,8 @@ interface Options {
   signs?: readonly PersonalSign[];
   /** Sign-pack signs to recognize, instead of personal signs (recreates the session when they change). */
   vocabulary?: readonly ReferenceSign[];
+  /** A trained model to use instead of both (recreates the session when it changes). */
+  model?: ModelPack | null;
   source?: FrameSource | null;
   /** Labels that may be shown; anything else is dropped. */
   isDisplayable?: (label: string) => boolean;
@@ -36,6 +39,7 @@ export function useRecognition({
   demoMode,
   signs,
   vocabulary,
+  model,
   source,
   isDisplayable = isDisplayableLabel,
   active,
@@ -55,7 +59,7 @@ export function useRecognition({
   }, [onRecognition, isDisplayable]);
 
   useEffect(() => {
-    const session = factory({ demoMode, signs, vocabulary, source });
+    const session = factory({ demoMode, signs, vocabulary, model, source });
     sessionRef.current = session;
     const unsubscribe = session.subscribe({
       onSnapshot: setSnapshot,
@@ -71,7 +75,7 @@ export function useRecognition({
       session.stop();
       sessionRef.current = null;
     };
-  }, [demoMode, signs, vocabulary, source, factory, attempt]);
+  }, [demoMode, signs, vocabulary, model, source, factory, attempt]);
 
   const state = snapshot?.state;
   useEffect(() => {

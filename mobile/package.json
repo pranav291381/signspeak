@@ -59,7 +59,8 @@
     "manifest:signpack": "node scripts/make-signpack-manifest.mjs",
     "build:signpack": "node scripts/build-sign-pack.mjs",
     "install:signpack": "node scripts/install-sign-pack.mjs",
-    "eval:signpack": "node scripts/eval-sign-pack.mjs"
+    "eval:signpack": "node scripts/eval-sign-pack.mjs",
+    "export:landmarks": "node scripts/export-landmarks.mjs"
   },
   "private": true
 }

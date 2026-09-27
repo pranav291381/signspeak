@@ -33,11 +33,13 @@ function readPack(path) {
   } catch (error) {
     fail(`cannot read ${path}: ${error.message}`);
   }
-  if (pack?.format !== 'islconnect-sign-pack' || pack.version !== 1) fail(`${path} is not a sign pack this app can read`);
+  const model = pack?.format === 'islconnect-model-pack';
+  if (!model && (pack?.format !== 'islconnect-sign-pack' || pack.version !== 1)) fail(`${path} is not a sign pack or model this app can read`);
   if (typeof pack.id !== 'string' || !/^[a-z0-9-]+$/.test(pack.id)) fail(`${path} has no valid id`);
   if (!pack.source?.name || !pack.source?.url || !pack.source?.permission) fail(`${path} does not say where its signs come from`);
-  if (!Array.isArray(pack.signs) || pack.signs.length === 0) fail(`${path} has no signs`);
-  return pack;
+  const signs = model ? pack.labels?.filter((l) => l.id !== pack.unknownLabel) : pack.signs;
+  if (!Array.isArray(signs) || signs.length === 0) fail(`${path} has no signs`);
+  return { ...pack, signCount: signs.length, kind: model ? 'model' : 'sign pack' };
 }
 
 function installed() {
@@ -71,7 +73,7 @@ export const BUNDLED_SIGN_PACKS: readonly BundledSignPack[] = [${ids.length > 0 
 if (args.list) {
   for (const id of installed()) {
     const pack = readPack(join(assetDir, `${id}.signpack`));
-    console.log(`${id}: ${pack.name}, ${pack.signs.length} signs, ${Math.round(statSync(join(assetDir, `${id}.signpack`)).size / 1024)} KB (${pack.source.name})`);
+    console.log(`${id}: ${pack.kind}, ${pack.name}, ${pack.signCount} signs, ${Math.round(statSync(join(assetDir, `${id}.signpack`)).size / 1024)} KB (${pack.source.name})`);
   }
 } else if (args.remove) {
   const path = join(assetDir, `${args.remove}.signpack`);
@@ -86,5 +88,5 @@ if (args.list) {
   mkdirSync(assetDir, { recursive: true });
   copyFileSync(source, join(assetDir, `${pack.id}.signpack`));
   const ids = writeRegistry();
-  console.log(`Installed ${pack.id} (${pack.signs.length} signs). Packs in the app: ${ids.join(', ')}.`);
+  console.log(`Installed ${pack.id} (${pack.kind}, ${pack.signCount} signs). Packs in the app: ${ids.join(', ')}.`);
 }

@@ -38,10 +38,10 @@ export function SignVocabularyProvider({ children, load = loadBundledPacks }: { 
     started.current = true;
     setState({ status: 'loading' });
     load()
-      .catch(() => ({ packs: [], failed: ['all'] }))
-      .then(({ packs, failed }) => {
+      .catch(() => ({ packs: [], models: [], failed: ['all'] }))
+      .then(({ packs, models = [], failed }) => {
         if (!mounted.current) return;
-        const vocabulary = buildVocabulary(packs);
+        const vocabulary = buildVocabulary(packs, models);
         setState(vocabulary.size > 0 ? { status: 'ready', vocabulary, failed } : { status: 'empty', failed });
       });
   }, [load]);
