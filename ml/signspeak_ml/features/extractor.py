@@ -33,19 +33,24 @@ class FeatureExtractor(Protocol):
     ) -> ExtractedSequence: ...
 
 
-def _landmarks_to_array(landmarks: Any) -> np.ndarray:
-    return np.array([[lm.x, lm.y, lm.z] for lm in landmarks], dtype=np.float32)
+def _landmarks_to_array(landmarks: Any, height_over_width: float = 1.0) -> np.ndarray:
+    return np.array([[lm.x, lm.y * height_over_width, lm.z] for lm in landmarks], dtype=np.float32)
 
 
-def frame_from_mediapipe(pose_result: Any, hand_result: Any) -> np.ndarray:
+def frame_from_mediapipe(pose_result: Any, hand_result: Any, height_over_width: float = 1.0) -> np.ndarray:
     """Convert MediaPipe Tasks results for one image into a feature-spec frame.
 
     Only the first detected pose is used. Hands are assigned by MediaPipe's
     handedness label (see feature spec notes on mirroring).
+
+    MediaPipe divides x by the image width and y by its height; y is rescaled
+    by ``height_over_width`` so both axes are in image-width units and the
+    features do not depend on the image's shape (as in the app's camera engine).
     """
+    ratio = height_over_width if np.isfinite(height_over_width) and height_over_width > 0 else 1.0
     pose = None
     if pose_result is not None and getattr(pose_result, "pose_landmarks", None):
-        pose = _landmarks_to_array(pose_result.pose_landmarks[0])
+        pose = _landmarks_to_array(pose_result.pose_landmarks[0], ratio)
     left = right = None
     if hand_result is not None and getattr(hand_result, "hand_landmarks", None):
         best: dict[str, tuple[float, np.ndarray]] = {}
@@ -55,7 +60,7 @@ def frame_from_mediapipe(pose_result: Any, hand_result: Any) -> np.ndarray:
             if name not in ("left", "right"):
                 continue
             if name not in best or category.score > best[name][0]:
-                best[name] = (category.score, _landmarks_to_array(landmarks))
+                best[name] = (category.score, _landmarks_to_array(landmarks, ratio))
         left = best.get("left", (0.0, None))[1]
         right = best.get("right", (0.0, None))[1]
     return normalize_frame(pose, left, right)
@@ -123,6 +128,7 @@ class MediaPipeFeatureExtractor:
                         frame_from_mediapipe(
                             pose_landmarker.detect_for_video(image, timestamp),
                             hand_landmarker.detect_for_video(image, timestamp),
+                            rgb.shape[0] / rgb.shape[1],
                         )
                     )
                     stamps.append(float(timestamp))

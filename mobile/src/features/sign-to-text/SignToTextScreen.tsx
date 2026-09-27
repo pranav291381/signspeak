@@ -8,15 +8,15 @@ import { useAppActive } from '@/accessibility/useAppActive';
 import { AppText, Button, Card, IconButton, Notice, Pill, Screen } from '@/components';
 import { getSign, isEmergencySign, signMeaning } from '@/content/library';
 import { EngineFrameSource } from '@/engine/EngineFrameSource';
-import { handsVisible } from '@/recognition/features';
 import { useHistory } from '@/history/HistoryProvider';
-import { signText } from '@/personal/labels';
-import { usePersonalSigns } from '@/personal/PersonalSignsProvider';
-import { isEmergencyLabel, type SessionFactory } from '@/recognition/engine';
+import { LANGUAGES, type LanguageCode } from '@/i18n/languages';
+import type { SessionFactory } from '@/recognition/engine';
+import { handsVisible } from '@/recognition/features';
 import type { Recognition } from '@/recognition/types';
 import { useRecognition } from '@/recognition/useRecognition';
 import type { CameraFacing } from '@/settings/settings';
 import { useSettings } from '@/settings/SettingsProvider';
+import { useSignVocabulary } from '@/signpack/SignVocabularyProvider';
 import { SpeakButton } from '@/speech/SpeakButton';
 import { useSpeech } from '@/speech/useSpeech';
 import { useTheme } from '@/theme';
@@ -31,12 +31,21 @@ interface Props {
   sessionFactory?: SessionFactory;
 }
 
+interface Described {
+  text: string;
+  language: LanguageCode;
+  letter: boolean;
+  emergency: boolean;
+}
+
+const NO_REFERENCES: never[] = [];
+
 export function SignToTextScreen({ sessionFactory }: Props) {
   const { t } = useTranslation();
   const router = useRouter();
   const { spacing } = useTheme();
   const { settings, updateSettings } = useSettings();
-  const { ready: signsLoaded, recognizable, get } = usePersonalSigns();
+  const vocabularyState = useSignVocabulary();
   const focused = useIsFocused();
   const appActive = useAppActive();
 
@@ -49,18 +58,17 @@ export function SignToTextScreen({ sessionFactory }: Props) {
 
   const visible = focused && appActive;
   const { outputLanguage, hapticsEnabled, autoSpeak, demoMode } = settings;
-  const personal = !demoMode;
-  const hasSigns = recognizable.length > 0;
+  const vocabulary = vocabularyState.status === 'ready' ? vocabularyState.vocabulary : null;
 
-  /** Text for a recognized label: a personal sign, or a library sign (demo mode). */
+  /** Text for a recognized label: a sign of the vocabulary, or a library sign (demo mode). */
   const describe = useCallback(
-    (label: string): { text: string; letter: boolean; emergency: boolean } | null => {
-      const sign = get(label);
-      if (sign) return { text: signText(sign, outputLanguage), letter: sign.target.kind === 'letter', emergency: isEmergencyLabel(label) };
+    (label: string): Described | null => {
+      const sign = vocabulary?.describe(label);
+      if (sign) return { text: sign.text, language: sign.language, letter: sign.letter, emergency: false };
       const entry = getSign(label);
-      return entry ? { text: signMeaning(entry, outputLanguage).text, letter: false, emergency: isEmergencySign(label) } : null;
+      return entry ? { ...signMeaning(entry, outputLanguage), letter: false, emergency: isEmergencySign(label) } : null;
     },
-    [get, outputLanguage],
+    [vocabulary, outputLanguage],
   );
   const isDisplayable = useCallback((label: string) => describe(label) !== null, [describe]);
 
@@ -74,18 +82,18 @@ export function SignToTextScreen({ sessionFactory }: Props) {
       announce(t('signToText.a11y.recognized', { text: described.text }));
       confirmHaptic(hapticsEnabled);
       setFlash((n) => n + 1);
-      if (autoSpeak && !described.letter) void speak(described.text);
+      if (autoSpeak && !described.letter) void speak(described.text, described.language);
       // Simulated demo results are never saved as if they were real.
       if (!demoMode) {
-        addToHistory({ kind: 'recognition', text: described.text, language: outputLanguage, signIds: [recognition.label] });
+        addToHistory({ kind: 'recognition', text: described.text, language: described.language, signIds: [recognition.label] });
       }
     },
-    [describe, hapticsEnabled, autoSpeak, demoMode, speak, addToHistory, outputLanguage, t],
+    [describe, hapticsEnabled, autoSpeak, demoMode, speak, addToHistory, t],
   );
 
   const { snapshot, results, clear, restart } = useRecognition({
     demoMode,
-    signs: recognizable,
+    vocabulary: vocabulary?.references ?? NO_REFERENCES,
     source,
     isDisplayable,
     active: visible && !userPaused && (demoMode || cameraReady),
@@ -104,23 +112,16 @@ export function SignToTextScreen({ sessionFactory }: Props) {
   const last = entries.at(-1);
   const latest = last ? { recognition: last.recognition, text: last.described.text, emergency: last.described.emergency } : null;
   const spokenText = transcript.map((w) => w.text).join(' ');
+  const spokenLanguage = last?.described.language ?? outputLanguage;
 
-  const needsSigns = personal && signsLoaded && !hasSigns;
+  const vocabularyLoading = !demoMode && (vocabularyState.status === 'idle' || vocabularyState.status === 'loading');
+  const vocabularyMissing = !demoMode && vocabularyState.status === 'empty';
   const failed = snapshot?.state === 'model_error';
+  // Dictionary words are shown as the dictionary gives them; say so if that is not the chosen output language.
+  const shownLanguage = vocabulary && !vocabulary.languages.includes(outputLanguage) ? vocabulary.languages[0] : undefined;
 
   return (
-    <Screen
-      testID="sign-to-text-screen"
-      title={t('screens.signToText')}
-      headerAction={
-        <IconButton
-          testID="open-my-signs"
-          icon="hand-back-right-outline"
-          accessibilityLabel={t('screens.mySigns')}
-          onPress={() => router.push('/signs')}
-        />
-      }
-    >
+    <Screen testID="sign-to-text-screen" title={t('screens.signToText')}>
       {snapshot?.simulated ? (
         <Notice
           testID="simulated-banner"
@@ -186,18 +187,16 @@ export function SignToTextScreen({ sessionFactory }: Props) {
         />
       </CameraGate>
 
-      {needsSigns ? (
-        <Card tone="tinted" testID="teach-first">
-          <AppText variant="heading">{t('signToText.teachFirst.title')}</AppText>
-          <AppText variant="body">{t('signToText.teachFirst.message')}</AppText>
-          <Button testID="teach-first-sign" icon="plus" label={t('signToText.teachFirst.teach')} onPress={() => router.push('/signs/teach')} />
-          <Button
-            testID="teach-first-alphabet"
-            variant="outline"
-            icon="alphabetical-variant"
-            label={t('signToText.teachFirst.alphabet')}
-            onPress={() => router.push({ pathname: '/signs/teach', params: { kind: 'alphabet' } })}
-          />
+      {vocabularyLoading ? (
+        <Card testID="vocabulary-loading">
+          <AppText variant="body" color="textSecondary">
+            {t('signToText.vocabulary.loading')}
+          </AppText>
+        </Card>
+      ) : vocabularyMissing ? (
+        <Card tone="tinted" testID="vocabulary-missing">
+          <AppText variant="heading">{t('signToText.vocabulary.missingTitle')}</AppText>
+          <AppText variant="body">{t('signToText.vocabulary.missingMessage')}</AppText>
           <Button
             testID="try-demo"
             variant="ghost"
@@ -214,7 +213,7 @@ export function SignToTextScreen({ sessionFactory }: Props) {
       ) : (
         <Card>
           <RecognitionPanel snapshot={snapshot} paused={userPaused} latest={latest} transcript={transcript} />
-          <SpeakButton text={spokenText} speech={speech} testID="speak-transcript" />
+          <SpeakButton text={spokenText} language={spokenLanguage} speech={speech} testID="speak-transcript" />
           <View style={[styles.row, { gap: spacing.sm }]}>
             <View style={styles.flex}>
               <Button
@@ -253,9 +252,13 @@ export function SignToTextScreen({ sessionFactory }: Props) {
         </Card>
       )}
 
-      {personal && hasSigns ? (
-        <AppText variant="caption" color="textSecondary" testID="known-signs">
-          {t('signToText.knownSigns', { count: recognizable.length })}
+      {vocabulary && !demoMode ? (
+        <AppText variant="caption" color="textSecondary" testID="vocabulary-info">
+          {t('signToText.vocabulary.info', {
+            count: vocabulary.size,
+            source: vocabulary.packs.map((p) => p.source.name).join(', '),
+          })}
+          {shownLanguage ? ` ${t('signToText.vocabulary.language', { language: LANGUAGES[shownLanguage].nativeName })}` : ''}
         </AppText>
       ) : null}
 

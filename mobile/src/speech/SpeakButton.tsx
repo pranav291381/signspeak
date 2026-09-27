@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { Button, Notice } from '@/components';
-import { LANGUAGES } from '@/i18n/languages';
+import { LANGUAGES, type LanguageCode } from '@/i18n/languages';
 import { useSettings } from '@/settings/SettingsProvider';
 import { useTheme } from '@/theme';
 
@@ -10,16 +10,19 @@ import type { SpeechController } from './useSpeech';
 
 interface Props {
   text: string;
+  /** Language of `text` (default: the user's output language). */
+  language?: LanguageCode;
   speech: SpeechController;
   testID?: string;
 }
 
 /** Speak / Stop toggle with visible, non-audio feedback when speech fails. */
-export function SpeakButton({ text, speech, testID }: Props) {
+export function SpeakButton({ text, language: textLanguage, speech, testID }: Props) {
   const { t } = useTranslation();
   const { settings } = useSettings();
   const { spacing } = useTheme();
-  const language = LANGUAGES[settings.outputLanguage].nativeName;
+  const spoken = textLanguage ?? settings.outputLanguage;
+  const language = LANGUAGES[spoken].nativeName;
   const problem = speech.problem;
 
   let message: string | null = null;
@@ -35,7 +38,7 @@ export function SpeakButton({ text, speech, testID }: Props) {
         icon={speech.speaking ? 'stop' : 'volume-high'}
         accessibilityHint={t('speech.a11yHint', { language })}
         disabled={!text.trim()}
-        onPress={() => (speech.speaking ? speech.stop() : void speech.speak(text))}
+        onPress={() => (speech.speaking ? speech.stop() : void speech.speak(text, spoken))}
       />
       {message ? <Notice tone="warning" icon="volume-off" message={message} testID="speech-problem" /> : null}
     </View>

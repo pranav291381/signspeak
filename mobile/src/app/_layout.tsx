@@ -10,6 +10,7 @@ import { HistoryProvider } from '@/history/HistoryProvider';
 import { PersonalSignsProvider } from '@/personal/PersonalSignsProvider';
 import { AppThemeProvider } from '@/settings/AppThemeProvider';
 import { SettingsProvider } from '@/settings/SettingsProvider';
+import { SignVocabularyProvider } from '@/signpack/SignVocabularyProvider';
 import { useTheme } from '@/theme';
 import { APP_FONTS } from '@/theme/fonts';
 
@@ -83,7 +84,9 @@ export default function RootLayout() {
           <NavigationTheme>
             <HistoryProvider>
               <PersonalSignsProvider>
-                <AppStack />
+                <SignVocabularyProvider>
+                  <AppStack />
+                </SignVocabularyProvider>
               </PersonalSignsProvider>
             </HistoryProvider>
           </NavigationTheme>

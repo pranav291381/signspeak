@@ -1,5 +1,5 @@
 import { FRAME_DIM } from '@/recognition/featureSpec';
-import { handsVisible, signerPresent } from '@/recognition/features';
+import { handsRaised, handsVisible, signerPresent } from '@/recognition/features';
 import type { LandmarkFrame } from '@/recognition/types';
 
 /**
@@ -38,12 +38,15 @@ export function resampleByTime(
   return out;
 }
 
-/** Index range [first, last] of frames with hands visible, or null. */
+/**
+ * Index range [first, last] of frames with a hand raised into signing space, or
+ * null. Hands resting low before and after a sign are not part of it.
+ */
 export function handSpan(frames: readonly (ArrayLike<number> | null)[]): [number, number] | null {
   let first = -1;
   let last = -1;
   frames.forEach((values, i) => {
-    if (handsVisible(values)) {
+    if (handsRaised(values)) {
       if (first < 0) first = i;
       last = i;
     }
@@ -57,7 +60,7 @@ export type PreparedSample = { ok: true; frames: Float32Array[] } | { ok: false;
 
 /**
  * Turns raw recorded frames into a stored sample: resampled to SAMPLE_FPS and
- * trimmed to the part where hands are visible. Explains what went wrong otherwise,
+ * trimmed to the part where hands are raised. Explains what went wrong otherwise,
  * so the teach flow can tell the user how to fix it.
  */
 export function prepareSample(recorded: readonly LandmarkFrame[]): PreparedSample {
@@ -65,7 +68,8 @@ export function prepareSample(recorded: readonly LandmarkFrame[]): PreparedSampl
   if (tracked.filter((f) => signerPresent(f.values)).length < MIN_HAND_FRAMES) {
     return { ok: false, problem: 'no_signer' };
   }
-  const withHands = tracked.filter((f) => handsVisible(f.values));
+  // Hands resting low (on the lap) are not signing.
+  const withHands = tracked.filter((f) => handsRaised(f.values));
   if (withHands.length === 0) return { ok: false, problem: 'no_hands' };
 
   const start = withHands[0]!.timestampMs;

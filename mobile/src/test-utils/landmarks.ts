@@ -224,3 +224,31 @@ export const MOTIONS: Record<string, Motion> = {
     { right: { x: 0.1, y: -0.9, curl: [0.3, 0.5, 0.5, 0.5, 0.5], angle: 0.5 } },
   ],
 };
+
+function randomHand(random: () => number, side: 1 | -1): HandPose {
+  const curl = () => {
+    const c = random();
+    return c < 0.5 ? 0 : c > 0.8 ? 1 : c;
+  };
+  return {
+    x: side * (0.1 + random() * 0.7),
+    y: -0.9 + random() * 1.4,
+    curl: [curl(), curl(), curl(), curl(), curl()],
+    angle: -Math.PI / 2 + (random() - 0.5) * 1.5,
+  };
+}
+
+/** A random but repeatable movement (one or two hands, 2–4 keyframes), for large test vocabularies. */
+export function randomMotion(seed: number): Motion {
+  const random = rng(seed);
+  const twoHands = random() < 0.35;
+  const keyframes = 2 + Math.floor(random() * 3);
+  const motion: Motion = [];
+  let right = randomHand(random, -1);
+  for (let k = 0; k < keyframes; k++) {
+    motion.push({ right, left: twoHands ? randomHand(random, 1) : null });
+    // Handshape often stays while the hand moves.
+    right = { ...randomHand(random, -1), curl: random() < 0.6 ? right.curl : randomHand(random, -1).curl };
+  }
+  return motion;
+}

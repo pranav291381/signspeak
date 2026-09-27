@@ -187,19 +187,20 @@ interface RawPrediction { scores: { label: string; score: number }[]; latencyMs:
 | Implementation | Status | Notes |
 | --- | --- | --- |
 | `EngineFrameSource` | Implemented | Live landmark frames from the camera engine (§6.7) |
-| `PersonalSignRecognizer` | Implemented | Recognizes the signs taught on this phone (§6.6). Used whenever at least one taught sign has two or more takes |
-| `UnavailableRecognizer` + `NoFrameSource` | Implemented | With no taught signs: `model_unavailable`; the screen explains how to teach the first sign |
+| `ReferenceSignRecognizer` (id `sign-pack-dtw`) | Implemented | Recognizes the signs of the installed sign packs, e.g. the ISL dictionary (§6.8). What Sign → Text uses |
+| `PersonalSignRecognizer` | Implemented, parked | The same matching over signs taught on this phone (§6.6). Teaching is paused while the dictionary vocabulary is built; the code and routes are kept |
+| `UnavailableRecognizer` + `NoFrameSource` | Implemented | With no vocabulary: `model_unavailable`; the screen says the vocabulary is not installed yet |
 | `MockSignRecognizer` + `SimulatedFrameSource` | Implemented | Scripted outputs, including uncertain and noisy sequences. Only reachable by switching on **Demo mode**, and the UI shows a persistent "Simulated — not real recognition" banner |
 | `OnDeviceSignRecognizer` | Planned | Runs an exported, trained model pack (TFLite or ONNX) for a general vocabulary |
 
-`createRecognitionSession()` (`recognition/engine.ts`) picks one of these. Personal recognition uses a time-based window (`RecognizerInfo.windowMs`, last 3 s, first prediction after 8 frames), `requireHands` (status `no_hands` when a person is visible without hands) and `idle` predictions (resting hands never lead to "not sure").
+`createRecognitionSession()` (`recognition/engine.ts`) picks one of these: demo mode, else the sign-pack vocabulary, else personal signs, else unavailable. Both recording-based recognizers use a time-based window (`RecognizerInfo.windowMs`, last 3 s, first prediction after 8 frames), `requireHands` (status `no_hands` when a person is visible without hands) and `idle` predictions (resting hands never lead to "not sure").
 
 ### 6.3 Feature contract (train/serve parity)
 
 Training (Python MediaPipe) and inference (mobile) have to produce identical feature vectors. The contract lives in `shared/feature_spec_v1.json` and is generated from and tested against `ml/signspeak_ml/features/spec.py`:
 
 - Landmarks: 21 left-hand + 21 right-hand + a subset of upper-body pose (nose, shoulders, elbows, wrists, hips). Face landmarks are reserved for v2, because non-manual markers matter in ISL.
-- Coordinates: x, y, z normalized by shoulder midpoint (origin) and shoulder width (scale). This makes the vector robust to distance and framing.
+- Coordinates: x, y, z normalized by shoulder midpoint (origin) and shoulder width (scale). This makes the vector robust to distance and framing. MediaPipe divides x by the image width and y by its height, so before normalization y is rescaled by height / width (both axes in image-width units). Without this, the same person would give vertical distances about 3× apart in a portrait phone camera and a landscape dictionary video (`isotropic` in `engine/core.ts`, `frame_from_mediapipe` in the Python extractor).
 - Presence flags for each hand. A missing hand is encoded as zeros + flag 0 rather than dropped.
 - Fixed frame rate (resampled to 15 fps) and window length (default 32 frames ≈ 2.1 s).
 
@@ -254,11 +255,22 @@ Recognition that works without a trained model: the user (ideally a fluent signe
 - **Matching** (`dtw.ts`, `matcher.ts`): subsequence DTW (symmetric steps, normalized by path weight) finds the best stretch of the live window for each take's core (the middle of the take). Queries are also compared mirrored, so a left-handed signer matches right-handed takes.
 - **Acceptance** per sign from its own takes: leave-one-out distance between takes, `θ = clamp(1.8 × median, 0.5, 1.2)`. Scores are a softmax over `−6 × distance / θ` with "unknown" at 1, fed to the existing `PredictionStabilizer`, so ambiguity and unknown movement still produce "not sure", never a guess.
 - **Evidence** (`personal/__tests__`): synthetic landmark sequences (speed, position, noise, left-handed, label flips) and real MediaPipe landmarks captured from the app's engine on MediaPipe's hand test photos (`fixtures/mediapipe_hands.json`): repeats of a handshape score 0.15–0.29 of θ, different handshapes ≥ 1.6, and an untaught handshape is rejected.
+- **Resting hands**: a hand whose wrist is lower than 1.2 shoulder widths below the shoulders (on the lap, arms hanging) is not signing. It counts as absent in the compact features, and recordings and live windows are trimmed to the frames with a hand raised (`handsRaised`, `REST_WRIST_Y` in `recognition/features.ts`). So a hand resting in view never spoils a match, and a resting pose is not a sign.
 - **Limits**: it recognizes only what was taught, as the teacher signed it; it has not been evaluated with real ISL signing across signers; see README.
 
 ### 6.7 Camera engine (`mobile/engine/`, `mobile/src/engine/`)
 
 MediaPipe Tasks Vision (hand + pose landmarkers, VIDEO mode, GPU with CPU fallback) runs in a page that is bundled into one HTML string (`scripts/build-engine.mjs`, checked by `npm run check:engine`) and loaded in a WebView on phones (origin `https://localhost`, a secure context) or an iframe on the web. Only landmark numbers are posted to the app. Model and WASM files are fetched once from the configured sources, verified against pinned SHA-256 hashes (by role, so a swapped file is rejected), and cached. Speed: at start the page checks the WebGL renderer and skips MediaPipe's GPU path on software renderers (SwiftShader, llvmpipe, Microsoft Basic Render), where it is many times slower than the WASM CPU path; otherwise it measures the GPU and switches to the CPU if that is faster (`DelegateTuner`). Hand tracking runs every detection (up to 30/s), pose (only needed for shoulder normalization) every third, and frames are posted to the app at 15/s. The skeleton of both hands (blue bones, teal joints) is redrawn on every display frame, easing toward the latest detection, so it moves smoothly even when detection is slower; it flashes on recognition. Webcams that do not report their facing mode are mirrored on the web. A stats message (rate, time per detection, GPU/CPU) is shown as a small label.
+
+### 6.8 Sign packs (`mobile/src/signpack/`, `mobile/scripts/build-sign-pack.mjs`)
+
+The vocabulary of Sign → Text comes from **sign packs**: reference recordings made from published sign videos (the ISL dictionary at indiansignlanguage.org, with the owners' permission). Details and the how-to: [`sign-packs.md`](sign-packs.md).
+
+- **Builder** (`scripts/build-sign-pack.mjs`, Node): reads a manifest (word, video, source page), downloads each video once to a local cache, and serves the extraction page `engine/extract.ts` with the MediaPipe files to Chrome/Edge/Chromium through `playwright-core` (a dev dependency; no browser download). The page seeks through each video at 15 fps and runs **the same** hand and pose landmarkers, `frameValues` and `prepareSample` as the app, so dictionary recordings and live signing produce the same kind of numbers. Videos the browser cannot decode are converted with ffmpeg if available. Results are cached per video and keyed by a hash of the extractor and models, so re-runs resume. It writes the pack and a report (per-video counts and problems, and the three closest other signs for each sign by the app's own matching).
+- **Pack**: JSON, `islconnect-sign-pack` v1, samples without depth (105 values per frame, Int16 × 1000, base64). `scripts/install-sign-pack.mjs` copies packs to `assets/signpacks/` (a Metro asset type, `metro.config.js`) and regenerates `src/signpack/bundled.ts`.
+- **App**: `SignVocabularyProvider` reads the bundled packs the first time Sign → Text opens (`expo-asset` + `fetch` on the web, `expo-file-system` on phones), validates them (`parse.ts`: wrong format, feature version or frame rate is rejected; single broken signs are dropped and counted) and builds the `Vocabulary` (labels → word, language, source).
+- **Matching at dictionary scale** (`personal/prefilter.ts`): full DTW against thousands of signs is too slow at 5 predictions a second. A first pass compares each sign's core, reduced to 5 frames, with the live window at a third of its frame rate by the same subsequence DTW (so any timing, pause or speed still lines up), abandoning a sign as soon as it cannot beat the current 24th best. Only those 24 get the full comparison. Used from 48 signs. Synthetic benchmark (random one- and two-handed movements, other "signers" at 0.75–1.35× speed, noise, offsets, 20% left-handed): with 2,000 signs, the signed sign was among the 24 candidates in 100% of queries, including with hands resting low or held still after the sign; 12–22 ms per prediction in Node/V8 (1 s to build the index).
+- **Thresholds**: one recording per sign cannot give a leave-one-out spread, so each sign uses `threshold` or the pack's `defaultThreshold` (0.9, uncalibrated). An explicit threshold always wins over leave-one-out, because a dictionary's variants of a word are not repeats.
 
 ---
 
@@ -367,3 +379,8 @@ The first model is a small temporal classifier (1D temporal convolutions + GRU, 
 | D12 | Diagrams (Text → ISL, alphabet) are drawn from recordings made on the phone, never from invented handshapes | The project must not invent ISL content; no verified references were available | Accepted |
 | D13 | Bottom tabs + first-launch welcome (language, appearance), Inter font, light/dark/system theme | Owner request for a modern, low-clutter UI with a first-run menu | Accepted (owner) |
 | D14 | `react-native-svg` for diagrams, `@expo-google-fonts/inter` for type | Standard, in Expo Go; no native build needed | Accepted |
+| D15 | Sign → Text vocabulary from the ISL dictionary at indiansignlanguage.org, as sign packs built offline from its videos with the app's own tracking | Owner obtained permission and asked to start with the official videos; no testers yet. One pipeline for any published, permitted source | Accepted (owner) |
+| D16 | Teaching your own signs is paused; Sign → Text is camera, text and speech only | Owner request ("isl-text should be clean camera and text and speech"). Code, routes and tests of personal signs are kept; earlier taught signs can still be deleted in Settings | Accepted (owner) |
+| D17 | `playwright-core` (dev dependency) drives the user's installed Chrome/Edge for the pack builder | Runs the exact browser code of the app on dictionary videos; no browser download, nothing added to the app | Accepted |
+| D18 | `expo-file-system` to read bundled packs on phones | Part of Expo (in Expo Go); `fetch` of `file://` is not reliable on Android | Accepted |
+| D19 | Packs bundled as app assets for now | Works offline, no hosting. Revisit when the real pack's size is known: a large pack may need to be downloaded on first use | **Open, owner decision when the pack exists** |

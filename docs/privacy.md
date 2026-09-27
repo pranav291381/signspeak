@@ -14,9 +14,11 @@ Status: **engineering privacy design**, not legal advice. It must be reviewed ag
 
 | Data | Where | Leaves device? | Retention | Deletion |
 | --- | --- | --- | --- | --- |
-| Camera frames | Memory only, inside the camera engine (WebView/iframe) during Sign → Text and Teach a sign | **Never** | Discarded immediately after processing | n/a |
+| Camera frames | Memory only, inside the camera engine (WebView/iframe) during Sign → Text | **Never** | Discarded immediately after processing | n/a |
 | Landmarks (numeric hand/pose points) while signing | Memory only | No. Future server inference would be opt-in only (see below) | Discarded after each window (≤ 3 s) | n/a |
-| **Taught signs** (landmark recordings of signs the user teaches, 2–5 takes each, ≤ 4 s per take) | On-device storage, one entry per sign. Hand, arm and shoulder positions only: **no images or video** | No | Until the user deletes them | My signs → a sign → delete a take or the sign; My signs or Settings → Delete all my signs; uninstall |
+| **Taught signs** (landmark recordings of signs the user taught, 2–5 takes each, ≤ 4 s per take). Teaching is paused; only signs taught with earlier versions exist | On-device storage, one entry per sign. Hand, arm and shoulder positions only: **no images or video** | No | Until the user deletes them | Settings → Delete all my signs (shown while any exist); uninstall |
+| **Sign vocabulary** (sign packs shipped with the app) | App bundle. Landmark numbers derived from the published videos of the ISL dictionary at indiansignlanguage.org, used with its owners' permission, plus the source's name, URL and permission statement. Nothing about the user | n/a (read only) | Replaced with app updates | n/a |
+| Dictionary videos used to build packs | Only on the computer of whoever runs `npm run build:signpack` (`mobile/.signpack-cache/`, git-ignored). Never on phones, never uploaded, never committed (CI rejects video files) | No | Until that person deletes the cache | Delete `mobile/.signpack-cache/` |
 | Recognition results (text) | Screen. History only if the user enables it | No | Until cleared or superseded | Clear on screen, or clear history |
 | History (recognized text, phrase lookups) | On-device storage, **off by default**, max 50 entries. Simulated demo results are never saved | No | Until the user clears it or turns history off (turning it off deletes it) | History → Clear history, or Settings → turn history off |
 | Settings (languages, appearance, speech, camera, demo mode, whether the welcome was completed) | On-device storage | No | Until app uninstall | Uninstall |

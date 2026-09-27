@@ -40,3 +40,6 @@ yarn-error.*
 /ios
 /android
 public/mediapipe/
+
+# Sign pack builder cache (downloaded videos, per-video results)
+.signpack-cache/

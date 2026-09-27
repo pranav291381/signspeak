@@ -1,7 +1,11 @@
+import { COORDS, FRAME_DIM, PRESENCE_START } from '@/recognition/featureSpec';
+
 /**
  * Compact storage for landmark frames: values × 1000 as little-endian Int16,
  * base64-encoded (≈ 2.7 bytes per value instead of ~8 as JSON text).
  */
+
+const PRESENCE_FLAGS = FRAME_DIM - PRESENCE_START;
 
 export const VALUE_SCALE = 1000;
 const INT16_MAX = 32767;
@@ -67,4 +71,42 @@ export function decodeFrames(data: string, frames: number, dim: number): Float32
     out.push(frame);
   }
   return out;
+}
+
+/**
+ * Frames without depth, for sign packs: x and y of every landmark (feature
+ * spec v1 order) followed by the three presence flags. Matching and diagrams
+ * use only x and y, so this loses nothing they need and is a third smaller.
+ */
+export const XY_FRAME_DIM = (FRAME_DIM - PRESENCE_FLAGS) / COORDS * 2 + PRESENCE_FLAGS;
+
+export function toXY(frame: ArrayLike<number>): Float32Array {
+  const out = new Float32Array(XY_FRAME_DIM);
+  const points = (FRAME_DIM - PRESENCE_FLAGS) / COORDS;
+  for (let p = 0; p < points; p++) {
+    out[p * 2] = frame[p * COORDS]!;
+    out[p * 2 + 1] = frame[p * COORDS + 1]!;
+  }
+  for (let f = 0; f < PRESENCE_FLAGS; f++) out[points * 2 + f] = frame[PRESENCE_START + f]!;
+  return out;
+}
+
+/** A spec-v1 frame from an XY frame (depth 0). */
+export function fromXY(frame: ArrayLike<number>): Float32Array {
+  const out = new Float32Array(FRAME_DIM);
+  const points = (FRAME_DIM - PRESENCE_FLAGS) / COORDS;
+  for (let p = 0; p < points; p++) {
+    out[p * COORDS] = frame[p * 2]!;
+    out[p * COORDS + 1] = frame[p * 2 + 1]!;
+  }
+  for (let f = 0; f < PRESENCE_FLAGS; f++) out[PRESENCE_START + f] = frame[points * 2 + f]!;
+  return out;
+}
+
+/** Decodes stored frames as spec-v1 frames, whichever of the two layouts they use. */
+export function decodeSpecFrames(data: string, frames: number, dim: number): Float32Array[] {
+  const decoded = decodeFrames(data, frames, dim);
+  if (dim === FRAME_DIM) return decoded;
+  if (dim === XY_FRAME_DIM) return decoded.map(fromXY);
+  throw new Error(`Unknown frame layout (${dim} values)`);
 }

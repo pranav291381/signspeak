@@ -4,7 +4,7 @@ Each phase ends with passing tests, updated documentation and logical commits. S
 
 Legend: ✅ done · 🟡 built, but waiting for verified content, a dataset or a decision · ⏳ not started · 🔒 blocked on external input
 
-Sign → Text now works with signs taught on the phone (personal signs, on-device hand tracking). Text → ISL and Learn draw hand diagrams from those recordings; no verified ISL content is bundled yet. Phase 6 is complete as a pipeline, but no general model can be trained until a consented dataset exists.
+Sign → Text now recognizes an installed **sign vocabulary** built from the videos of the ISL dictionary at indiansignlanguage.org (permission obtained by the owner), with a builder that turns videos into sign packs using the app's own hand tracking (`docs/sign-packs.md`). The real pack is waiting on network access to the site. Teaching your own signs, Text → ISL and Learn are parked. Phase 6 is complete as a pipeline, but no general model can be trained until a consented dataset exists.
 
 | # | Phase | Status | Deliverables | Exit criteria |
 | --- | --- | --- | --- | --- |
@@ -14,7 +14,7 @@ Sign → Text now works with signs taught on the phone (personal signs, on-devic
 | 4 | Camera screen + tracking | ✅ | Permission flow, MediaPipe engine in a WebView/iframe with integrity-checked assets, skeleton overlay, front/back, pause/resume/clear, all error states | Engine protocol/asset tests, camera state tests with a fake engine, browser run with a fake camera |
 | 5 | Recognition interface + mock inference | ✅ | `SignRecognizer`, `FrameSource`, `UnavailableRecognizer`, `MockSignRecognizer` (Demo mode), `PredictionStabilizer`, `RecognitionSession` | Stabilizer unit tests (stable, noisy, ambiguous, emergency, cooldown, duplicates) |
 | 6 | Real ML pipeline | 🟡 | `signspeak_ml`: feature spec, MediaPipe extractor, dataset loader + signer splits, temporal model, trainer, evaluator, inference engine; `dataset.md`, `model-evaluation.md` | Pytest green on synthetic fixtures. **Real training 🔒 needs consented dataset** |
-| 7 | ISL → Text | ✅ | Personal-sign recognizer (DTW, per-sign thresholds), teach flow, My signs, transcript with fingerspelling, history | Synthetic and real-MediaPipe recognition tests, end-to-end screen test |
+| 7 | ISL → Text | 🟡 | Sign-pack vocabulary (builder, installer, loader, first-pass shortlist for thousands of signs), recording-based recognizer (DTW), clean camera + text + speech screen, transcript with fingerspelling, history. Personal signs parked | Pack, loader, shortlist and end-to-end screen tests; builder and live recognition checked in a browser with stand-in videos. **Needs the dictionary crawl (network access to indiansignlanguage.org), then testers to calibrate** |
 | 8 | Text → ISL | 🟡 | Phrase/word planner with fingerspelling, animated hand-diagram player | Planner + screen tests. **Needs recorded, reviewed signs** |
 | 9 | Learn ISL | 🟡 | Alphabet map with guided recording, signing tips | Screen tests. **Needs a fluent signer to record the alphabet; tips need educator review** |
 | 10 | Speech | ✅ | `SpeechService` + expo-speech adapter, voice availability, error states | Service tests with mocked engine |
@@ -27,8 +27,8 @@ Sign → Text now works with signs taught on the phone (personal signs, on-devic
 
 | Suite | Tests | Covers |
 | --- | --- | --- |
-| Mobile (Jest + RNTL) | 328 | Navigation and welcome over the real route tree, localization, colour contrast, settings, camera engine protocol/assets, camera states, personal-sign storage/matching/recognition (synthetic and real MediaPipe landmarks), teach flow, My signs, diagrams, Sign → Text end to end, Text → ISL, Learn, stabilizer, session, speech, history, feedback |
-| ML (pytest) | 72 | Feature contract parity, normalization, resampling, augmentation, MediaPipe result conversion, annotation validation, signer-level splits, dataset loading, model, training, calibration, metrics, packs, inference, CLI |
+| Mobile (Jest + RNTL) | 372 | Navigation and welcome over the real route tree, localization, colour contrast, settings, camera engine protocol/assets (incl. portrait/landscape parity), camera states, sign packs (parsing, layouts, loader, vocabulary, provider), first-pass shortlist at 250 signs, resting hands, personal-sign storage/matching/recognition (synthetic and real MediaPipe landmarks), teach flow, My signs, diagrams, Sign → Text end to end, Text → ISL, Learn, stabilizer, session, speech, history, feedback |
+| ML (pytest) | 74 | Feature contract parity, normalization, resampling, augmentation, MediaPipe result conversion, annotation validation, signer-level splits, dataset loading, model, training, calibration, metrics, packs, inference, CLI |
 | Backend (pytest) | 35 | Validation, malformed input, model-unavailable, feedback privacy, size limits, CORS, error hygiene, retention |
 
 ## Production build (Phase 14): what the owner needs to decide or provide
@@ -44,7 +44,7 @@ Sign → Text now works with signs taught on the phone (personal signs, on-devic
 These need people and partners. They should start in parallel with engineering:
 
 1. **ISL educators + Deaf community partners:** select and validate the vocabulary, choose regional variants, record or review the alphabet and common signs, and review the tips.
-2. **A reviewed sign pack:** recordings (landmarks) by fluent Deaf signers, with consent and a clear licence, that could be shared between phones.
+2. **Calibrating the dictionary vocabulary:** testers (ideally fluent Deaf signers) signing known dictionary words, so that acceptance distances can be measured instead of assumed, and recognition of signers other than the dictionary's can be evaluated.
 3. **Consented dataset:** many signers, diverse conditions, and signer-level splits (see `docs/dataset.md`).
 4. **Translation review:** native speakers review each UI language, with Hindi first.
 5. **License decision** for code and content (owner).

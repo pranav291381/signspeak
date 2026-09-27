@@ -514,7 +514,7 @@ async function main(): Promise<void> {
 
     if (now - lastSent >= 1000 / SEND_FPS - 2) {
       lastSent = now;
-      const { values, hands } = frameValues(pose, handsResult);
+      const { values, hands } = frameValues(pose, handsResult, video.videoHeight / video.videoWidth);
       send({ type: 'frame', t: Date.now(), v: values, hands });
     }
     if (now - lastStats > 1000) {

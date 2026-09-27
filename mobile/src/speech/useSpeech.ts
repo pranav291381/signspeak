@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 
+import type { LanguageCode } from '@/i18n/languages';
 import { useSettings } from '@/settings/SettingsProvider';
 import { SPEECH_RATE_VALUES } from '@/settings/settings';
 
@@ -12,14 +13,15 @@ const defaultService = new SpeechService(expoSpeechEngine);
 export const SpeechServiceContext = createContext<SpeechService>(defaultService);
 
 export interface SpeechController {
-  speak(text: string): Promise<SpeakResult>;
+  /** Speaks `text` in `language` (default: the user's output language). */
+  speak(text: string, language?: LanguageCode): Promise<SpeakResult>;
   stop(): void;
   speaking: boolean;
   /** Last failure, cleared on the next attempt. */
   problem: SpeakResult | null;
 }
 
-/** Speaks in the user's output language and speed. */
+/** Speaks in the user's output language (unless told otherwise) and speed. */
 export function useSpeech(): SpeechController {
   const service = useContext(SpeechServiceContext);
   const { settings } = useSettings();
@@ -36,10 +38,10 @@ export function useSpeech(): SpeechController {
   }, [service]);
 
   const speak = useCallback(
-    async (text: string) => {
+    async (text: string, language: LanguageCode = settings.outputLanguage) => {
       setProblem(null);
       setSpeaking(true);
-      const result = await service.speak(text, settings.outputLanguage, SPEECH_RATE_VALUES[settings.speechRate]);
+      const result = await service.speak(text, language, SPEECH_RATE_VALUES[settings.speechRate]);
       if (mounted.current) {
         setSpeaking(false);
         if (result.status !== 'ok' && result.status !== 'stopped') setProblem(result);

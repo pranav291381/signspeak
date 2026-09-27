@@ -21,7 +21,7 @@
       153
     ]
   },
-  "normalization": "Input x, y in normalized image coordinates [0, 1]; z as reported by MediaPipe (pose: relative to hip midpoint, hands: relative to the wrist). origin = midpoint(left_shoulder, right_shoulder) in (x, y); scale = euclidean distance between the shoulders in (x, y); x' = (x - origin_x) / scale, y' = (y - origin_y) / scale, z' = z / scale",
+  "normalization": "Input x in normalized image coordinates (x / image width, as MediaPipe reports it); y in the same units (MediaPipe's y x image height / image width), so features do not depend on the image's shape (portrait or landscape); z as reported by MediaPipe (pose: relative to hip midpoint, hands: relative to the wrist). origin = midpoint(left_shoulder, right_shoulder) in (x, y); scale = euclidean distance between the shoulders in (x, y); x' = (x - origin_x) / scale, y' = (y - origin_y) / scale, z' = z / scale",
   "pose_landmarks": {
     "left_elbow": 13,
     "left_hip": 23,

@@ -33,11 +33,11 @@ A welcome flow asks for the app language and the appearance (light, dark or foll
 ### 4.1 Sign → Text (+ speech)
 1. The user opens **Sign → Text**, grants camera permission, and chooses the front or back camera.
 2. Live hand and body tracking is drawn over the video as a hand skeleton; a status pill says at once whether a person and hands are in view.
-3. Recognized signs appear as text in the **output language**; fingerspelled letters are joined into words; **Speak** reads everything recognized so far.
+3. Recognized signs appear as text: the dictionary's word, in the dictionary's language (English), with a note when the output language differs; fingerspelled letters are joined into words; **Speak** reads everything recognized so far in the language it is written in. The screen is only camera, text and speech: no teaching or sign management.
 4. Controls: pause/resume, clear, switch camera, report a wrong result.
 5. When recognition is uncertain it shows *"Not sure what was signed. Please try again."* It never shows a guess.
 6. Emergency-category signs need stricter confidence and agreement before they are shown.
-7. Recognition covers the signs taught on the phone (§4.6). With none taught, the screen explains how to teach the first sign or record the alphabet; Demo mode remains available, clearly labelled.
+7. Recognition covers the installed **sign vocabulary**: sign packs made from the videos of the ISL dictionary at indiansignlanguage.org, used with permission (`docs/sign-packs.md`). The screen says how many signs it knows and credits the source. With no pack installed it says "Sign vocabulary not installed yet"; Demo mode remains available, clearly labelled.
 
 ### 4.2 Text → ISL
 1. The user types (or pastes) words in their language.
@@ -63,7 +63,8 @@ A welcome flow asks for the app language and the appearance (light, dark or foll
 - Report a problem / feedback
 - About: limitations, privacy summary, "not a replacement for interpreters"
 
-### 4.6 Teach a sign / My signs
+### 4.6 Teach a sign / My signs (paused)
+Parked by the owner's decision while Sign → Text uses the dictionary vocabulary: there is no entry point in the app, but the code, routes and tests are kept, and signs taught earlier can still be deleted in Settings. When testers are available, recordings of their signing will be used to calibrate the dictionary vocabulary.
 - Teach a common word from the library, any typed word or phrase, a single letter, or the whole alphabet.
 - Each take: countdown, a few seconds of recording (landmarks only), animated replay, and checks (no one in view, no hands, too short, unlike earlier takes). Words need three takes, letters two.
 - My signs lists every sign with its takes and readiness; takes, signs, or everything can be deleted.

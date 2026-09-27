@@ -10,6 +10,7 @@
     "expo-asset": "~57.0.18",
     "expo-camera": "~57.0.5",
     "expo-constants": "~57.0.19",
+    "expo-file-system": "~57.0.7",
     "expo-font": "~57.0.4",
     "expo-haptics": "~57.0.3",
     "expo-linking": "~57.0.11",
@@ -38,6 +39,7 @@
     "eslint-config-expo": "^57.0.2",
     "jest": "^29.7.0",
     "jest-expo": "^57.0.5",
+    "playwright-core": "^1.63.0",
     "react-test-renderer": "19.2.3",
     "typescript": "~6.0.3"
   },
@@ -53,7 +55,9 @@
     "postinstall": "node scripts/setup-mediapipe-assets.mjs",
     "setup:mediapipe": "node scripts/setup-mediapipe-assets.mjs --strict",
     "build:engine": "node scripts/build-engine.mjs",
-    "check:engine": "node scripts/build-engine.mjs --check"
+    "check:engine": "node scripts/build-engine.mjs --check",
+    "build:signpack": "node scripts/build-sign-pack.mjs",
+    "install:signpack": "node scripts/install-sign-pack.mjs"
   },
   "private": true
 }
