@@ -60,7 +60,7 @@ def raised(frames: np.ndarray) -> np.ndarray:
     return left | right
 
 
-def live_windows(frames: np.ndarray, label: str) -> list[tuple[str, np.ndarray]]:
+def live_windows(frames: np.ndarray, label: str, positives: int = POSITIVES) -> list[tuple[str, np.ndarray]]:
     """Windows as the app sees them live, with their labels.
 
     The app looks at the last WINDOW_FRAMES frames, with the person in view
@@ -78,7 +78,7 @@ def live_windows(frames: np.ndarray, label: str) -> list[tuple[str, np.ndarray]]
     span = last - first + 1
     window = lambda end: seq[end - WINDOW_FRAMES + 1 : end + 1]  # noqa: E731
     ends = np.arange(last - int(0.2 * span), min(last + CONTEXT, len(seq) - 1) + 1)
-    out = [(label, window(int(e))) for e in np.linspace(ends[0], ends[-1], min(len(ends), POSITIVES)).round()]
+    out = [(label, window(int(e))) for e in np.linspace(ends[0], ends[-1], min(len(ends), positives)).round()]
     onset = np.arange(first + 1, first + max(2, int(0.45 * span)))
     onset_ends = np.linspace(onset[0], onset[-1], min(len(onset), 3)).round()
     out += [(UNKNOWN_LABEL, window(int(e))) for e in onset_ends]
@@ -117,6 +117,10 @@ def main() -> None:
     parser.add_argument("--epochs", type=int, default=80)
     parser.add_argument("--patience", type=int, default=15)
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--positives", type=int, default=POSITIVES, help="sign windows per recording")
+    parser.add_argument("--conv-channels", type=int, default=128)
+    parser.add_argument("--hidden-size", type=int, default=96)
+    parser.add_argument("--dropout", type=float, default=0.3)
     args = parser.parse_args()
 
     lines = args.data.read_text(encoding="utf-8").splitlines()
@@ -136,7 +140,7 @@ def main() -> None:
     for i, record in enumerate(records):
         frames = decode(record["recording"])
         part = splits[record["label"]][str(record.get("group") or "all")]
-        windows = live_windows(frames, record["label"])
+        windows = live_windows(frames, record["label"], args.positives)
         if not windows:
             skipped["no sign seen"] += 1
             continue
@@ -153,7 +157,14 @@ def main() -> None:
     print({part: len(d) for part, d in datasets.items()}, "skipped:", dict(skipped))
 
     torch.set_num_threads(max(1, torch.get_num_threads()))
-    model = TemporalSignClassifier(ModelConfig(num_classes=len(labels)))
+    model = TemporalSignClassifier(
+        ModelConfig(
+            num_classes=len(labels),
+            conv_channels=args.conv_channels,
+            hidden_size=args.hidden_size,
+            dropout=args.dropout,
+        )
+    )
     config = TrainConfig(epochs=args.epochs, patience=args.patience, batch_size=64, seed=args.seed)
     trainer = ModelTrainer(config)
     result = trainer.fit(model, datasets["train"], datasets["val"])

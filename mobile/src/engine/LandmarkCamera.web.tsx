@@ -12,9 +12,9 @@ import { useEngineMessages } from './useEngineMessages';
  * Web version: the same engine page in an iframe (srcdoc, same origin), so the
  * web build runs exactly the code phones run in their WebView.
  */
-export function LandmarkCamera({ facing, active, flashSignal = 0, style, testID, ...handlers }: LandmarkCameraProps) {
+export function LandmarkCamera({ facing, active, flashSignal = 0, model, style, testID, ...handlers }: LandmarkCameraProps) {
   const frame = useRef<HTMLIFrameElement>(null);
-  const onMessage = useEngineMessages(handlers);
+  const onMessage = useEngineMessages({ ...handlers, onPrediction: (message) => model?.receive(message) });
   // Built once per mount: later changes are sent as messages (no camera restart).
   const reduceMotion = useReduceMotion();
   const [html] = useState(() =>
@@ -48,12 +48,16 @@ export function LandmarkCamera({ facing, active, flashSignal = 0, style, testID,
     send({ type: 'setFacing', facing });
   }, [facing]);
 
+  useEffect(() => () => model?.detach(), [model]);
+
   return (
     <View style={[styles.container, style]} testID={testID}>
       <iframe
         ref={frame}
         srcDoc={html}
         allow="camera; autoplay"
+        // The page's script has run: it takes messages now.
+        onLoad={() => model?.attach(send)}
         aria-hidden
         tabIndex={-1}
         style={{ border: 0, width: '100%', height: '100%', display: 'block' }}

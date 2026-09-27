@@ -4,6 +4,8 @@
  * See docs/architecture.md §6.
  */
 
+import type { RemoteModel } from '@/model/remote';
+
 /** Label a model uses for "none of the known signs". Never shown as text. */
 export const UNKNOWN_LABEL = '__unknown__';
 
@@ -20,6 +22,8 @@ export interface LandmarkFrame {
 export interface FrameSource {
   /** True when frames do not come from a real camera. */
   readonly simulated: boolean;
+  /** Where a trained model can run faster than in the app (the camera engine page). */
+  readonly model?: RemoteModel;
   start(onFrame: (frame: LandmarkFrame) => void): void;
   stop(): void;
 }

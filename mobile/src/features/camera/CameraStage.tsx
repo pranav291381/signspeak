@@ -5,6 +5,7 @@ import { ActivityIndicator, StyleSheet, useWindowDimensions, View } from 'react-
 import { AppText, Button, Icon } from '@/components';
 import { LandmarkCamera } from '@/engine/LandmarkCamera';
 import type { EngineErrorCode, EngineFacing, EngineStatus } from '@/engine/protocol';
+import type { EngineLink } from '@/engine/types';
 import { useTheme } from '@/theme';
 
 interface Props {
@@ -16,6 +17,8 @@ interface Props {
   onReadyChange?: (ready: boolean) => void;
   /** Increment to flash the hand skeleton. */
   flashSignal?: number;
+  /** Runs the sign model in the engine page. */
+  model?: EngineLink;
   /** Shown over the preview while tracking runs. */
   overlayTop?: ReactNode;
   overlayCenter?: ReactNode;
@@ -30,6 +33,7 @@ export function CameraStage({
   onFrame,
   onReadyChange,
   flashSignal,
+  model,
   overlayTop,
   overlayCenter,
   overlayBottom,
@@ -66,6 +70,7 @@ export function CameraStage({
         facing={facing}
         active={active}
         flashSignal={flashSignal}
+        model={model}
         style={StyleSheet.absoluteFill}
         onFrame={onFrame}
         onStatus={update}

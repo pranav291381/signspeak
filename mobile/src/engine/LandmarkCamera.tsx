@@ -16,9 +16,9 @@ import { useEngineMessages } from './useEngineMessages';
  * context, so the camera API is available. Camera images never leave the
  * WebView; only landmark numbers are posted back.
  */
-export function LandmarkCamera({ facing, active, flashSignal = 0, style, testID, ...handlers }: LandmarkCameraProps) {
+export function LandmarkCamera({ facing, active, flashSignal = 0, model, style, testID, ...handlers }: LandmarkCameraProps) {
   const ref = useRef<WebView>(null);
-  const onMessage = useEngineMessages(handlers);
+  const onMessage = useEngineMessages({ ...handlers, onPrediction: (message) => model?.receive(message) });
 
   // Built once per mount: later changes are sent as messages, so the camera
   // does not restart and models are not reloaded.
@@ -46,6 +46,8 @@ export function LandmarkCamera({ facing, active, flashSignal = 0, style, testID,
     send({ type: 'setFacing', facing: facing as EngineFacing });
   }, [facing]);
 
+  useEffect(() => () => model?.detach(), [model]);
+
   return (
     <View style={[styles.container, style]} testID={testID}>
       <WebView
@@ -53,6 +55,8 @@ export function LandmarkCamera({ facing, active, flashSignal = 0, style, testID,
         source={{ html, baseUrl: 'https://localhost/' }}
         originWhitelist={['https://*', 'about:*', 'blob:*']}
         onMessage={(event: WebViewMessageEvent) => onMessage(decodeEngineMessage(event.nativeEvent.data))}
+        // The page's script has run: it takes messages now (again after a reload).
+        onLoadEnd={() => model?.attach(send)}
         javaScriptEnabled
         mediaCapturePermissionGrantType="grant"
         allowsInlineMediaPlayback

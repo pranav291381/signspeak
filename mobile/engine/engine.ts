@@ -34,6 +34,7 @@ import {
   type HandsResultLike,
   type Pt,
 } from './core';
+import { EngineSignModel } from './model';
 
 declare global {
   interface Window {
@@ -440,11 +441,15 @@ async function main(): Promise<void> {
     }
   };
 
+  const signModel = new EngineSignModel();
   window.__islEngine = {
     receive(raw: unknown) {
       const message: HostToEngine | null = decodeHostMessage(raw);
       if (!message) return;
-      if (message.type === 'setActive') {
+      if (message.type === 'setModel' || message.type === 'predict') {
+        const reply = signModel.handle(message);
+        if (reply) send(reply);
+      } else if (message.type === 'setActive') {
         active = message.active;
         void syncCamera();
       } else if (message.type === 'flash') {

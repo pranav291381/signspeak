@@ -9,6 +9,7 @@ import {
 } from '@/recognition/types';
 
 import type { ModelPack } from './modelPack';
+import type { RemoteModel } from './remote';
 import { softmax, TemporalModel } from './temporalModel';
 
 /** Frames with a hand raised needed in a window before the model is asked. */
@@ -26,13 +27,21 @@ export function withoutDepth(values: ArrayLike<number>, dim: number): Float32Arr
   return out;
 }
 
-/** Recognizes the signs of a trained model pack from the last `windowFrames` frames. */
+/**
+ * Recognizes the signs of a trained model pack from the last `windowFrames`
+ * frames. With a `remote` runner (the camera engine page), the forward pass
+ * runs there whenever it is available; otherwise here.
+ */
 export class ModelSignRecognizer implements SignRecognizer {
   readonly info: RecognizerInfo;
   private model: TemporalModel | null = null;
+  private loaded = false;
   private readonly labels: string[];
 
-  constructor(private readonly pack: ModelPack) {
+  constructor(
+    private readonly pack: ModelPack,
+    private readonly remote?: RemoteModel,
+  ) {
     this.labels = pack.labels.map((l) => (l.id === pack.unknownLabel ? UNKNOWN_LABEL : l.id));
     this.info = {
       id: `model:${pack.id}`,
@@ -46,19 +55,22 @@ export class ModelSignRecognizer implements SignRecognizer {
   }
 
   async load(): Promise<void> {
-    this.model = new TemporalModel(this.pack);
+    if (this.remote) this.remote.load(this.pack);
+    else this.model = new TemporalModel(this.pack);
+    this.loaded = true;
   }
 
   async predict(window: readonly LandmarkFrame[]): Promise<RawPrediction> {
     const started = now();
-    if (!this.model) throw new Error('Model not loaded');
+    if (!this.loaded) throw new Error('Model not loaded');
     const dim = this.pack.config.inputDim;
     const frames = window.slice(-this.pack.windowFrames).map((f) => (f.values ? withoutDepth(f.values, dim) : new Float32Array(dim)));
     if (frames.filter((f) => handsRaised(f)).length < MIN_RAISED_FRAMES) {
       // Hands down or out of view: nothing is being signed.
       return { scores: [{ label: UNKNOWN_LABEL, score: 1 }], latencyMs: now() - started, idle: true };
     }
-    const probabilities = softmax(this.model.forward(frames), this.pack.temperature);
+    const logits = this.remote?.available ? await this.remote.forward(frames) : this.local().forward(frames);
+    const probabilities = softmax(logits, this.pack.temperature);
     return {
       scores: this.labels.map((label, i) => ({ label, score: probabilities[i]! })),
       latencyMs: now() - started,
@@ -67,5 +79,10 @@ export class ModelSignRecognizer implements SignRecognizer {
 
   dispose(): void {
     this.model = null;
+    this.loaded = false;
+  }
+
+  private local(): TemporalModel {
+    return (this.model ??= new TemporalModel(this.pack));
   }
 }

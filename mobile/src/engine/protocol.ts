@@ -51,14 +51,28 @@ export type EngineToHost =
   /** One processed camera frame: feature spec v1 values, or null when nobody is in view. */
   | { type: 'frame'; t: number; v: number[] | null; hands: number }
   /** Detection rate, time per detection, and whether MediaPipe runs on the GPU or CPU. */
-  | { type: 'stats'; fps: number; inferenceMs: number; delegate?: 'GPU' | 'CPU' };
+  | { type: 'stats'; fps: number; inferenceMs: number; delegate?: 'GPU' | 'CPU' }
+  /** The sign model's logits for a `predict` request, or why there are none. */
+  | { type: 'prediction'; id: number; logits: number[] | null; error?: PredictionError };
+
+export type PredictionError = 'no_model' | 'failed';
 
 export type HostToEngine =
   | { type: 'setActive'; active: boolean }
   | { type: 'setFacing'; facing: EngineFacing }
   /** Briefly highlight the skeleton, e.g. when a sign was recognized. */
   | { type: 'flash' }
-  | { type: 'setReduceMotion'; reduceMotion: boolean };
+  | { type: 'setReduceMotion'; reduceMotion: boolean }
+  /**
+   * Load a trained model pack (its JSON text) for `predict`, or unload it
+   * (null). The page's JavaScript runs with a JIT, unlike the app's on phones.
+   */
+  | { type: 'setModel'; pack: string | null }
+  /**
+   * Run the loaded model on a window of frames: feature spec v1 without depth
+   * (XY layout, Int16 × 1000, base64; see src/personal/codec.ts).
+   */
+  | { type: 'predict'; id: number; frames: number; data: string };
 
 export interface TaggedMessage<T> {
   tag: typeof ENGINE_MESSAGE_TAG;
@@ -83,7 +97,7 @@ export function decodeEngineMessage(data: unknown): EngineToHost | null {
   const message = parsed as Partial<TaggedMessage<EngineToHost>>;
   if (message.tag !== ENGINE_MESSAGE_TAG || !message.payload || typeof message.payload !== 'object') return null;
   const payload = message.payload as { type?: unknown };
-  return ['status', 'error', 'frame', 'stats'].includes(String(payload.type)) ? (message.payload as EngineToHost) : null;
+  return ['status', 'error', 'frame', 'stats', 'prediction'].includes(String(payload.type)) ? (message.payload as EngineToHost) : null;
 }
 
 export function decodeHostMessage(data: unknown): HostToEngine | null {
@@ -104,6 +118,18 @@ export function decodeHostMessage(data: unknown): HostToEngine | null {
   if (payload.type === 'flash') return { type: 'flash' };
   if (payload.type === 'setReduceMotion' && typeof payload.reduceMotion === 'boolean') {
     return { type: 'setReduceMotion', reduceMotion: payload.reduceMotion };
+  }
+  if (payload.type === 'setModel' && (payload.pack === null || typeof payload.pack === 'string')) {
+    return { type: 'setModel', pack: payload.pack };
+  }
+  if (
+    payload.type === 'predict' &&
+    Number.isInteger(payload.id) &&
+    Number.isInteger(payload.frames) &&
+    payload.frames > 0 &&
+    typeof payload.data === 'string'
+  ) {
+    return { type: 'predict', id: payload.id, frames: payload.frames, data: payload.data };
   }
   return null;
 }
