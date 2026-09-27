@@ -26,23 +26,6 @@ export function HomeScreen() {
         description={t('home.signToText.description')}
         onPress={() => router.navigate('/sign-to-text')}
       />
-      <NavCard
-        testID="home-text-to-isl"
-        icon="message-text-outline"
-        title={t('home.textToIsl.title')}
-        accessibilityLabel={t('home.textToIsl.a11yLabel')}
-        description={t('home.textToIsl.description')}
-        onPress={() => router.navigate('/text-to-isl')}
-      />
-      <NavCard
-        testID="home-learn"
-        icon="school-outline"
-        title={t('home.learn.title')}
-        accessibilityLabel={t('home.learn.a11yLabel')}
-        description={t('home.learn.description')}
-        onPress={() => router.navigate('/learn')}
-      />
-
       <Card testID="home-signs">
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
           <View

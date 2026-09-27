@@ -1,6 +1,17 @@
 import fixture from '../../../../shared/fixtures/feature_parity_v1.json';
 import appPackage from '../../../package.json';
-import { cameraErrorCode, FrameMeter, frameValues, pickHands, wasmFiles } from '../../../engine/core';
+import {
+  cameraErrorCode,
+  delegateOrder,
+  DelegateTuner,
+  FrameMeter,
+  frameValues,
+  isSoftwareRenderer,
+  pickHands,
+  shouldMirror,
+  smoothPoints,
+  wasmFiles,
+} from '../../../engine/core';
 import { engineAssetSources, engineHashes, HAND_MODEL_KEY, POSE_MODEL_KEY, remoteSource } from '../assets';
 import { EngineFrameSource } from '../EngineFrameSource';
 import { buildEngineHtml, engineConfig, engineContentSecurityPolicy } from '../engineHtml';
@@ -86,6 +97,58 @@ describe('engine core', () => {
   });
 });
 
+describe('engine speed and drawing helpers', () => {
+  it('avoids the GPU path on software WebGL, where it is many times slower', () => {
+    expect(isSoftwareRenderer('ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero)), SwiftShader driver)')).toBe(true);
+    expect(isSoftwareRenderer('llvmpipe (LLVM 15.0.7, 256 bits)')).toBe(true);
+    expect(isSoftwareRenderer('ANGLE (Microsoft, Microsoft Basic Render Driver Direct3D11)')).toBe(true);
+    expect(isSoftwareRenderer(null)).toBe(true);
+    expect(isSoftwareRenderer('ANGLE (Intel, Intel(R) UHD Graphics 620 Direct3D11 vs_5_0 ps_5_0)')).toBe(false);
+    expect(delegateOrder(true)).toEqual(['CPU']);
+    expect(delegateOrder(false)).toEqual(['GPU', 'CPU']);
+  });
+
+  it('keeps a fast GPU, and moves to the CPU when the GPU is slow', () => {
+    const fast = new DelegateTuner('GPU', ['GPU', 'CPU']);
+    const decisions = Array.from({ length: DelegateTuner.SAMPLE }, () => fast.record(12));
+    expect(decisions.filter(Boolean)).toEqual([]);
+    expect(fast.settled).toBe(true);
+
+    const slow = new DelegateTuner('GPU', ['GPU', 'CPU']);
+    let switched: string | null = null;
+    for (let i = 0; i < DelegateTuner.SAMPLE; i++) switched = slow.record(400) ?? switched;
+    expect(switched).toBe('CPU');
+    // The CPU turns out faster: stay there.
+    const after = Array.from({ length: DelegateTuner.SAMPLE }, () => slow.record(60));
+    expect(after.filter(Boolean)).toEqual([]);
+    expect(slow.current).toBe('CPU');
+  });
+
+  it('goes back to the GPU if the CPU is even slower', () => {
+    const tuner = new DelegateTuner('GPU', ['GPU', 'CPU']);
+    for (let i = 0; i < DelegateTuner.SAMPLE; i++) tuner.record(80);
+    let back: string | null = null;
+    for (let i = 0; i < DelegateTuner.SAMPLE; i++) back = tuner.record(300) ?? back;
+    expect(back).toBe('GPU');
+    expect(tuner.settled).toBe(true);
+  });
+
+  it('mirrors cameras that face the user, including laptop webcams that do not say', () => {
+    expect(shouldMirror('back', 'user', false)).toBe(true);
+    expect(shouldMirror('front', 'environment', true)).toBe(false);
+    expect(shouldMirror('back', undefined, true)).toBe(true);
+    expect(shouldMirror('back', undefined, false)).toBe(false);
+    expect(shouldMirror('front', undefined, false)).toBe(true);
+  });
+
+  it('eases drawn points toward the detection and snaps on big jumps', () => {
+    const current = [{ x: 0.5, y: 0.5 }];
+    expect(smoothPoints(current, [{ x: 0.6, y: 0.5 }], 0.5)[0]).toEqual({ x: 0.55, y: 0.5 });
+    expect(smoothPoints(current, [{ x: 0.9, y: 0.5 }], 0.5)[0]).toEqual({ x: 0.9, y: 0.5 });
+    expect(smoothPoints(null, [{ x: 0.1, y: 0.2 }], 0.5)).toEqual([{ x: 0.1, y: 0.2 }]);
+  });
+});
+
 describe('engine assets and config', () => {
   it('prefers same-origin files on the web and falls back to the pinned CDN', () => {
     const web = engineAssetSources('web', 'http://localhost:8081');
@@ -112,6 +175,12 @@ describe('engine assets and config', () => {
     expect(hashes[HAND_MODEL_KEY]).toBe(manifest.models.hand.sha256);
     expect(hashes[POSE_MODEL_KEY]).toBe(manifest.models.pose.sha256);
     expect(hashes['vision_wasm_internal.wasm']).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it('mirrors unknown cameras only on the web (laptop webcams)', () => {
+    expect(engineConfig({ facing: 'back', active: true, platform: 'web' }).mirrorUnknown).toBe(true);
+    expect(engineConfig({ facing: 'back', active: true, platform: 'android' }).mirrorUnknown).toBe(false);
+    expect(engineConfig({ facing: 'back', active: true, platform: 'ios' }).targetFps).toBe(30);
   });
 
   it('passes the reduced-motion preference to the overlay', () => {

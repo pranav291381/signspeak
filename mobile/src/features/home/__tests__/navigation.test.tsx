@@ -58,21 +58,20 @@ describe('app navigation', () => {
     await storeSettings({ onboardingComplete: true });
   });
 
-  it('shows the main destinations on the home screen', async () => {
+  it('puts Sign → Text first on the home screen', async () => {
     renderRouter(APP_DIR, { initialUrl: '/' });
 
     expect(await screen.findByTestId('home-screen')).toBeOnTheScreen();
-    for (const name of [/^Sign to text\./, /^Text to I S L\./, /^Learn I S L\./]) {
-      expect(screen.getByRole('button', { name })).toBeOnTheScreen();
-    }
+    expect(screen.getByRole('button', { name: /^Sign to text\./ })).toBeOnTheScreen();
+    // Text → ISL and Learn are parked while Sign → Text is finished.
+    expect(screen.queryByTestId('home-text-to-isl')).toBeNull();
+    expect(screen.queryByTestId('home-learn')).toBeNull();
     expect(screen.getByText(/not a replacement for a qualified ISL interpreter/)).toBeOnTheScreen();
     expect(screen.getByText(/Recognition learns from you/)).toBeOnTheScreen();
   });
 
   it.each([
     ['home-sign-to-text', '/sign-to-text'],
-    ['home-text-to-isl', '/text-to-isl'],
-    ['home-learn', '/learn'],
     ['home-history', '/history'],
     ['home-teach', '/signs/teach'],
     ['home-my-signs', '/signs'],
@@ -84,21 +83,15 @@ describe('app navigation', () => {
     await act(async () => undefined);
   });
 
-  it('opens the alphabet map and tips in Learn', async () => {
-    renderRouter(APP_DIR, { initialUrl: '/learn' });
-    expect(await screen.findByTestId('learn-screen')).toBeOnTheScreen();
-    expect(screen.getByTestId('alphabet-progress')).toHaveTextContent('0 / 26');
-    expect(screen.getByRole('button', { name: 'Letter A, not recorded. Record it' })).toBeOnTheScreen();
-    expect(screen.getByRole('button', { name: 'Letter Z, not recorded. Record it' })).toBeOnTheScreen();
-
-    fireEvent.press(screen.getByRole('button', { name: 'Use an interpreter when it matters' }));
-    expect(await screen.findByText(/use a qualified ISL interpreter/)).toBeOnTheScreen();
-  });
-
-  it('starts recording a letter from the alphabet map', async () => {
-    const router = renderRouter(APP_DIR, { initialUrl: '/learn' });
-    fireEvent.press(await screen.findByTestId('letter-k'));
-    await waitFor(() => expect(router.getPathname()).toBe('/signs/teach'));
-    expect(await screen.findByTestId('teach-title')).toHaveTextContent('K');
+  it.each([
+    ['/text-to-isl', 'text-to-isl-in-progress'],
+    ['/learn', 'learn-in-progress'],
+  ])('%s says it is in progress and leads back to Sign → Text', async (url, testID) => {
+    const router = renderRouter(APP_DIR, { initialUrl: url });
+    expect(await screen.findByTestId(testID)).toBeOnTheScreen();
+    expect(screen.getByText('In progress')).toBeOnTheScreen();
+    fireEvent.press(screen.getByRole('button', { name: 'Go to Sign → Text' }));
+    await waitFor(() => expect(router.getPathname()).toBe('/sign-to-text'));
+    await act(async () => undefined);
   });
 });

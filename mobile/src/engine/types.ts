@@ -7,7 +7,7 @@ export interface EngineHandlers {
   onFrame?: (timestampMs: number, values: number[] | null, hands: number) => void;
   onStatus?: (status: EngineStatus, progress?: number) => void;
   onError?: (code: EngineErrorCode) => void;
-  onStats?: (fps: number, inferenceMs: number) => void;
+  onStats?: (fps: number, inferenceMs: number, delegate?: 'GPU' | 'CPU') => void;
 }
 
 export interface LandmarkCameraProps extends EngineHandlers {

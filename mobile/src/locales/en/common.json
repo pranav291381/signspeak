@@ -362,8 +362,8 @@
       "subtitle": "Three things to know before you start.",
       "signTitle": "Sign → Text learns from you",
       "signBody": "Teach each sign once by recording it a few times. After that, the camera turns those signs into text and speech.",
-      "textTitle": "Text → ISL shows hand diagrams",
-      "textBody": "Type words to see the recorded signs as animated hand diagrams. Names are fingerspelled letter by letter.",
+      "textTitle": "Fingerspelling too",
+      "textBody": "Record the alphabet once and spelled words, like names, are recognized letter by letter.",
       "privacyTitle": "Private by design",
       "privacyBody": "Video never leaves your phone and is never saved. Only hand positions of the signs you teach are stored, on this phone."
     }
@@ -384,7 +384,8 @@
       "unsupported": "This browser or phone cannot run hand tracking. Try an up-to-date Chrome, Edge or Safari.",
       "model_load_failed": "Hand tracking could not be loaded. The first time, it needs an internet connection to download (about 25 MB).",
       "integrity_failed": "The downloaded hand-tracking files failed a safety check and were not used. Please try again later."
-    }
+    },
+    "rate": "{{fps}} fps · {{delegate}}"
   },
   "teach": {
     "teaching": "Teaching",
@@ -466,5 +467,10 @@
     "deleteSign": "Delete sign",
     "deleteSignTitle": "Delete “{{name}}”?",
     "deleteSignMessage": "All takes of this sign are removed from this phone."
+  },
+  "inProgress": {
+    "title": "In progress",
+    "message": "This section is being rebuilt. For now, ISL Connect focuses on Sign → Text.",
+    "goToSign": "Go to Sign → Text"
   }
 }

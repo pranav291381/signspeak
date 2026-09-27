@@ -200,7 +200,7 @@ function IntroStep() {
   const { colors, radii, spacing } = useTheme();
   const points: { icon: IconName; title: string; body: string }[] = [
     { icon: 'hand-wave-outline', title: t('welcome.intro.signTitle'), body: t('welcome.intro.signBody') },
-    { icon: 'message-text-outline', title: t('welcome.intro.textTitle'), body: t('welcome.intro.textBody') },
+    { icon: 'alphabetical-variant', title: t('welcome.intro.textTitle'), body: t('welcome.intro.textBody') },
     { icon: 'shield-lock-outline', title: t('welcome.intro.privacyTitle'), body: t('welcome.intro.privacyBody') },
   ];
   return (

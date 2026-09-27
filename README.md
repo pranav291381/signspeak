@@ -14,10 +14,10 @@ A mobile app to help people communicate using **Indian Sign Language (ISL)**, bu
 | | |
 | --- | --- |
 | **First launch** | Choose the app language and a light, dark or system look, then a short "how it works" |
-| **Sign → Text** | Live camera with on-device hand and body tracking, drawn as a glowing hand skeleton over the video. Tells you at once whether hands are in view. Recognizes taught signs, joins fingerspelled letters into words, speaks the result, never guesses. Pause, switch camera, clear, report a wrong result |
+| **Sign → Text** | Live camera with on-device hand and body tracking, both hands drawn as a skeleton over the video (smooth at the screen's refresh rate; a small label shows the tracking rate). Tells you at once whether hands are in view. Recognizes taught signs, joins fingerspelled letters into words, speaks the result, never guesses. Pause, switch camera, clear, report a wrong result |
 | **Teach a sign** | Pick a common word, type any word or phrase, or record the whole alphabet letter by letter. Countdown, recording, an animated replay of each take, and checks (no one in view, no hands, too short, unlike your earlier takes) |
-| **Text → ISL** | Type words and watch them as a sequence of animated hand diagrams, with captions, play/pause, step and slow motion. Anything not recorded yet is shown as such, with a button to record it |
-| **Learn** | A map of all 26 letters as hand diagrams (recorded on the phone), and tips for communicating in sign language |
+| **Text → ISL** | **In progress** (parked while Sign → Text is finished). The code is kept in `features/text-to-isl` |
+| **Learn** | **In progress** (parked). The alphabet map and tips are kept in `features/learn` |
 | **My signs** | Every taught sign with its takes, readiness, and delete controls |
 | **Settings** | Appearance, app and output languages (separate), speech, camera, my signs, history (off by default), haptics, demo mode, report a problem |
 | **Privacy** | Video never leaves the phone and is never saved. Taught signs are stored on the phone as hand-position numbers only |

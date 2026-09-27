@@ -13,6 +13,9 @@ export const fakeCamera = {
   status(status: EngineStatus, progress?: number) {
     fakeCamera.props?.onStatus?.(status, progress);
   },
+  stats(fps: number, inferenceMs: number, delegate?: 'GPU' | 'CPU') {
+    fakeCamera.props?.onStats?.(fps, inferenceMs, delegate);
+  },
   error(code: EngineErrorCode) {
     fakeCamera.props?.onError?.(code);
   },
