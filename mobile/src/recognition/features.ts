@@ -110,3 +110,24 @@ export function handsRaised(values: ArrayLike<number> | null): boolean {
     (handRaised(values, LEFT_HAND_START, LEFT_HAND_PRESENT_INDEX) || handRaised(values, RIGHT_HAND_START, RIGHT_HAND_PRESENT_INDEX))
   );
 }
+
+const POSE_ORDER = Object.keys(POSE_LANDMARKS);
+/** y of the pose tracker's wrists in a frame. */
+export const POSE_LEFT_WRIST_Y = POSE_START + POSE_ORDER.indexOf('left_wrist') * COORDS + 1;
+export const POSE_RIGHT_WRIST_Y = POSE_START + POSE_ORDER.indexOf('right_wrist') * COORDS + 1;
+
+/**
+ * Someone is signing: a hand, or the pose tracker's wrist, is raised into
+ * signing space. The hand tracker often loses hands in fast movement (motion
+ * blur) while the pose tracker keeps the arm, so the wrist alone counts too.
+ * ml/scripts/train_from_landmarks.py (`raised`) uses the same rule.
+ */
+export function signing(values: ArrayLike<number> | null): boolean {
+  if (handsRaised(values)) return true;
+  return (
+    values !== null &&
+    values.length === FRAME_DIM &&
+    (values[POSE_PRESENT_INDEX] ?? 0) > 0.5 &&
+    ((values[POSE_LEFT_WRIST_Y] ?? Infinity) < REST_WRIST_Y || (values[POSE_RIGHT_WRIST_Y] ?? Infinity) < REST_WRIST_Y)
+  );
+}

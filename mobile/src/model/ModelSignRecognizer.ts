@@ -1,4 +1,4 @@
-import { handsRaised } from '@/recognition/features';
+import { signing } from '@/recognition/features';
 import { COORDS, PRESENCE_START } from '@/recognition/featureSpec';
 import {
   UNKNOWN_LABEL,
@@ -12,7 +12,7 @@ import type { ModelPack } from './modelPack';
 import type { RemoteModel } from './remote';
 import { softmax, TemporalModel } from './temporalModel';
 
-/** Frames with a hand raised needed in a window before the model is asked. */
+/** Frames with a hand or wrist raised needed in a window before the model is asked. */
 const MIN_RAISED_FRAMES = 3;
 
 const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
@@ -66,7 +66,7 @@ export class ModelSignRecognizer implements SignRecognizer {
     if (!this.loaded) throw new Error('Model not loaded');
     const dim = this.pack.config.inputDim;
     const frames = window.slice(-this.pack.windowFrames).map((f) => (f.values ? withoutDepth(f.values, dim) : new Float32Array(dim)));
-    if (frames.filter((f) => handsRaised(f)).length < MIN_RAISED_FRAMES) {
+    if (frames.filter((f) => signing(f)).length < MIN_RAISED_FRAMES) {
       // Hands down or out of view: nothing is being signed.
       return { scores: [{ label: UNKNOWN_LABEL, score: 1 }], latencyMs: now() - started, idle: true };
     }
