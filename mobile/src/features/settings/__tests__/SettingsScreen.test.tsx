@@ -1,10 +1,11 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
-import { Alert } from 'react-native';
+import { Alert, Linking } from 'react-native';
 
 import { i18n } from '@/i18n';
 import { SETTINGS_STORAGE_KEY } from '@/settings/settings';
 import { createMemoryStore } from '@/storage/keyValueStore';
 import { renderWithProviders } from '@/test-utils/render';
+import { testPack } from '@/test-utils/packs';
 import { seedSigns, taughtSign } from '@/test-utils/signs';
 
 import { SettingsScreen } from '../SettingsScreen';
@@ -90,6 +91,22 @@ describe('SettingsScreen', () => {
     expect(await screen.findByText(/recognizes only the signs of its installed vocabulary/)).toBeOnTheScreen();
     expect(screen.getByText(/not yet been tested with many signers/)).toBeOnTheScreen();
     expect(screen.getByText(/not a replacement for a qualified ISL interpreter/)).toBeOnTheScreen();
+  });
+
+  it('credits the installed sign vocabulary and links to its source and licence', async () => {
+    const openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
+    renderWithProviders(<SettingsScreen />, { packs: [testPack([{ text: 'Hello', motion: 'wave' }])] });
+    const row = await screen.findByTestId('about-vocabulary-test');
+    expect(row).toHaveTextContent(/Test pack/);
+    expect(row).toHaveTextContent(/Test dictionary\. Test data/);
+    expect(row).toHaveTextContent(/1 sign/);
+    fireEvent.press(row);
+    expect(openURL).toHaveBeenCalledWith('https://example.org/');
+  });
+
+  it('says when no sign vocabulary is installed', async () => {
+    renderWithProviders(<SettingsScreen />);
+    expect(await screen.findByTestId('about-no-vocabulary')).toHaveTextContent('No sign vocabulary is installed in this version.');
   });
 
   it('has no sign-teaching section when nothing was taught', async () => {

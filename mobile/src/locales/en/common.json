@@ -102,7 +102,11 @@
       "version": "Version {{version}}",
       "limitations": "Sign → Text recognizes only the signs of its installed vocabulary. It has not yet been tested with many signers, and it shows “not sure” rather than guessing.",
       "notInterpreter": "This app is not a replacement for a qualified ISL interpreter, especially for medical, legal or emergency situations.",
-      "privacy": "Camera video stays on your phone. It is never recorded or uploaded. Hand tracking runs on the phone; its files are downloaded once from Google's model server."
+      "privacy": "Camera video stays on your phone. It is never recorded or uploaded. Hand tracking runs on the phone; its files are downloaded once from Google's model server.",
+      "vocabulary": "Sign vocabulary",
+      "noVocabulary": "No sign vocabulary is installed in this version.",
+      "vocabularySigns_one": "{{count}} sign",
+      "vocabularySigns_other": "{{count}} signs"
     },
     "reportProblem": "Report a problem",
     "theme": {
