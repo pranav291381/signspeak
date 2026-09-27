@@ -9,7 +9,7 @@ import { UnavailableRecognizer } from './recognizers/UnavailableRecognizer';
 import { RecognitionSession } from './session';
 import { NoFrameSource, SimulatedFrameSource } from './sources';
 import { PredictionStabilizer } from './stabilizer';
-import type { FrameSource } from './types';
+import type { FrameSource, SignRecognizer } from './types';
 
 export interface EngineOptions {
   demoMode: boolean;
@@ -29,8 +29,12 @@ export function isEmergencyLabel(label: string): boolean {
   return isEmergencySign(libraryId);
 }
 
-/** Session for recorded reference signs, fed by live camera landmarks. */
-function referenceSession(recognizer: ReferenceSignRecognizer, source: NonNullable<EngineOptions['source']>): RecognitionSession {
+/**
+ * Session for recorded reference signs, fed by live camera landmarks. Also used
+ * by the sign pack accuracy test (engine/extract.ts), so it measures exactly
+ * what the app does.
+ */
+export function referenceSession(recognizer: SignRecognizer, source: FrameSource): RecognitionSession {
   return new RecognitionSession({
     source,
     recognizer,
