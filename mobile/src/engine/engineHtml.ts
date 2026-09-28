@@ -11,6 +11,7 @@ export function engineConfig(options: {
   platform: string;
   origin?: string;
   reduceMotion?: boolean;
+  afterStop?: boolean;
 }): EngineConfig {
   return {
     facing: options.facing,
@@ -21,6 +22,7 @@ export function engineConfig(options: {
     showLandmarks: true,
     reduceMotion: options.reduceMotion ?? false,
     mirrorUnknown: options.platform === 'web',
+    ...(options.afterStop ? { afterStop: true } : {}),
   };
 }
 
@@ -32,7 +34,7 @@ export function engineConfig(options: {
 export function engineContentSecurityPolicy(config: EngineConfig): string {
   const origins = new Set<string>();
   for (const source of config.sources) {
-    for (const url of [source.wasmBase, source.handModelUrl, source.poseModelUrl]) {
+    for (const url of [source.wasmBase, source.handModelUrl, source.handLiteModelUrl, source.poseModelUrl]) {
       try {
         const { origin, protocol } = new URL(url);
         if (protocol === 'https:' || protocol === 'http:') origins.add(origin);

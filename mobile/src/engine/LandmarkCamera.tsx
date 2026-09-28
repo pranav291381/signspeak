@@ -9,6 +9,9 @@ import { decodeEngineMessage, encodeMessage, type EngineFacing, type HostToEngin
 import type { LandmarkCameraProps } from './types';
 import { useEngineMessages } from './useEngineMessages';
 
+/** The phone stopped an engine page in this session (low memory): the next one uses fewer workers. */
+let stoppedBefore = false;
+
 /**
  * Camera preview + on-device hand/pose tracking (phones).
  *
@@ -23,7 +26,13 @@ export function LandmarkCamera({ facing, active, flashSignal = 0, model, style, 
   // Built once per mount: later changes are sent as messages, so the camera
   // does not restart and models are not reloaded.
   const reduceMotion = useReduceMotion();
-  const [html] = useState(() => buildEngineHtml(engineConfig({ facing, active, platform: Platform.OS, reduceMotion })));
+  const [html] = useState(() =>
+    buildEngineHtml(engineConfig({ facing, active, platform: Platform.OS, reduceMotion, afterStop: stoppedBefore })),
+  );
+  const onStopped = () => {
+    stoppedBefore = true;
+    handlers.onError?.('engine_stopped');
+  };
 
   const send = (message: HostToEngine) => {
     const script = `window.__islEngine&&window.__islEngine.receive(${JSON.stringify(encodeMessage(message))});true;`;
@@ -57,6 +66,9 @@ export function LandmarkCamera({ facing, active, flashSignal = 0, model, style, 
         onMessage={(event: WebViewMessageEvent) => onMessage(decodeEngineMessage(event.nativeEvent.data))}
         // The page's script has run: it takes messages now (again after a reload).
         onLoadEnd={() => model?.attach(send)}
+        // The phone may stop the page (e.g. low on memory): report it instead of the app closing.
+        onRenderProcessGone={onStopped}
+        onContentProcessDidTerminate={onStopped}
         javaScriptEnabled
         mediaCapturePermissionGrantType="grant"
         allowsInlineMediaPlayback

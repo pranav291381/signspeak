@@ -423,9 +423,23 @@
       "insecure_context": "The camera only works on a secure (https) page.",
       "unsupported": "This browser or phone cannot run hand tracking. Try an up-to-date Chrome, Edge or Safari.",
       "model_load_failed": "Hand tracking could not be loaded. The first time, it needs an internet connection to download (about 25 MB).",
-      "integrity_failed": "The downloaded hand-tracking files failed a safety check and were not used. Please try again later."
+      "integrity_failed": "The downloaded hand-tracking files failed a safety check and were not used. Please try again later.",
+      "engine_stopped": "Hand tracking stopped: the phone ran low on memory. Try again; it will use less."
     },
-    "rate": "{{fps}} fps · {{delegate}}"
+    "rate": "{{fps}} fps · {{delegate}}",
+    "details": {
+      "title": "Tracking details",
+      "show": "Show tracking details",
+      "hide": "Hide tracking details",
+      "hands": "Hands: {{fps}} a second",
+      "model_full": "full hand model",
+      "model_lite": "lite hand model (faster)",
+      "workers_one": "{{count}} worker",
+      "workers_other": "{{count}} workers in parallel",
+      "mainThread": "on the page thread",
+      "body": "Body and face: {{fps}} a second",
+      "runsOn": "Runs on the {{delegate}}"
+    }
   },
   "teach": {
     "teaching": "Teaching",

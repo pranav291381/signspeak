@@ -241,6 +241,23 @@ describe('SignToTextScreen camera', () => {
     expect(screen.getByTestId('tracking-rate')).toHaveTextContent('28 fps · GPU');
   });
 
+  it('shows how tracking runs when the rate is tapped', async () => {
+    await renderScreen();
+    cameraRunning();
+    act(() =>
+      fakeCamera.stats(19.2, 62, 'CPU', 'renderer: Mali-G52; lite hand model, 2 hands workers', { model: 'lite', workers: 2, bodyFps: 12.4 }),
+    );
+    expect(screen.queryByTestId('tracking-details')).toBeNull();
+    fireEvent.press(screen.getByRole('button', { name: 'Show tracking details' }));
+    const details = screen.getByTestId('tracking-details');
+    expect(details).toHaveTextContent(/Hands: 19 a second · lite hand model \(faster\) · 2 workers in parallel/);
+    expect(details).toHaveTextContent(/Body and face: 12 a second/);
+    expect(details).toHaveTextContent(/Runs on the CPU/);
+    expect(details).toHaveTextContent(/renderer: Mali-G52/);
+    fireEvent.press(screen.getByRole('button', { name: 'Hide tracking details' }));
+    expect(screen.queryByTestId('tracking-details')).toBeNull();
+  });
+
   it('switches between back and front cameras', async () => {
     await renderScreen();
     await waitFor(() => expect(fakeCamera.props?.facing).toBe('back'));

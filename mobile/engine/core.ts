@@ -175,6 +175,136 @@ export class DelegateTuner {
   }
 }
 
+export type HandModel = 'full' | 'lite';
+
+/** How hand tracking runs: where, with which hand model, and in how many workers taking frames in turn. */
+export interface TrackingSetup {
+  delegate: Delegate;
+  model: HandModel;
+  workers: number;
+}
+
+export interface TrackingTunerOptions {
+  /** Delegates to try, likely-fastest first (see delegateOrder). */
+  delegates: readonly Delegate[];
+  /** Whether the lite hand model can be used (it may still be downloading). */
+  liteAvailable: () => boolean;
+  maxWorkers: number;
+  /** Skip choosing the delegate (a setup remembered from an earlier run). */
+  remembered?: boolean;
+}
+
+/** Hands workers worth running on a device with `cores` logical processors (pose, the sign model and the page need the rest). */
+export function maxHandWorkers(cores: number | undefined): number {
+  return Math.max(1, Math.min(3, (cores || 4) - 2));
+}
+
+/**
+ * Chooses how to run hand tracking by measuring it, one change at a time:
+ * 1. the delegate: the first one that is fast enough, else the faster of both;
+ * 2. the model: MediaPipe's lite hand model when a detection takes over
+ *    LITE_ABOVE_MS (about twice as fast, slightly less precise);
+ * 3. workers: one more hands worker while fewer than TARGET_RATE hands results
+ *    arrive a second, as long as the last one helped.
+ * After each change the caller calls `ready()` once the new setup runs.
+ */
+export class TrackingTuner {
+  /** Results measured before deciding. */
+  static readonly SAMPLE = 20;
+  static readonly FAST_ENOUGH_MS = 45;
+  static readonly LITE_ABOVE_MS = 40;
+  /** Hands results a second worth reaching (recognition works at 15 frames a second). */
+  static readonly TARGET_RATE = 15;
+  /** An added worker has to raise the rate by this factor to stay. */
+  static readonly MIN_GAIN = 1.15;
+
+  private stage: 'delegate' | 'model' | 'workers' | 'done';
+  private samples: { ms: number; at: number }[] = [];
+  private readonly delegateTimes = new Map<Delegate, number>();
+  private readonly rates = new Map<number, number>();
+  private lastMedian = 0;
+
+  constructor(
+    public setup: TrackingSetup,
+    private readonly options: TrackingTunerOptions,
+  ) {
+    this.stage = options.remembered ? 'model' : 'delegate';
+  }
+
+  get settled(): boolean {
+    return this.stage === 'done';
+  }
+
+  /** The new setup is running: measure it from now on. */
+  ready(): void {
+    this.samples = [];
+  }
+
+  /** A change could not be made: stay with `setup` and stop tuning. */
+  revert(setup: TrackingSetup): void {
+    this.setup = setup;
+    this.stage = 'done';
+    this.samples = [];
+  }
+
+  /** Records one hands result (time spent in the worker, arrival time in ms). Returns a setup to switch to, or null. */
+  record(ms: number, at: number): TrackingSetup | null {
+    if (this.stage === 'done') return null;
+    this.samples.push({ ms, at });
+    if (this.samples.length < TrackingTuner.SAMPLE) return null;
+    const sorted = this.samples.map((s) => s.ms).sort((a, b) => a - b);
+    const median = sorted[Math.floor(sorted.length / 2)]!;
+    const span = (this.samples[this.samples.length - 1]!.at - this.samples[0]!.at) / 1000;
+    const rate = span > 0 ? (this.samples.length - 1) / span : Infinity;
+    this.samples = [];
+    this.lastMedian = median;
+
+    if (this.stage === 'delegate') {
+      this.delegateTimes.set(this.setup.delegate, median);
+      const untried = this.options.delegates.find((d) => !this.delegateTimes.has(d));
+      if (median > TrackingTuner.FAST_ENOUGH_MS && untried) return this.change({ delegate: untried });
+      this.stage = 'model';
+      let best = this.setup.delegate;
+      for (const [delegate, time] of this.delegateTimes) if (time < this.delegateTimes.get(best)!) best = delegate;
+      if (best !== this.setup.delegate) return this.change({ delegate: best });
+    }
+    if (this.stage === 'model') {
+      this.stage = 'workers';
+      if (this.setup.model === 'full' && this.options.liteAvailable() && median > TrackingTuner.LITE_ABOVE_MS) {
+        return this.change({ model: 'lite' });
+      }
+    }
+    // Workers.
+    this.rates.set(this.setup.workers, rate);
+    const fewer = this.rates.get(this.setup.workers - 1);
+    if (fewer !== undefined && rate < fewer * TrackingTuner.MIN_GAIN) {
+      this.stage = 'done';
+      return this.change({ workers: this.setup.workers - 1 });
+    }
+    if (rate < TrackingTuner.TARGET_RATE && this.setup.workers < this.options.maxWorkers) {
+      return this.change({ workers: this.setup.workers + 1 });
+    }
+    this.stage = 'done';
+    return null;
+  }
+
+  /** What was measured, e.g. "GPU 62 ms, CPU 240 ms; 12.4/s with 1 worker, 21.0/s with 2". */
+  summary(): string {
+    const delegates = [...this.delegateTimes].map(([d, ms]) => `${d} ${Math.round(ms)} ms`).join(', ');
+    const rates = [...this.rates]
+      .sort(([a], [b]) => a - b)
+      .map(([n, r]) => `${r.toFixed(1)}/s with ${n} worker${n === 1 ? '' : 's'}`)
+      .join(', ');
+    return [delegates, rates, `last median ${Math.round(this.lastMedian)} ms`].filter(Boolean).join('; ');
+  }
+
+  private change(patch: Partial<TrackingSetup>): TrackingSetup {
+    this.setup = { ...this.setup, ...patch };
+    this.samples = [];
+    return this.setup;
+  }
+}
+
 /**
  * Mirror the preview like a selfie? Phones report the camera's facing mode;
  * laptop webcams usually do not, and they face the user.
@@ -202,3 +332,33 @@ export function smoothPoints(current: Pt[] | null, target: Pt[], k: number, snap
   if (Math.hypot(dx, dy) > snapDistance) return target.map((p) => ({ x: p.x, y: p.y }));
   return current.map((p, i) => ({ x: p.x + (target[i]!.x - p.x) * k, y: p.y + (target[i]!.y - p.y) * k }));
 }
+
+/** Pose landmarks drawn as the body: shoulders, arms and torso (MediaPipe pose indices). */
+export const BODY_CONNECTIONS: readonly [number, number][] = [
+  [11, 12], [11, 13], [13, 15], [12, 14], [14, 16], [11, 23], [12, 24], [23, 24],
+];
+
+/** Pose landmarks used to draw a simple face. */
+export const FACE_POINTS = { nose: 0, leftEye: 2, rightEye: 5, leftEar: 7, rightEar: 8, mouthLeft: 9, mouthRight: 10 } as const;
+
+/** The pose tracker thinks this point is in view. */
+export function isVisible(point: { visibility?: number } | undefined): boolean {
+  return point !== undefined && (point.visibility ?? 1) >= 0.5;
+}
+
+/**
+ * Circle around the head, in the same (pixel) units as the points: between the
+ * ears when both are seen, else around the eyes; null when neither is.
+ */
+export function headCircle(ears: [Pt, Pt] | null, eyes: [Pt, Pt] | null): { x: number; y: number; r: number } | null {
+  if (ears) {
+    const d = Math.hypot(ears[1].x - ears[0].x, ears[1].y - ears[0].y);
+    return { x: (ears[0].x + ears[1].x) / 2, y: (ears[0].y + ears[1].y) / 2, r: d * 0.72 };
+  }
+  if (eyes) {
+    const d = Math.hypot(eyes[1].x - eyes[0].x, eyes[1].y - eyes[0].y);
+    return { x: (eyes[0].x + eyes[1].x) / 2, y: (eyes[0].y + eyes[1].y) / 2 + d * 0.15, r: d * 1.45 };
+  }
+  return null;
+}
+

@@ -32,7 +32,7 @@ A welcome flow asks for the app language and the appearance (light, dark or foll
 
 ### 4.1 Sign → Text (+ speech)
 1. The user opens **Sign → Text**, grants camera permission, and chooses the front or back camera.
-2. Live hand and body tracking is drawn over the video as a hand skeleton; a status pill says at once whether a person and hands are in view.
+2. Live hand and body tracking is drawn over the video: both hands, the body (shoulders, arms, torso) and a simple face (head, eyes, nose, mouth); a status pill says at once whether a person and hands are in view. A small label shows how fast tracking runs; tapping it shows how (GPU or CPU, hand model, workers, body rate).
 3. Recognized signs appear as text: the dictionary's word, in the dictionary's language (English), with a note when the output language differs; fingerspelled letters are joined into words; **Speak** reads everything recognized so far in the language it is written in. The screen is only camera, text and speech: no teaching or sign management.
 4. Controls: pause/resume, clear, switch camera, report a wrong result.
 5. When recognition is uncertain it shows *"Not sure what was signed. Please try again."* It never shows a guess.

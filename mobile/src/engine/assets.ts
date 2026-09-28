@@ -6,6 +6,7 @@ export function remoteSource(): EngineAssetSource {
   return {
     wasmBase: manifest.remoteWasmBase,
     handModelUrl: manifest.models.hand.url,
+    handLiteModelUrl: manifest.models.handLite.url,
     poseModelUrl: manifest.models.pose.url,
   };
 }
@@ -16,6 +17,7 @@ export function sameOriginSource(origin: string): EngineAssetSource {
   return {
     wasmBase: `${base}wasm/`,
     handModelUrl: base + manifest.models.hand.file,
+    handLiteModelUrl: base + manifest.models.handLite.file,
     poseModelUrl: base + manifest.models.pose.file,
   };
 }
@@ -23,7 +25,8 @@ export function sameOriginSource(origin: string): EngineAssetSource {
 /**
  * Optional self-hosted mirror (e.g. an NGO server on a local network), set at
  * build time. It must contain the same files: wasm/…, hand_landmarker.task,
- * pose_landmarker_lite.task. Integrity is still checked against pinned hashes.
+ * hand_landmark_lite.tflite, pose_landmarker_lite.task. Integrity is still
+ * checked against pinned hashes.
  */
 export function customSource(): EngineAssetSource | null {
   const base = process.env.EXPO_PUBLIC_MEDIAPIPE_BASE_URL?.trim();
@@ -44,9 +47,14 @@ export function engineHashes(): Record<string, string> {
   return {
     ...manifest.wasm,
     [HAND_MODEL_KEY]: manifest.models.hand.sha256,
+    [HAND_LITE_MODEL_KEY]: manifest.models.handLite.sha256,
+    [HAND_LITE_BUNDLE_KEY]: manifest.derived.handLiteBundle.sha256,
     [POSE_MODEL_KEY]: manifest.models.pose.sha256,
   };
 }
 
 export const HAND_MODEL_KEY = 'model:hand';
 export const POSE_MODEL_KEY = 'model:pose';
+/** MediaPipe's lite hand landmark model (legacy format) and the Tasks bundle the engine makes from it. */
+export const HAND_LITE_MODEL_KEY = 'model:hand-lite';
+export const HAND_LITE_BUNDLE_KEY = 'bundle:hand-lite';
