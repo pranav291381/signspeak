@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "signspeak-api"
 version = "0.1.0"
-description = "ISL Connect optional backend: feedback collection and landmark-only recognition for research."
+description = "SignSpeak optional backend: feedback collection and landmark-only recognition for research."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [

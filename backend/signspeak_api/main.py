@@ -1,4 +1,4 @@
-"""ISL Connect optional backend.
+"""SignSpeak optional backend.
 
 The app works fully without this service. It provides:
 - GET  /health
@@ -76,7 +76,7 @@ def create_app(
     feedback_repo = feedback or SqlFeedbackRepository(make_engine(settings.database_url))
     provider = recognition or provider_from_settings(settings.model_dir)
 
-    app = FastAPI(title="ISL Connect API", version=__version__)
+    app = FastAPI(title="SignSpeak API", version=__version__)
     app.add_middleware(RequestSizeLimit, max_bytes=settings.max_request_bytes)
     if settings.allowed_origins:
         app.add_middleware(

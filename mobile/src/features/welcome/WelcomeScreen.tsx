@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Image, Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText, Button, Icon, Notice, RadioGroup, Screen, type IconName, type RadioOption } from '@/components';
 import { selectableLanguages, type LanguageCode } from '@/i18n';
@@ -95,7 +95,7 @@ function LanguageStep({ value, onChange }: { value: LanguageCode; onChange: (cod
   });
   return (
     <View style={{ gap: spacing.lg }}>
-      <Hero icon="hand-wave" title={t('welcome.title')} subtitle={t('welcome.languagePrompt')} />
+      <Hero icon="hand-wave" logo title={t('welcome.title')} subtitle={t('welcome.languagePrompt')} />
       <RadioGroup
         testID="welcome-language"
         label={t('settings.appLanguage.label')}
@@ -224,13 +224,20 @@ function IntroStep() {
   );
 }
 
-function Hero({ icon, title, subtitle }: { icon: IconName; title: string; subtitle: string }) {
+const LOGO = require('../../../assets/logo.png');
+
+function Hero({ icon, logo = false, title, subtitle }: { icon: IconName; logo?: boolean; title: string; subtitle: string }) {
   const { colors, radii, spacing } = useTheme();
   return (
     <View style={{ gap: spacing.md }}>
-      <View style={[styles.heroIcon, { backgroundColor: colors.primary, borderRadius: radii.lg }]}>
-        <Icon name={icon} size={30} color={colors.onPrimary} />
-      </View>
+      {logo ? (
+        // The app's logo; decorative, the title names the app.
+        <Image testID="welcome-logo" source={LOGO} style={styles.logo} accessible={false} accessibilityIgnoresInvertColors />
+      ) : (
+        <View style={[styles.heroIcon, { backgroundColor: colors.primary, borderRadius: radii.lg }]}>
+          <Icon name={icon} size={30} color={colors.onPrimary} />
+        </View>
+      )}
       <AppText variant="display">{title}</AppText>
       <AppText variant="body" color="textSecondary">
         {subtitle}
@@ -252,4 +259,5 @@ const styles = StyleSheet.create({
   point: { flexDirection: 'row', alignItems: 'flex-start' },
   pointIcon: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   heroIcon: { width: 56, height: 56, alignItems: 'center', justifyContent: 'center' },
+  logo: { width: 72, height: 72 },
 });

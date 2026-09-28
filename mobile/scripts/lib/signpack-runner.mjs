@@ -14,7 +14,7 @@ import { extname, join } from 'node:path';
 import { build } from 'esbuild';
 
 export const VIDEO_TYPES = { '.mp4': 'video/mp4', '.m4v': 'video/mp4', '.webm': 'video/webm', '.mov': 'video/quicktime', '.ogv': 'video/ogg' };
-const USER_AGENT = 'ISLConnect-signpack-builder/1 (+https://github.com/pranav291381/signspeak)';
+const USER_AGENT = 'SignSpeak-signpack-builder/1 (+https://github.com/pranav291381/signspeak)';
 
 /** A problem the person running the script can fix; printed without a stack trace. */
 export class RunnerError extends Error {}
@@ -98,7 +98,7 @@ export async function createRunner({ root, cacheDir, browser: browserChoice, ffm
     logLevel: 'warning',
   });
   const pageScript = bundle.outputFiles[0].text;
-  const page = `<!doctype html><html><head><meta charset="utf-8"><title>ISL Connect sign pack builder</title></head><body><script>${pageScript}</script></body></html>`;
+  const page = `<!doctype html><html><head><meta charset="utf-8"><title>SignSpeak sign pack builder</title></head><body><script>${pageScript}</script></body></html>`;
   // Cached results are reused only if they were made by this exact extractor and these models.
   const extractorVersion = createHash('sha1').update(pageScript).update(JSON.stringify(mediapipeManifest.models)).digest('hex').slice(0, 12);
 

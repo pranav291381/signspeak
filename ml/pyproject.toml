@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "signspeak-ml"
 version = "0.1.0"
-description = "ISL Connect: landmark-based Indian Sign Language recognition pipeline (dataset, training, evaluation, inference)."
+description = "SignSpeak: landmark-based Indian Sign Language recognition pipeline (dataset, training, evaluation, inference)."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [

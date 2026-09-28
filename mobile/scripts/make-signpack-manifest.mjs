@@ -7,7 +7,7 @@
  *   npm run manifest:signpack -- <videos folder> --out vocabulary.json \
  *     --id deaf-club-2026 --name "Deaf club recordings" \
  *     --source-name "Example Deaf Club" --source-url https://example.org/ \
- *     --permission "Recorded for ISL Connect by consenting signers (2026)."
+ *     --permission "Recorded for SignSpeak by consenting signers (2026)."
  *
  * Only use videos you have the right to use: your own recordings, or videos
  * whose owners gave permission. Do not download videos from YouTube.

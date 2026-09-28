@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "ISL Connect"
+    "name": "SignSpeak"
   },
   "common": {
     "loading": "Loading…",
@@ -9,7 +9,7 @@
     "cancel": "Cancel"
   },
   "home": {
-    "title": "ISL Connect",
+    "title": "SignSpeak",
     "intro": "Talk across sign and text.",
     "signToText": {
       "title": "Sign → Text",
@@ -137,7 +137,7 @@
       "message": "The camera is used to see the signer. Video stays on this phone. It is never recorded or uploaded.",
       "allow": "Allow camera",
       "deniedTitle": "Camera access is turned off",
-      "deniedMessage": "To use Sign → Text, allow camera access for ISL Connect in your phone settings."
+      "deniedMessage": "To use Sign → Text, allow camera access for SignSpeak in your phone settings."
     },
     "simulated": {
       "title": "Demo mode: simulated results",
@@ -352,7 +352,7 @@
     "settings": "Settings"
   },
   "welcome": {
-    "title": "Welcome to ISL Connect",
+    "title": "Welcome to SignSpeak",
     "languagePrompt": "First, choose the language for the app.",
     "languageHint": "You can change this any time in Settings.",
     "appearanceTitle": "Choose a look",
@@ -381,7 +381,7 @@
       "paused": "Camera paused"
     },
     "errors": {
-      "camera_denied": "Camera access is blocked. Allow camera access for ISL Connect (in a browser: the site settings), then try again.",
+      "camera_denied": "Camera access is blocked. Allow camera access for SignSpeak (in a browser: the site settings), then try again.",
       "no_camera": "No camera was found on this device.",
       "camera_in_use": "Another app is using the camera. Close it, then try again.",
       "insecure_context": "The camera only works on a secure (https) page.",
@@ -474,7 +474,7 @@
   },
   "inProgress": {
     "title": "In progress",
-    "message": "This section is being rebuilt. For now, ISL Connect focuses on Sign → Text.",
+    "message": "This section is being rebuilt. For now, SignSpeak focuses on Sign → Text.",
     "goToSign": "Go to Sign → Text"
   }
 }

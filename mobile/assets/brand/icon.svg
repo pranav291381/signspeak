@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><!-- SignSpeak logo, drawn for this project. Master for ../icon.png and splash-icon.png (1024 px, full-bleed square; iOS rounds the corners). Render with any SVG renderer at that size. --><defs></defs><rect width="1024" height="1024" rx="0" fill="#F4B63F"/><g opacity="0.2" stroke="#FFFFFF" stroke-width="10" fill="none" stroke-linecap="round">
+    <path d="M 90 870 C 250 840, 380 900, 520 870 S 800 840, 940 870"/>
+    <path d="M 60 940 C 230 910, 380 970, 540 940 S 820 910, 970 940"/>
+  </g><g transform="translate(62.2 142.6) scale(0.82)"><g fill="#2E3340" stroke="#FFFFFF" stroke-width="18" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M 430 1300 L 440 770 L 660 770 L 680 1300 Z"/>
+    <rect x="392" y="520" width="310" height="290" rx="112"/>
+    <rect x="394" y="220" width="128" height="370" rx="64"/>
+    <rect x="512" y="530" width="186" height="86" rx="43"/>
+    <rect x="512" y="616" width="186" height="86" rx="43"/>
+    <rect x="512" y="702" width="176" height="84" rx="42"/>
+    <path d="M 420 640 C 470 610, 560 600, 620 632 C 648 648, 640 690, 606 694 C 560 700, 500 700, 452 720 C 412 736, 388 668, 420 640 Z"/>
+  </g>
+  <g fill="none" stroke="#FFFFFF" stroke-linecap="round">
+    <path d="M 432 420 Q 458 430 486 420" stroke-width="10" opacity="0.7"/>
+    <g stroke-width="30" stroke="#FFFFFF"><path d="M 502.0 138.7 A 120 120 0 0 1 575.8 233.3"/><path d="M 528.2 73.8 A 190 190 0 0 1 645.2 223.6"/><path d="M 554.4 8.9 A 260 260 0 0 1 714.5 213.8"/></g>
+  </g></g></svg>

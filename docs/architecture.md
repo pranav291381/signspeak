@@ -1,4 +1,4 @@
-# Architecture — ISL Connect (repository: `signspeak`)
+# Architecture — SignSpeak (repository: `signspeak`)
 
 Status: **living document**. Update it whenever a component, interface, or decision changes.
 

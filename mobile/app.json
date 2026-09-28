@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "ISL Connect",
-    "slug": "isl-connect",
-    "scheme": "islconnect",
+    "name": "SignSpeak",
+    "slug": "signspeak",
+    "scheme": "signspeak",
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -12,7 +12,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#F4B63F",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -32,7 +32,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "ISL Connect uses the camera to recognise signs. Video stays on your phone and is never recorded or uploaded.",
+          "cameraPermission": "SignSpeak uses the camera to recognise signs. Video stays on your phone and is never recorded or uploaded.",
           "microphonePermission": false,
           "recordAudioAndroid": false,
           "barcodeScannerEnabled": false
