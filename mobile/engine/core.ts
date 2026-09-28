@@ -110,7 +110,8 @@ export type Delegate = 'GPU' | 'CPU';
  * WASM CPU path.
  */
 export function isSoftwareRenderer(renderer: string | null | undefined): boolean {
-  if (!renderer) return true;
+  // Unknown (some phone WebViews hide the name): try the GPU; the tuner measures it.
+  if (!renderer) return false;
   return /swiftshader|llvmpipe|softpipe|software|basic render|microsoft basic/i.test(renderer);
 }
 
@@ -166,6 +167,11 @@ export class DelegateTuner {
 
   get settled(): boolean {
     return this.decided;
+  }
+
+  /** What was measured, e.g. "GPU 62 ms, CPU 240 ms" (median per detection). */
+  summary(): string {
+    return [...this.measured].map(([delegate, ms]) => `${delegate} ${Math.round(ms)} ms`).join(', ');
   }
 }
 

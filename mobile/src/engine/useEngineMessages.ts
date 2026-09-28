@@ -24,7 +24,7 @@ export function useEngineMessages(handlers: EngineHandlers): (message: EngineToH
         h.onError?.(message.code);
         break;
       case 'stats':
-        h.onStats?.(message.fps, message.inferenceMs, message.delegate);
+        h.onStats?.(message.fps, message.inferenceMs, message.delegate, message.note);
         break;
       case 'prediction':
         h.onPrediction?.(message);

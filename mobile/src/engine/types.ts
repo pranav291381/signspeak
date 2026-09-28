@@ -8,7 +8,7 @@ export interface EngineHandlers {
   onFrame?: (timestampMs: number, values: number[] | null, hands: number) => void;
   onStatus?: (status: EngineStatus, progress?: number) => void;
   onError?: (code: EngineErrorCode) => void;
-  onStats?: (fps: number, inferenceMs: number, delegate?: 'GPU' | 'CPU') => void;
+  onStats?: (fps: number, inferenceMs: number, delegate?: 'GPU' | 'CPU', note?: string) => void;
   onPrediction?: (message: EnginePrediction) => void;
 }
 
