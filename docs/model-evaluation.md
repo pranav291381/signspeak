@@ -77,6 +77,8 @@ INCLUDE (262 signs, 4,276 videos, CC BY 4.0). For each sign the last recording s
 | Same, run A (without the validation videos) | 77.7% / 89.6% | 55.1% / 5.1% / 39.9% | 87.1%* | 0.07 | no |
 | Window model (previous, replaced) | 63% of windows | 32% / 4% / 64% | — | 0.19 | no |
 
+Slow phones use MediaPipe's lite hand model. On one test video per sign (260), analysed with each: full 68.1% right on the first try, 4.2% wrong, right sign on screen 93.5%; lite 63.5%, 5.0%, 92.3%.
+
 \* Measured when the app still hid suggestions below 3% probability; run B with that rule: 90.1%. The rule was dropped after it cost 1.4 points on validation.
 
 "Live" means each test video was played frame by frame, with rest before and after, through the app's own `RecognitionSession` (`npm run tune:model -- --evaluate --split test`). Per sign: [`include-signs.md`](include-signs.md). Against §4 the model falls short on unseen signers (not measured), the wrong-sign rate (4.8% at the app's setting, target 2%) and per-sign recall (84 of the 260 tested signs are right on fewer than two thirds of their test videos).

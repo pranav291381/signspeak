@@ -129,6 +129,7 @@ How it was made: all 4,276 INCLUDE videos were analysed with `npm run export:lan
 | Model alone, one prediction per video | 83% right sign, 93% in the top 3, 96% in the top 5 (run A, without the validation videos: 78%, 90%, 92%) |
 | Live, `npm run tune:model -- --evaluate --split test` (played into the app's session with rest before and after) | 64% right on the first try, 5% wrong, 31% "not sure" |
 | Right sign on screen, shown or offered for one tap (“Did you mean…?”, “Not right?”) | 92% |
+| Slow phones (lite hand model), one test video per sign | 64% right on the first try, 5% wrong, right sign on screen 92% (the same 260 videos with the full model: 68%, 4%, 94%) |
 | Signs | 176 right on at least two thirds of their test videos, 30 sometimes, 45 never shown on their own but offered for one tap, 9 not yet, 2 not tested |
 
 Every sign and its result: [`include-signs.md`](include-signs.md). Limits: recording sessions may share signers and all signers come from one school, so this overstates accuracy for new signers; calibration is not verified (ECE 0.06 on the test videos, but not checked on other signers), so the app shows no confidence level with the result. It has not been tried by users yet. The previous model (one network reading the last 2 seconds, 32% right live) is replaced.
