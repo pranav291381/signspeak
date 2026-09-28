@@ -11,7 +11,7 @@ interface Props {
   description: string;
   icon: IconName;
   onPress: () => void;
-  /** `primary` is the filled hero style for the main actions. */
+  /** `primary` is the saffron hero style for the main action. */
   tone?: 'default' | 'primary';
   /** Spoken name when the visible title contains symbols (e.g. "→"). */
   accessibilityLabel?: string;
@@ -22,8 +22,8 @@ interface Props {
 export function NavCard({ title, description, icon, onPress, tone = 'default', accessibilityLabel, testID }: Props) {
   const { colors, elevation, radii, spacing } = useTheme();
   const hero = tone === 'primary';
-  const fg = hero ? colors.onPrimary : colors.text;
-  const fgSecondary = hero ? colors.onPrimary : colors.textSecondary;
+  const fg = hero ? colors.onAccent : colors.text;
+  const fgSecondary = hero ? colors.onAccent : colors.textSecondary;
 
   return (
     <PressableScale
@@ -37,8 +37,8 @@ export function NavCard({ title, description, icon, onPress, tone = 'default', a
         styles.card,
         hero ? null : elevation.card,
         {
-          backgroundColor: hero ? colors.primary : colors.surface,
-          borderColor: hero ? colors.primary : colors.border,
+          backgroundColor: hero ? colors.accent : colors.surface,
+          borderColor: hero ? colors.accent : colors.border,
           borderRadius: radii.lg,
           padding: spacing.lg,
           gap: spacing.lg,
@@ -48,16 +48,16 @@ export function NavCard({ title, description, icon, onPress, tone = 'default', a
       <View
         style={[
           styles.iconWrap,
-          { backgroundColor: hero ? 'rgba(255,255,255,0.18)' : colors.primaryContainer, borderRadius: radii.md },
+          { backgroundColor: hero ? colors.onAccent : colors.primaryContainer, borderRadius: radii.md },
         ]}
       >
-        <Icon name={icon} size={26} color={hero ? colors.onPrimary : colors.primary} />
+        <Icon name={icon} size={26} color={hero ? colors.accent : colors.onPrimaryContainer} />
       </View>
       <View style={styles.text}>
         <AppText variant="heading" accessibilityRole="none" style={{ color: fg }}>
           {title}
         </AppText>
-        <AppText variant="caption" style={{ color: fgSecondary, opacity: hero ? 0.9 : 1 }}>
+        <AppText variant="caption" style={{ color: fgSecondary, opacity: hero ? 0.85 : 1 }}>
           {description}
         </AppText>
       </View>

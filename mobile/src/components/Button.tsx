@@ -6,7 +6,7 @@ import { AppText } from './AppText';
 import { Icon, type IconName } from './Icon';
 import { PressableScale } from './PressableScale';
 
-/** `secondary` is a tonal button: tinted background, primary-coloured label. */
+/** `secondary` is a tonal button: tinted background, dark label. */
 export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'danger' | 'ghost';
 
 interface Props {
@@ -56,16 +56,16 @@ export function Button({
       onPress={onPress}
       testID={testID}
       pressedScale={0.96}
-      pressedOpacity={0.88}
+      pressedOpacity={0.9}
       style={[
         styles.base,
         {
-          minHeight: small ? MIN_TOUCH_TARGET : 52,
+          minHeight: small ? MIN_TOUCH_TARGET : 54,
           backgroundColor: palette.bg,
           borderColor: palette.border,
-          borderRadius: radii.md + 2,
-          paddingHorizontal: small ? spacing.md : spacing.lg,
-          opacity: inactive ? 0.45 : 1,
+          borderRadius: radii.pill,
+          paddingHorizontal: small ? spacing.lg : spacing.xl,
+          opacity: inactive ? 0.4 : 1,
         },
       ]}
     >
@@ -75,7 +75,7 @@ export function Button({
         ) : icon ? (
           <Icon name={icon} color={palette.fg} size={small ? 18 : 20} />
         ) : null}
-        <AppText variant="label" style={{ color: palette.fg, flexShrink: 1, textAlign: 'center' }}>
+        <AppText variant="label" style={{ color: palette.fg, flexShrink: 1, textAlign: 'center', fontSize: small ? 15 : 16 }}>
           {label}
         </AppText>
       </View>

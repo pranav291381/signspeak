@@ -169,21 +169,25 @@ export function SignToTextScreen({ sessionFactory }: Props) {
             </>
           }
           overlayBottom={
-            <View style={[styles.controls, { gap: spacing.md }]}>
+            <View style={[styles.controls, { gap: spacing.lg }]}>
+              <View style={styles.controlSide} />
               <IconButton
                 testID="pause-toggle"
-                variant="overlay"
+                variant="accent"
+                size={62}
                 icon={userPaused ? 'play' : 'pause'}
                 accessibilityLabel={userPaused ? t('signToText.controls.resume') : t('signToText.controls.pause')}
                 onPress={() => setUserPaused((p) => !p)}
               />
-              <IconButton
-                testID="switch-camera"
-                variant="overlay"
-                icon="camera-flip-outline"
-                accessibilityLabel={t('signToText.controls.switchCamera')}
-                onPress={() => setFacing((f) => (f === 'back' ? 'front' : 'back'))}
-              />
+              <View style={styles.controlSide}>
+                <IconButton
+                  testID="switch-camera"
+                  variant="overlay"
+                  icon="camera-flip-outline"
+                  accessibilityLabel={t('signToText.controls.switchCamera')}
+                  onPress={() => setFacing((f) => (f === 'back' ? 'front' : 'back'))}
+                />
+              </View>
             </View>
           }
         />
@@ -213,44 +217,41 @@ export function SignToTextScreen({ sessionFactory }: Props) {
           <Button icon="refresh" label={t('common.retry')} onPress={restart} />
         </Card>
       ) : (
-        <Card>
+        <Card style={{ gap: spacing.lg }}>
           <RecognitionPanel snapshot={snapshot} paused={userPaused} latest={latest} transcript={transcript} />
-          <SpeakButton text={spokenText} language={spokenLanguage} speech={speech} testID="speak-transcript" />
           <View style={[styles.row, { gap: spacing.sm }]}>
             <View style={styles.flex}>
-              <Button
-                testID="clear-results"
-                size="sm"
-                variant="secondary"
-                icon="eraser"
-                label={t('signToText.controls.clear')}
-                disabled={results.length === 0}
-                onPress={clear}
-              />
+              <SpeakButton text={spokenText} language={spokenLanguage} speech={speech} testID="speak-transcript" />
             </View>
-            {latest ? (
-              <View style={styles.flex}>
-                <Button
-                  testID="report-wrong"
-                  size="sm"
-                  variant="ghost"
-                  icon="message-alert-outline"
-                  label={t('signToText.reportWrong')}
-                  onPress={() =>
-                    router.push({
-                      pathname: '/feedback',
-                      params: {
-                        feature: 'sign_to_text',
-                        issue: 'wrong_recognition',
-                        label: latest.recognition.label,
-                        simulated: String(snapshot?.simulated ?? false),
-                      },
-                    })
-                  }
-                />
-              </View>
-            ) : null}
+            <IconButton
+              testID="clear-results"
+              size={54}
+              icon="eraser"
+              accessibilityLabel={t('signToText.controls.clear')}
+              disabled={results.length === 0}
+              onPress={clear}
+            />
           </View>
+          {latest ? (
+            <Button
+              testID="report-wrong"
+              size="sm"
+              variant="ghost"
+              icon="message-alert-outline"
+              label={t('signToText.reportWrong')}
+              onPress={() =>
+                router.push({
+                  pathname: '/feedback',
+                  params: {
+                    feature: 'sign_to_text',
+                    issue: 'wrong_recognition',
+                    label: latest.recognition.label,
+                    simulated: String(snapshot?.simulated ?? false),
+                  },
+                })
+              }
+            />
+          ) : null}
         </Card>
       )}
 
@@ -279,6 +280,7 @@ export function SignToTextScreen({ sessionFactory }: Props) {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  row: { flexDirection: 'row' },
-  controls: { flexDirection: 'row', justifyContent: 'center' },
+  row: { flexDirection: 'row', alignItems: 'flex-start' },
+  controls: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
+  controlSide: { width: 48, alignItems: 'center' },
 });

@@ -163,7 +163,7 @@ describe('PressableScale', () => {
     render(<Button label="Speak" disabled onPress={jest.fn()} />);
     const style = screen.getByRole('button', { name: 'Speak' }).props.style;
     const flat = Array.isArray(style) ? Object.assign({}, ...style.flat(Infinity)) : style;
-    expect(flat.opacity).toBe(0.45);
+    expect(flat.opacity).toBe(0.4);
   });
 });
 

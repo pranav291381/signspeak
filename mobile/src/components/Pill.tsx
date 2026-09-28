@@ -28,7 +28,7 @@ export function Pill({ label, tone = 'neutral', icon, testID }: Props) {
   return (
     <View testID={testID} style={[styles.pill, { backgroundColor: palette.bg, borderRadius: radii.pill }]}>
       {icon ? <Icon name={icon} size={14} color={palette.fg} /> : null}
-      <AppText variant="caption" style={{ color: palette.fg, fontSize: 13, lineHeight: 18 }}>
+      <AppText variant="label" style={{ color: palette.fg, fontSize: 13, lineHeight: 18 }}>
         {label}
       </AppText>
     </View>
@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: 'flex-start',
     gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 11,
+    paddingVertical: 5,
   },
 });

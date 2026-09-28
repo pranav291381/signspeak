@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
-import { AppText, FadeIn, Icon, Notice, type IconName } from '@/components';
+import { AppText, FadeIn, Icon, LiveDot, Notice, type IconName } from '@/components';
 import type { SessionSnapshot } from '@/recognition/session';
 import type { Recognition } from '@/recognition/types';
 import { useTheme } from '@/theme';
@@ -51,9 +51,11 @@ export function RecognitionPanel({ snapshot, paused, latest, transcript }: Props
   const key = statusKey(snapshot, paused);
   const uncertain = key === 'uncertain';
   const hint = uncertain && snapshot?.reason ? t(`signToText.hints.${snapshot.reason}`) : null;
+  const live = key === 'analyzing' || key === 'recognized';
+  const dot = uncertain ? colors.warning : live ? colors.success : key === 'paused' ? colors.outline : colors.accent;
 
   return (
-    <View style={{ gap: spacing.md }}>
+    <View style={{ gap: spacing.lg }}>
       <View
         testID="recognition-status"
         accessible
@@ -63,30 +65,32 @@ export function RecognitionPanel({ snapshot, paused, latest, transcript }: Props
           styles.status,
           {
             backgroundColor: uncertain ? colors.warningBackground : colors.surfaceAlt,
-            borderRadius: radii.md,
-            padding: spacing.md,
-            gap: spacing.md,
+            borderRadius: hint ? radii.md + 2 : radii.pill,
+            paddingHorizontal: spacing.md,
+            paddingVertical: spacing.sm + 2,
+            gap: spacing.sm + 2,
           },
         ]}
       >
-        <FadeIn trigger={key} distance={4} duration={180} style={[styles.status, styles.flex, { gap: spacing.md }]}>
-          <Icon name={STATUS_ICONS[key]} color={uncertain ? colors.warning : colors.primary} size={22} />
+        <LiveDot color={dot} pulsing={live || key === 'starting'} />
+        <FadeIn trigger={key} distance={3} duration={180} style={[styles.status, styles.flex, { gap: spacing.sm }]}>
           <View style={styles.flex}>
             <AppText variant="label">{t(`signToText.status.${key}`)}</AppText>
             {hint ? <AppText variant="caption">{hint}</AppText> : null}
           </View>
+          <Icon name={STATUS_ICONS[key]} color={uncertain ? colors.warning : colors.textSecondary} size={20} />
         </FadeIn>
       </View>
 
-      <View testID="recognition-result" style={{ gap: spacing.xs, minHeight: 72, justifyContent: 'center' }}>
+      <View testID="recognition-result" style={[styles.result, { gap: spacing.xs }]}>
         {latest ? (
           <>
             <AppText variant="overline" color="textSecondary">
               {t('signToText.result.label')}
             </AppText>
             {/* Each new result pops in. */}
-            <FadeIn trigger={latest.recognition.timestampMs} pop distance={6} duration={260}>
-              <AppText variant="display" accessibilityRole="text" testID="recognition-text" style={{ fontSize: 40, lineHeight: 48 }}>
+            <FadeIn trigger={latest.recognition.timestampMs} pop distance={8} duration={280}>
+              <AppText variant="display" accessibilityRole="text" testID="recognition-text" style={styles.resultText}>
                 {latest.text}
               </AppText>
             </FadeIn>
@@ -98,9 +102,14 @@ export function RecognitionPanel({ snapshot, paused, latest, transcript }: Props
             {latest.emergency ? <Notice tone="danger" message={t('signToText.result.emergency')} /> : null}
           </>
         ) : (
-          <AppText variant="body" color="textSecondary" style={styles.center}>
-            {t('signToText.result.empty')}
-          </AppText>
+          <View style={[styles.empty, { gap: spacing.sm }]}>
+            <View style={[styles.emptyIcon, { backgroundColor: colors.primaryContainer }]}>
+              <Icon name="hand-wave-outline" size={24} color={colors.onPrimaryContainer} />
+            </View>
+            <AppText variant="body" color="textSecondary" style={styles.center}>
+              {t('signToText.result.empty')}
+            </AppText>
+          </View>
         )}
       </View>
 
@@ -109,9 +118,9 @@ export function RecognitionPanel({ snapshot, paused, latest, transcript }: Props
           <AppText variant="overline" color="textSecondary">
             {t('signToText.transcript.label')}
           </AppText>
-          <View style={[styles.words, { gap: spacing.xs }]}>
+          <View style={[styles.words, { gap: spacing.xs + 2 }]}>
             {transcript.map((word, i) => (
-              <FadeIn key={`${i}-${word.text}`} distance={4} duration={200}>
+              <FadeIn key={`${i}-${word.text}`} distance={4} duration={200} pop>
                 <View
                   style={[
                     styles.word,
@@ -138,6 +147,10 @@ const styles = StyleSheet.create({
   status: { flexDirection: 'row', alignItems: 'center' },
   flex: { flex: 1 },
   center: { textAlign: 'center' },
+  result: { minHeight: 96, justifyContent: 'center' },
+  resultText: { fontSize: 44, lineHeight: 52, letterSpacing: -1 },
+  empty: { alignItems: 'center', paddingVertical: 4 },
+  emptyIcon: { width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   words: { flexDirection: 'row', flexWrap: 'wrap' },
-  word: { paddingHorizontal: 12, paddingVertical: 6 },
+  word: { paddingHorizontal: 14, paddingVertical: 7 },
 });

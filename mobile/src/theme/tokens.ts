@@ -14,10 +14,14 @@ export interface ColorPalette {
   outline: string;
   text: string;
   textSecondary: string;
+  /** Main actions and selected states: ink in the light theme, saffron in the dark theme. */
   primary: string;
   onPrimary: string;
   primaryContainer: string;
   onPrimaryContainer: string;
+  /** The brand saffron, as a fill (hero cards, the selected tab). Text on it uses `onAccent`. */
+  accent: string;
+  onAccent: string;
   danger: string;
   onDanger: string;
   info: string;
@@ -31,64 +35,98 @@ export interface ColorPalette {
   /** Translucent layer for controls drawn over the camera preview. */
   scrim: string;
   onScrim: string;
+  /** The floating tab bar, and its unselected icons and labels. */
+  tabBar: string;
+  onTabBar: string;
 }
 
+/** SignSpeak's identity, from the logo: saffron, deep ink and warm paper. */
+export const brand = {
+  saffron: '#F4B63F',
+  ink: '#1F232C',
+} as const;
+
 export const lightColors: ColorPalette = {
-  background: '#F6F7F9',
+  background: '#FAF7F2',
   surface: '#FFFFFF',
-  surfaceAlt: '#EFF1F5',
-  border: '#E4E7EC',
-  outline: '#7A8394',
-  text: '#0F172A',
-  textSecondary: '#4B5565',
-  primary: '#4F46E5',
+  surfaceAlt: '#F3EEE6',
+  border: '#ECE5DA',
+  outline: '#8A8275',
+  text: '#1A1D24',
+  textSecondary: '#5E5950',
+  primary: brand.ink,
   onPrimary: '#FFFFFF',
-  primaryContainer: '#EEF0FF',
-  onPrimaryContainer: '#3730A3',
-  danger: '#C8231B',
+  primaryContainer: '#FCEFD3',
+  onPrimaryContainer: '#5A3E00',
+  accent: brand.saffron,
+  onAccent: brand.ink,
+  danger: '#C4261D',
   onDanger: '#FFFFFF',
-  info: '#4F46E5',
-  infoBackground: '#EEF0FF',
-  success: '#12723A',
-  successBackground: '#E8F6EE',
-  warning: '#A15C07',
-  warningBackground: '#FEF4E2',
-  dangerBackground: '#FDECEA',
-  focus: '#4F46E5',
-  scrim: 'rgba(15, 23, 42, 0.62)',
+  info: '#3B4252',
+  infoBackground: '#F1ECE3',
+  success: '#177A43',
+  successBackground: '#E7F4EC',
+  warning: '#A3480B',
+  warningBackground: '#FCEEE3',
+  dangerBackground: '#FCEDEA',
+  focus: brand.ink,
+  scrim: 'rgba(20, 22, 28, 0.62)',
   onScrim: '#FFFFFF',
+  tabBar: brand.ink,
+  onTabBar: '#A9AEBA',
 };
 
 export const darkColors: ColorPalette = {
-  background: '#0B0F17',
-  surface: '#141B26',
-  surfaceAlt: '#1C2533',
-  border: '#243044',
-  outline: '#6B778C',
-  text: '#E8ECF3',
-  textSecondary: '#A3AEC0',
-  primary: '#8E95FF',
-  onPrimary: '#0B0F17',
-  primaryContainer: '#252C55',
-  onPrimaryContainer: '#D9DBFF',
-  danger: '#FF8A80',
-  onDanger: '#0B0F17',
-  info: '#8E95FF',
-  infoBackground: '#1D2447',
-  success: '#5FD08F',
-  successBackground: '#11291C',
-  warning: '#F2B84B',
-  warningBackground: '#2D2210',
-  dangerBackground: '#34161A',
-  focus: '#8E95FF',
-  scrim: 'rgba(5, 8, 14, 0.66)',
+  background: '#0F1115',
+  surface: '#181B21',
+  surfaceAlt: '#22262E',
+  border: '#2C313B',
+  outline: '#747B89',
+  text: '#F4F1EA',
+  textSecondary: '#AEA99F',
+  primary: brand.saffron,
+  onPrimary: '#1A1C21',
+  primaryContainer: '#3A2F16',
+  onPrimaryContainer: '#FFE0A3',
+  accent: brand.saffron,
+  onAccent: '#1A1C21',
+  danger: '#FF8A7E',
+  onDanger: '#1A1C21',
+  info: '#BAC3D4',
+  infoBackground: '#1F242E',
+  success: '#62D394',
+  successBackground: '#12291C',
+  warning: '#FFA766',
+  warningBackground: '#36210F',
+  dangerBackground: '#3A1917',
+  focus: brand.saffron,
+  scrim: 'rgba(8, 9, 12, 0.66)',
   onScrim: '#FFFFFF',
+  tabBar: '#1F232B',
+  onTabBar: '#A3A8B3',
 };
+
+/**
+ * Fills of the small icon tiles in lists (Settings). Decorative: every row also
+ * has a text label. Icons on them are white.
+ */
+export const tileColors = {
+  saffron: '#E09A12',
+  ink: '#3B4252',
+  teal: '#138A7A',
+  violet: '#6D5BD0',
+  rose: '#D2455B',
+  blue: '#2F6FD6',
+  green: '#2E8B57',
+  slate: '#6B7280',
+} as const;
+
+export type TileColor = keyof typeof tileColors;
 
 /** Colours of the hand-skeleton diagram, one per finger (thumb → little finger). */
 export const skeletonColors = {
-  light: { fingers: ['#F97316', '#8B5CF6', '#3B82F6', '#10B981', '#EC4899'], palm: '#64748B', body: '#94A3B8' },
-  dark: { fingers: ['#FDBA74', '#C4B5FD', '#93C5FD', '#6EE7B7', '#F9A8D4'], palm: '#94A3B8', body: '#475569' },
+  light: { fingers: ['#F97316', '#8B5CF6', '#3B82F6', '#10B981', '#EC4899'], palm: '#6B6457', body: '#A59D8F' },
+  dark: { fingers: ['#FDBA74', '#C4B5FD', '#93C5FD', '#6EE7B7', '#F9A8D4'], palm: '#A09A8E', body: '#4E5360' },
 } as const;
 
 export const spacing = {
@@ -102,10 +140,10 @@ export const spacing = {
 } as const;
 
 export const radii = {
-  sm: 8,
-  md: 12,
-  lg: 18,
-  xl: 24,
+  sm: 10,
+  md: 14,
+  lg: 22,
+  xl: 28,
   pill: 999,
 } as const;
 
@@ -142,14 +180,14 @@ export const FONT_FAMILIES = {
 type Weight = keyof typeof FONT_FAMILIES;
 
 const scale: Record<TextVariant, Omit<TypeStyle, 'fontFamily' | 'fontWeight'> & { weight: Weight }> = {
-  display: { fontSize: 32, lineHeight: 40, weight: '700', letterSpacing: -0.6 },
-  title: { fontSize: 24, lineHeight: 32, weight: '700', letterSpacing: -0.4 },
-  heading: { fontSize: 18, lineHeight: 26, weight: '600', letterSpacing: -0.2 },
+  display: { fontSize: 34, lineHeight: 42, weight: '700', letterSpacing: -0.8 },
+  title: { fontSize: 24, lineHeight: 31, weight: '700', letterSpacing: -0.5 },
+  heading: { fontSize: 18, lineHeight: 25, weight: '600', letterSpacing: -0.25 },
   body: { fontSize: 16, lineHeight: 24, weight: '400' },
-  bodyStrong: { fontSize: 16, lineHeight: 24, weight: '600' },
-  label: { fontSize: 15, lineHeight: 20, weight: '600' },
+  bodyStrong: { fontSize: 16, lineHeight: 24, weight: '600', letterSpacing: -0.1 },
+  label: { fontSize: 15, lineHeight: 20, weight: '600', letterSpacing: -0.1 },
   caption: { fontSize: 14, lineHeight: 20, weight: '400' },
-  overline: { fontSize: 12, lineHeight: 16, weight: '600', letterSpacing: 0.8, textTransform: 'uppercase' },
+  overline: { fontSize: 12, lineHeight: 16, weight: '700', letterSpacing: 1, textTransform: 'uppercase' },
 };
 
 /**
@@ -173,13 +211,14 @@ export interface Elevation {
   raised: { boxShadow?: string };
 }
 
+// Soft, warm shadows: the paper background is tinted, so cards lift off it without hard edges.
 const lightElevation: Elevation = {
-  card: { boxShadow: '0px 1px 2px rgba(15, 23, 42, 0.04), 0px 4px 14px rgba(15, 23, 42, 0.05)' },
-  raised: { boxShadow: '0px 8px 24px rgba(15, 23, 42, 0.12)' },
+  card: { boxShadow: '0px 1px 2px rgba(40, 30, 10, 0.05), 0px 8px 24px rgba(40, 30, 10, 0.06)' },
+  raised: { boxShadow: '0px 12px 32px rgba(20, 22, 28, 0.22)' },
 };
 
 // Shadows are barely visible on dark backgrounds; borders separate surfaces instead.
-const darkElevation: Elevation = { card: {}, raised: { boxShadow: '0px 8px 24px rgba(0, 0, 0, 0.45)' } };
+const darkElevation: Elevation = { card: {}, raised: { boxShadow: '0px 12px 32px rgba(0, 0, 0, 0.55)' } };
 
 export type ColorScheme = 'light' | 'dark';
 

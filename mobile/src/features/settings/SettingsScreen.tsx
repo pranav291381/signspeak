@@ -1,11 +1,14 @@
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Linking } from 'react-native';
+import { Image, Linking, StyleSheet, View } from 'react-native';
 
 import {
   AppText,
+  Card,
   confirmAction,
+  IconTile,
   ListRow,
   Notice,
   RadioGroup,
@@ -13,6 +16,7 @@ import {
   Section,
   SegmentedControl,
   SwitchRow,
+  type IconName,
   type RadioOption,
 } from '@/components';
 import { selectableLanguages, type LanguageCode } from '@/i18n';
@@ -21,6 +25,45 @@ import { usePersonalSigns } from '@/personal/PersonalSignsProvider';
 import { useSettings } from '@/settings/SettingsProvider';
 import { useSignVocabulary } from '@/signpack/SignVocabularyProvider';
 import type { CameraFacing, SpeechRate } from '@/settings/settings';
+import { useTheme, type TileColor } from '@/theme';
+
+const LOGO = require('../../../assets/logo.png');
+
+/** A control under its own label and icon (a choice that does not fit on one row). */
+function LabelledControl({ icon, tile, label, children }: { icon: IconName; tile: TileColor; label: string; children: ReactNode }) {
+  const { spacing } = useTheme();
+  return (
+    <View style={{ gap: spacing.md, paddingVertical: spacing.sm }}>
+      <View style={[styles.row, { gap: spacing.md }]}>
+        <IconTile icon={icon} tile={tile} />
+        <AppText variant="bodyStrong" style={styles.flex}>
+          {label}
+        </AppText>
+      </View>
+      {children}
+    </View>
+  );
+}
+
+/** The app's name, logo and version at the top of Settings. */
+function AppCard() {
+  const { t } = useTranslation();
+  const { radii, spacing } = useTheme();
+  return (
+    <Card style={[styles.row, { gap: spacing.lg }]}>
+      <Image source={LOGO} style={[styles.logo, { borderRadius: radii.md + 2 }]} accessible={false} accessibilityIgnoresInvertColors />
+      <View style={styles.flex}>
+        <AppText variant="heading">{t('home.title')}</AppText>
+        <AppText variant="caption" color="textSecondary">
+          {t('settings.about.version', { version: Constants.expoConfig?.version ?? '—' })}
+        </AppText>
+        <AppText variant="caption" color="textSecondary">
+          {t('home.intro')}
+        </AppText>
+      </View>
+    </Card>
+  );
+}
 
 export function SettingsScreen() {
   const { t } = useTranslation();
@@ -56,6 +99,8 @@ export function SettingsScreen() {
 
   return (
     <Screen testID="settings-screen" title={t('screens.settings')}>
+      <AppCard />
+
       <Section title={t('settings.sections.appearance')} description={t('settings.theme.hint')}>
         <SegmentedControl
           testID="theme"
@@ -89,41 +134,46 @@ export function SettingsScreen() {
         />
       </Section>
 
-      <Section title={t('settings.sections.speech')}>
+      <Section title={t('settings.sections.speech')} variant="list">
         <SwitchRow
           testID="auto-speak"
+          icon="account-voice"
+          tile="violet"
           label={t('settings.autoSpeak.label')}
           hint={t('settings.autoSpeak.hint')}
           value={settings.autoSpeak}
           onValueChange={(autoSpeak) => updateSettings({ autoSpeak })}
         />
-        <AppText variant="bodyStrong">{t('settings.speechRate.label')}</AppText>
-        <SegmentedControl
-          testID="speech-rate"
-          label={t('settings.speechRate.label')}
-          segments={speechRates}
-          value={settings.speechRate}
-          onChange={(speechRate) => updateSettings({ speechRate })}
-        />
+        <LabelledControl icon="speedometer" tile="blue" label={t('settings.speechRate.label')}>
+          <SegmentedControl
+            testID="speech-rate"
+            label={t('settings.speechRate.label')}
+            segments={speechRates}
+            value={settings.speechRate}
+            onChange={(speechRate) => updateSettings({ speechRate })}
+          />
+        </LabelledControl>
       </Section>
 
-      <Section title={t('settings.sections.camera')}>
-        <AppText variant="bodyStrong">{t('settings.defaultCamera.label')}</AppText>
-        <SegmentedControl
-          testID="default-camera"
-          label={t('settings.defaultCamera.label')}
-          segments={cameras}
-          value={settings.defaultCamera}
-          onChange={(defaultCamera) => updateSettings({ defaultCamera })}
-        />
+      <Section title={t('settings.sections.camera')} variant="list">
+        <LabelledControl icon="camera-outline" tile="ink" label={t('settings.defaultCamera.label')}>
+          <SegmentedControl
+            testID="default-camera"
+            label={t('settings.defaultCamera.label')}
+            segments={cameras}
+            value={settings.defaultCamera}
+            onChange={(defaultCamera) => updateSettings({ defaultCamera })}
+          />
+        </LabelledControl>
       </Section>
 
       {signs.length > 0 ? (
         // Teaching signs is paused; signs taught earlier can still be deleted.
-        <Section title={t('settings.sections.signs')} description={t('settings.signs.hint')}>
+        <Section title={t('settings.sections.signs')} description={t('settings.signs.hint')} variant="list">
           <ListRow
             testID="settings-delete-signs"
             icon="delete-outline"
+            tile="rose"
             tone="danger"
             label={t('signs.deleteAll')}
             value={String(signs.length)}
@@ -140,29 +190,35 @@ export function SettingsScreen() {
         </Section>
       ) : null}
 
-      <Section title={t('settings.sections.privacy')}>
+      <Section title={t('settings.sections.privacy')} variant="list">
         <SwitchRow
           testID="history-enabled"
+          icon="shield-lock-outline"
+          tile="green"
           label={t('settings.history.label')}
           hint={t('settings.history.hint')}
           value={settings.historyEnabled}
           onValueChange={(historyEnabled) => updateSettings({ historyEnabled })}
         />
-        <ListRow testID="settings-history" icon="history" label={t('screens.history')} onPress={() => router.push('/history')} />
+        <ListRow testID="settings-history" icon="history" tile="teal" label={t('screens.history')} onPress={() => router.push('/history')} />
       </Section>
 
-      <Section title={t('settings.sections.accessibility')}>
+      <Section title={t('settings.sections.accessibility')} variant="list">
         <SwitchRow
           testID="haptics-enabled"
+          icon="vibrate"
+          tile="blue"
           label={t('settings.haptics.label')}
           value={settings.hapticsEnabled}
           onValueChange={(hapticsEnabled) => updateSettings({ hapticsEnabled })}
         />
       </Section>
 
-      <Section title={t('settings.sections.demo')}>
+      <Section title={t('settings.sections.demo')} variant="list">
         <SwitchRow
           testID="demo-mode"
+          icon="flask-outline"
+          tile="slate"
           label={t('settings.demoMode.label')}
           hint={t('settings.demoMode.hint')}
           value={settings.demoMode}
@@ -170,17 +226,17 @@ export function SettingsScreen() {
         />
       </Section>
 
-      <Section title={t('settings.sections.feedback')}>
+      <Section title={t('settings.sections.feedback')} variant="list">
         <ListRow
           testID="report-problem"
           icon="message-alert-outline"
+          tile="rose"
           label={t('settings.reportProblem')}
           onPress={() => router.push('/feedback')}
         />
       </Section>
 
       <Section title={t('settings.sections.about')}>
-        <AppText variant="body">{t('settings.about.version', { version: Constants.expoConfig?.version ?? '—' })}</AppText>
         <Notice tone="warning" message={t('settings.about.limitations')} />
         <Notice tone="info" message={t('settings.about.notInterpreter')} />
         <Notice tone="info" icon="shield-lock-outline" message={t('settings.about.privacy')} />
@@ -196,6 +252,7 @@ export function SettingsScreen() {
               key={pack.id}
               testID={`about-vocabulary-${pack.id}`}
               icon="book-open-variant"
+              tile="saffron"
               label={pack.name}
               description={`${pack.source.name}. ${pack.source.permission}`}
               value={t('settings.about.vocabularySigns', { count: pack.signCount })}
@@ -211,6 +268,7 @@ export function SettingsScreen() {
                 key={pack.id}
                 testID={`about-motions-${pack.id}`}
                 icon="human-greeting-variant"
+                tile="teal"
                 label={pack.name}
                 description={`${pack.source.name}. ${pack.source.permission}`}
                 value={t('settings.about.vocabularySigns', { count: pack.signCount })}
@@ -223,3 +281,9 @@ export function SettingsScreen() {
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  row: { flexDirection: 'row', alignItems: 'center' },
+  flex: { flex: 1 },
+  logo: { width: 56, height: 56 },
+});

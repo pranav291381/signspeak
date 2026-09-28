@@ -52,8 +52,8 @@ export function RadioGroup<T extends string>({ label, hint, options, value, onCh
               {
                 borderColor: selected ? colors.primary : colors.border,
                 borderWidth: selected ? 2 : 1,
-                borderRadius: radii.md,
-                paddingHorizontal: spacing.md,
+                borderRadius: radii.md + 2,
+                paddingHorizontal: spacing.lg,
                 gap: spacing.md,
                 backgroundColor: selected ? colors.primaryContainer : pressed ? colors.surfaceAlt : colors.surface,
               },

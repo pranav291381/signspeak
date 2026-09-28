@@ -1,3 +1,4 @@
+import { useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Keyboard, StyleSheet, View } from 'react-native';
@@ -50,25 +51,38 @@ export function TextToIslScreen() {
   );
   const categoryLabel = (category: string) => t(`textToIsl.categories.${categoryKey(category)}`, { defaultValue: category });
 
-  const show = (input: string) => {
+  /** Shows the signs for `input` on this screen; returns the plan (null: nothing to sign). */
+  const display = (input: string) => {
     const next = planSigns(input, sources);
+    setText(input);
     setShownText(input);
     setEmpty(next === null);
     setPlan(next);
     setChosen(next ? next.items.map(() => 0) : []);
     setActiveCard(null);
-    Keyboard.dismiss();
     setVersion((v) => v + 1);
+    return next;
+  };
+
+  const show = (input: string) => {
+    const next = display(input);
+    Keyboard.dismiss();
     if (next) {
       const ids = next.items.flatMap((item) => (item.choices[0] ? [item.choices[0].id] : []));
       history.add({ kind: 'lookup', text: input.trim(), language, signIds: ids });
     }
   };
 
-  const pick = (input: string) => {
-    setText(input);
-    show(input);
-  };
+  // Opened with words (e.g. a recent look-up on the home screen): show them once the signs are loaded.
+  // Already in the history, so not added again.
+  const { text: linked } = useLocalSearchParams<{ text?: string }>();
+  const [shownLink, setShownLink] = useState<string | null>(null);
+  if (library && typeof linked === 'string' && linked.trim() && linked !== shownLink) {
+    setShownLink(linked);
+    display(linked);
+  }
+
+  const pick = (input: string) => show(input);
 
   const shown = plan?.items.filter((item) => item.kind !== 'missing').length ?? 0;
 
