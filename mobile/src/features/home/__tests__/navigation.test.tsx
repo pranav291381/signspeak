@@ -85,6 +85,36 @@ describe('app navigation', () => {
     await act(async () => undefined);
   });
 
+  it('switches tabs from the floating tab bar, marking the chosen tab', async () => {
+    const router = renderRouter(APP_DIR, { initialUrl: '/' });
+    await screen.findByTestId('home-screen');
+    expect(screen.getByTestId('tab-home')).toBeSelected();
+    fireEvent.press(screen.getByRole('tab', { name: 'Text to I S L' }));
+    await waitFor(() => expect(router.getPathname()).toBe('/text-to-isl'));
+    expect(screen.getByTestId('tab-text-to-isl')).toBeSelected();
+    expect(screen.getByTestId('tab-home')).not.toBeSelected();
+    fireEvent.press(screen.getByTestId('tab-settings'));
+    await waitFor(() => expect(router.getPathname()).toBe('/settings'));
+    await act(async () => undefined);
+  });
+
+  it('lists recent activity on the home screen; a recent look-up opens in Text → ISL', async () => {
+    await storeSettings({ onboardingComplete: true, historyEnabled: true });
+    await AsyncStorage.setItem(
+      'islconnect.history.v1',
+      JSON.stringify([
+        { id: 'a', kind: 'lookup', text: 'Good morning', language: 'en', signIds: [], createdAt: Date.now() },
+        { id: 'b', kind: 'recognition', text: 'Thank you', language: 'en', signIds: [], createdAt: Date.now() - 1000 },
+      ]),
+    );
+    const router = renderRouter(APP_DIR, { initialUrl: '/' });
+    expect(await screen.findByTestId('home-recent')).toBeOnTheScreen();
+    fireEvent.press(screen.getByRole('button', { name: /^Looked up: Good morning/ }));
+    await waitFor(() => expect(router.getPathname()).toBe('/text-to-isl'));
+    expect(router.getSearchParams()).toEqual({ text: 'Good morning' });
+    await act(async () => undefined);
+  });
+
   it('/text-to-isl turns typed words into signs', async () => {
     renderRouter(APP_DIR, { initialUrl: '/text-to-isl' });
     expect(await screen.findByTestId('text-to-isl-screen')).toBeOnTheScreen();

@@ -11,10 +11,17 @@
   "home": {
     "title": "SignSpeak",
     "intro": "Talk across sign and text.",
+    "greeting": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
     "signToText": {
       "title": "Sign → Text",
       "a11yLabel": "Sign to text",
-      "description": "Point the camera at a signer and see their signs as text and speech."
+      "description": "Point the camera at a signer and see their signs as text and speech.",
+      "badge": "Private · on this phone",
+      "cta": "Open camera"
     },
     "textToIsl": {
       "title": "Text → ISL",
@@ -31,6 +38,7 @@
       "description": "Recent results saved on this phone."
     },
     "disclaimer": "Early version. This app is not a replacement for a qualified ISL interpreter.",
+    "recent": "Recent",
     "signs": {
       "title": "Your signs",
       "empty": "Recognition learns from you. Teach a sign in about a minute.",

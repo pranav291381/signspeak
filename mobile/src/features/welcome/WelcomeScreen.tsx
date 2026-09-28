@@ -27,7 +27,7 @@ export function WelcomeScreen() {
   };
 
   return (
-    <Screen testID="welcome-screen" edges={['top', 'bottom', 'left', 'right']}>
+    <Screen testID="welcome-screen" edges={['top', 'bottom', 'left', 'right']} glow>
       <StepDots index={index} />
       {/* Each step eases in from below. */}
       <FadeIn trigger={step} distance={14} duration={280}>
@@ -164,9 +164,13 @@ function ThemeCard({
   const { colors, radii, spacing } = useTheme();
   const mini = (palette: ColorPalette, half?: 'left' | 'right') => (
     <View style={[styles.mini, half ? { width: '50%' } : null, { backgroundColor: palette.background }]}>
-      <View style={[styles.miniBar, { backgroundColor: palette.primary }]} />
+      <View style={[styles.miniLine, { backgroundColor: palette.text }]} />
+      <View style={[styles.miniHero, { backgroundColor: palette.accent }]} />
       <View style={[styles.miniCard, { backgroundColor: palette.surface, borderColor: palette.border }]} />
-      <View style={[styles.miniCard, { backgroundColor: palette.surface, borderColor: palette.border }]} />
+      <View style={styles.flex} />
+      <View style={[styles.miniTabs, { backgroundColor: palette.tabBar }]}>
+        <View style={[styles.miniTab, { backgroundColor: palette.accent }]} />
+      </View>
     </View>
   );
   return (
@@ -218,7 +222,7 @@ function IntroStep() {
       {points.map((point) => (
         <View key={point.title} style={[styles.point, { gap: spacing.md }]}>
           <View style={[styles.pointIcon, { backgroundColor: colors.primaryContainer, borderRadius: radii.md }]}>
-            <Icon name={point.icon} size={22} color={colors.primary} />
+            <Icon name={point.icon} size={22} color={colors.onPrimaryContainer} />
           </View>
           <View style={styles.flex}>
             <AppText variant="bodyStrong">{point.title}</AppText>
@@ -236,15 +240,17 @@ function IntroStep() {
 const LOGO = require('../../../assets/logo.png');
 
 function Hero({ icon, logo = false, title, subtitle }: { icon: IconName; logo?: boolean; title: string; subtitle: string }) {
-  const { colors, radii, spacing } = useTheme();
+  const { colors, elevation, radii, spacing } = useTheme();
   return (
     <View style={{ gap: spacing.md }}>
       {logo ? (
-        // The app's logo; decorative, the title names the app.
-        <Image testID="welcome-logo" source={LOGO} style={styles.logo} accessible={false} accessibilityIgnoresInvertColors />
+        // The app's logo, like its icon on the home screen; decorative, the title names the app.
+        <View style={[styles.logoFrame, elevation.raised, { marginBottom: spacing.sm }]}>
+          <Image testID="welcome-logo" source={LOGO} style={styles.logo} accessible={false} accessibilityIgnoresInvertColors />
+        </View>
       ) : (
-        <View style={[styles.heroIcon, { backgroundColor: colors.primary, borderRadius: radii.lg }]}>
-          <Icon name={icon} size={30} color={colors.onPrimary} />
+        <View style={[styles.heroIcon, { backgroundColor: colors.accent, borderRadius: radii.lg - 2 }]}>
+          <Icon name={icon} size={30} color={colors.onAccent} />
         </View>
       )}
       <AppText variant="display">{title}</AppText>
@@ -262,11 +268,15 @@ const styles = StyleSheet.create({
   themeCard: { flex: 1 },
   previewFrame: { overflow: 'hidden', aspectRatio: 0.8 },
   mini: { flex: 1, padding: 6, gap: 5 },
-  miniBar: { height: 8, width: '60%', borderRadius: 4 },
-  miniCard: { height: 18, borderRadius: 5, borderWidth: 1 },
+  miniLine: { height: 5, width: '55%', borderRadius: 3, opacity: 0.8 },
+  miniHero: { height: 26, borderRadius: 6 },
+  miniCard: { height: 16, borderRadius: 5, borderWidth: 1 },
+  miniTabs: { height: 12, borderRadius: 6, padding: 2 },
+  miniTab: { width: '30%', flex: 1, borderRadius: 4 },
   themeLabel: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 },
   point: { flexDirection: 'row', alignItems: 'flex-start' },
   pointIcon: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  heroIcon: { width: 56, height: 56, alignItems: 'center', justifyContent: 'center' },
-  logo: { width: 72, height: 72 },
+  heroIcon: { width: 60, height: 60, alignItems: 'center', justifyContent: 'center' },
+  logoFrame: { width: 88, height: 88, borderRadius: 24 },
+  logo: { width: 88, height: 88 },
 });

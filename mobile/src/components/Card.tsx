@@ -5,7 +5,7 @@ import { useTheme } from '@/theme';
 
 interface Props {
   children: ReactNode;
-  /** `tinted` uses the primary container colour for highlighted content. */
+  /** `tinted` uses the primary container colour for highlighted content, `muted` the grouped-area colour. */
   tone?: 'default' | 'tinted' | 'muted';
   padded?: boolean;
   style?: StyleProp<ViewStyle>;
@@ -26,7 +26,7 @@ export function Card({ children, tone = 'default', padded = true, style, testID 
           backgroundColor: background,
           borderColor: tone === 'default' ? colors.border : background,
           borderRadius: radii.lg,
-          padding: padded ? spacing.lg : 0,
+          padding: padded ? spacing.lg + 2 : 0,
           gap: spacing.md,
         },
         style,

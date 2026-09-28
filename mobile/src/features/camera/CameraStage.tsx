@@ -75,7 +75,7 @@ export function CameraStage({
       testID={testID}
       style={[
         styles.stage,
-        { aspectRatio: width >= 600 ? 4 / 3 : 3 / 4, borderRadius: radii.xl, backgroundColor: '#0B0F17' },
+        { aspectRatio: width >= 600 ? 4 / 3 : 3 / 4, borderRadius: radii.xl, backgroundColor: '#111318' },
       ]}
     >
       <LandmarkCamera
@@ -171,7 +171,7 @@ export function CameraStage({
           ) : status === 'paused' ? (
             <Icon name="pause-circle-outline" size={40} color={colors.onScrim} />
           ) : (
-            <ActivityIndicator size="large" color={colors.onScrim} />
+            <ActivityIndicator size="large" color={colors.accent} />
           )}
           <AppText variant="bodyStrong" color="onScrim" style={styles.text}>
             {error
@@ -185,7 +185,7 @@ export function CameraStage({
               <View
                 style={[
                   styles.progressFill,
-                  { width: `${Math.round((progress ?? 0) * 100)}%`, backgroundColor: colors.onScrim, borderRadius: radii.pill },
+                  { width: `${Math.round((progress ?? 0) * 100)}%`, backgroundColor: colors.accent, borderRadius: radii.pill },
                 ]}
               />
             </View>
@@ -219,8 +219,8 @@ const styles = StyleSheet.create({
   text: { textAlign: 'center' },
   progressTrack: { width: '70%', height: 6, backgroundColor: 'rgba(255,255,255,0.25)', overflow: 'hidden' },
   progressFill: { height: 6 },
-  rate: { position: 'absolute', left: 12, bottom: 12, paddingHorizontal: 10, paddingVertical: 4 },
-  details: { position: 'absolute', left: 12, right: 12, bottom: 44 },
+  rate: { position: 'absolute', left: 14, top: 58, paddingHorizontal: 10, paddingVertical: 4 },
+  details: { position: 'absolute', left: 12, right: 12, top: 90 },
   note: { opacity: 0.8, fontSize: 11, lineHeight: 15 },
   rateText: { fontSize: 11, lineHeight: 15 },
 });

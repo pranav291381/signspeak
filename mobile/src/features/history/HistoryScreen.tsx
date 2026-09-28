@@ -2,14 +2,14 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
-import { AppText, Button, confirmAction, Icon, Notice, Screen, StateView } from '@/components';
+import { AppText, Button, confirmAction, FadeIn, IconTile, Notice, Screen, StateView } from '@/components';
 import { useHistory } from '@/history/HistoryProvider';
 import type { HistoryEntry } from '@/history/history';
 import { useTheme } from '@/theme';
 
 function EntryRow({ entry }: { entry: HistoryEntry }) {
   const { t, i18n } = useTranslation();
-  const { colors, radii, spacing } = useTheme();
+  const { colors, elevation, radii, spacing } = useTheme();
   const when = new Date(entry.createdAt).toLocaleString(i18n.language);
   const kind = t(`history.kinds.${entry.kind}`);
   return (
@@ -18,12 +18,15 @@ function EntryRow({ entry }: { entry: HistoryEntry }) {
       accessibilityLabel={t('history.entryA11y', { kind, text: entry.text, when })}
       style={[
         styles.row,
-        { borderColor: colors.border, borderRadius: radii.md, padding: spacing.md, gap: spacing.md, backgroundColor: colors.surface },
+        elevation.card,
+        { borderColor: colors.border, borderRadius: radii.lg, padding: spacing.md, gap: spacing.md, backgroundColor: colors.surface },
       ]}
     >
-      <View style={[styles.icon, { backgroundColor: colors.primaryContainer, borderRadius: radii.sm }]}>
-        <Icon name={entry.kind === 'recognition' ? 'hand-wave-outline' : 'message-text-outline'} color={colors.primary} size={20} />
-      </View>
+      <IconTile
+        icon={entry.kind === 'recognition' ? 'hand-wave-outline' : 'message-text-outline'}
+        tile={entry.kind === 'recognition' ? 'saffron' : 'ink'}
+        size={40}
+      />
       <View style={styles.flex}>
         <AppText variant="bodyStrong">{entry.text}</AppText>
         <AppText variant="caption" color="textSecondary">
@@ -75,8 +78,11 @@ export function HistoryScreen() {
     <Screen testID="history-screen">
       <Notice tone="info" icon="shield-lock-outline" message={t('history.privacyNote')} />
       <View style={{ gap: spacing.sm }}>
-        {entries.map((entry) => (
-          <EntryRow key={entry.id} entry={entry} />
+        {entries.map((entry, i) => (
+          // The first few ease in one after another.
+          <FadeIn key={entry.id} delay={Math.min(i, 6) * 40} distance={8}>
+            <EntryRow entry={entry} />
+          </FadeIn>
         ))}
       </View>
       <Button variant="danger" icon="delete-outline" label={t('history.clear')} onPress={confirmClear} testID="clear-history" />
@@ -86,6 +92,5 @@ export function HistoryScreen() {
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', borderWidth: 1 },
-  icon: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   flex: { flex: 1 },
 });

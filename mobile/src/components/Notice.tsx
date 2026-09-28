@@ -44,7 +44,7 @@ export function Notice({ tone = 'info', title, message, icon, testID }: Props) {
       accessibilityLabel={title ? `${title}. ${message}` : message}
       style={[
         styles.container,
-        { backgroundColor: tones.bg, borderRadius: radii.md, padding: spacing.md, gap: spacing.md },
+        { backgroundColor: tones.bg, borderRadius: radii.md + 2, padding: spacing.md + 2, gap: spacing.md },
       ]}
     >
       <Icon name={icon ?? DEFAULT_ICONS[tone]} color={tones.fg} size={20} />

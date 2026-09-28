@@ -31,13 +31,15 @@ const GAP = 4;
  * raised background slides to the new choice.
  */
 export function SegmentedControl<T extends string>({ label, segments, value, onChange, testID }: Props<T>) {
-  const { colors, elevation, radii } = useTheme();
+  const { colors, elevation, radii, scheme } = useTheme();
   const reduceMotion = useReduceMotion();
   const [width, setWidth] = useState(0);
   const index = Math.max(0, segments.findIndex((s) => s.value === value));
   const segmentWidth = width > 0 ? (width - 2 * PADDING - GAP * (segments.length - 1)) / segments.length : 0;
   const offset = useState(() => new Animated.Value(0))[0];
   const placed = useRef(false);
+  // The raised thumb: white on the light track; a lighter surface on the dark one.
+  const thumb = scheme === 'dark' ? colors.border : colors.surface;
 
   useEffect(() => {
     if (segmentWidth <= 0) return;
@@ -47,7 +49,7 @@ export function SegmentedControl<T extends string>({ label, segments, value, onC
       placed.current = true;
       return;
     }
-    Animated.spring(offset, { toValue: target, speed: 16, bounciness: 5, useNativeDriver: Platform.OS !== 'web' }).start();
+    Animated.spring(offset, { toValue: target, speed: 18, bounciness: 6, useNativeDriver: Platform.OS !== 'web' }).start();
   }, [index, segmentWidth, reduceMotion, offset]);
 
   return (
@@ -56,7 +58,7 @@ export function SegmentedControl<T extends string>({ label, segments, value, onC
       accessibilityRole="radiogroup"
       accessibilityLabel={label}
       onLayout={(event: LayoutChangeEvent) => setWidth(event.nativeEvent.layout.width)}
-      style={[styles.track, { backgroundColor: colors.surfaceAlt, borderRadius: radii.md + 2 }]}
+      style={[styles.track, { backgroundColor: colors.surfaceAlt, borderRadius: radii.pill }]}
     >
       {segmentWidth > 0 ? (
         <Animated.View
@@ -66,8 +68,8 @@ export function SegmentedControl<T extends string>({ label, segments, value, onC
             elevation.card,
             {
               width: segmentWidth,
-              borderRadius: radii.md,
-              backgroundColor: colors.surface,
+              borderRadius: radii.pill,
+              backgroundColor: thumb,
               borderColor: colors.outline,
               transform: [{ translateX: offset }],
             },
@@ -89,9 +91,9 @@ export function SegmentedControl<T extends string>({ label, segments, value, onC
             style={[
               styles.segment,
               {
-                borderRadius: radii.md,
+                borderRadius: radii.pill,
                 // Before the track is measured, show the selection without the sliding thumb.
-                backgroundColor: selected && segmentWidth <= 0 ? colors.surface : 'transparent',
+                backgroundColor: selected && segmentWidth <= 0 ? thumb : 'transparent',
               },
             ]}
           >

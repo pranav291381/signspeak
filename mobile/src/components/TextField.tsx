@@ -46,12 +46,12 @@ export function TextField({ label, hint, error, multiline, testID, onFocus, onBl
         style={[
           typography.body,
           {
-            minHeight: multiline ? 120 : MIN_TOUCH_TARGET + 4,
+            minHeight: multiline ? 120 : MIN_TOUCH_TARGET + 8,
             textAlignVertical: multiline ? 'top' : 'center',
             borderWidth: focused || error ? 2 : 1.5,
             borderColor,
-            borderRadius: radii.md,
-            paddingHorizontal: spacing.md,
+            borderRadius: radii.md + 2,
+            paddingHorizontal: spacing.lg,
             paddingVertical: spacing.sm + 2,
             color: colors.text,
             backgroundColor: colors.surface,

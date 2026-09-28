@@ -27,6 +27,7 @@ npm run lint         # ESLint (includes a rule against hard-coded JSX strings)
 | `src/features/` | Screens |
 | `src/components/` | Design system. Use these instead of styling screens ad hoc |
 | `src/theme/` | Colour, spacing and type tokens. Contrast is enforced by tests |
+| `src/navigation/` | The floating tab bar. The design is described in `docs/design.md` |
 | `src/i18n/`, `src/locales/` | Localization. Every user-facing string is a key in `locales/en/common.json` |
 | `src/settings/` | User settings (app language and output language are separate) |
 | `src/storage/` | On-device key-value storage behind a small interface |

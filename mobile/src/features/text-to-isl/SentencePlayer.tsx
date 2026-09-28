@@ -191,8 +191,8 @@ export function SentencePlayer({ items, chosen, suspended = false, testID }: Pro
         />
         <IconButton
           testID="sentence-play"
-          variant="filled"
-          size={60}
+          variant="accent"
+          size={64}
           icon={playing && started ? 'pause' : atEnd ? 'replay' : 'play'}
           accessibilityLabel={playing && started ? t('diagram.pause') : atEnd ? t('diagram.replay') : t('diagram.play')}
           onPress={() => {

@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import { View } from 'react-native';
+import { Children, type ReactNode } from 'react';
+import { StyleSheet, View } from 'react-native';
 
 import { useTheme } from '@/theme';
 
@@ -11,12 +11,16 @@ interface Props {
   /** Short explanation under the title. */
   description?: string;
   children: ReactNode;
+  /** `list`: rows separated by hairlines, as in Settings. */
+  variant?: 'card' | 'list';
   testID?: string;
 }
 
 /** Titled group of related content on a card. */
-export function Section({ title, description, children, testID }: Props) {
-  const { spacing } = useTheme();
+export function Section({ title, description, children, variant = 'card', testID }: Props) {
+  const { colors, spacing } = useTheme();
+  const list = variant === 'list';
+  const items = Children.toArray(children);
   return (
     <View style={{ gap: spacing.sm }} testID={testID}>
       {title ? (
@@ -31,7 +35,22 @@ export function Section({ title, description, children, testID }: Props) {
           ) : null}
         </View>
       ) : null}
-      <Card>{children}</Card>
+      {list ? (
+        <Card style={{ gap: 0, paddingVertical: spacing.xs }}>
+          {items.map((child, i) => (
+            <View key={i}>
+              {i > 0 ? <View style={[styles.hairline, { backgroundColor: colors.border }]} /> : null}
+              {child}
+            </View>
+          ))}
+        </Card>
+      ) : (
+        <Card>{children}</Card>
+      )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  hairline: { height: StyleSheet.hairlineWidth * 2, marginLeft: 48 },
+});

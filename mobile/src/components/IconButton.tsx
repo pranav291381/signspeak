@@ -9,7 +9,7 @@ interface Props {
   accessibilityLabel: string;
   onPress: () => void;
   /** `overlay` sits on top of the camera preview. */
-  variant?: 'tonal' | 'filled' | 'plain' | 'overlay';
+  variant?: 'tonal' | 'filled' | 'plain' | 'overlay' | 'accent';
   size?: number;
   disabled?: boolean;
   selected?: boolean;
@@ -33,6 +33,7 @@ export function IconButton({
     filled: { bg: colors.primary, fg: colors.onPrimary },
     plain: { bg: 'transparent', fg: colors.textSecondary },
     overlay: { bg: colors.scrim, fg: colors.onScrim },
+    accent: { bg: colors.accent, fg: colors.onAccent },
   }[variant];
   const dimension = Math.max(size, MIN_TOUCH_TARGET);
 

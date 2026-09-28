@@ -10,7 +10,8 @@ import { seedSigns, taughtSign } from '@/test-utils/signs';
 import { TextToIslScreen } from '../TextToIslScreen';
 
 const mockPush = jest.fn();
-jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush }) }));
+let mockParams: { text?: string } = {};
+jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush }), useLocalSearchParams: () => mockParams }));
 let mockReduceMotion = false;
 jest.mock('@/accessibility/useReduceMotion', () => ({ useReduceMotion: () => mockReduceMotion }));
 // Playback itself is tested in diagram/__tests__/motion.test.tsx; here the movement stays put.
@@ -35,6 +36,7 @@ async function show(text: string) {
 beforeEach(() => {
   mockPush.mockReset();
   mockReduceMotion = false;
+  mockParams = {};
 });
 
 describe('TextToIslScreen', () => {
@@ -184,5 +186,18 @@ describe('TextToIslScreen', () => {
     await show('hello teacher');
     await act(async () => undefined);
     await waitFor(() => expect(store.data.get(HISTORY_STORAGE_KEY)).toContain('test-motion:teacher'));
+  });
+
+  it('shows words it was opened with (a recent look-up), without saving them again', async () => {
+    mockParams = { text: 'hello teacher' };
+    const store = createMemoryStore({
+      [SETTINGS_STORAGE_KEY]: JSON.stringify({ appLanguage: 'en', historyEnabled: true }),
+    });
+    renderWithProviders(<TextToIslScreen />, { store, motionPacks: [pack] });
+    expect(await screen.findByTestId('sentence-player')).toBeOnTheScreen();
+    expect(screen.getByTestId('sentence-caption')).toHaveTextContent('Hello');
+    expect(screen.getByLabelText('Words or a sentence in English').props.value).toBe('hello teacher');
+    await act(async () => undefined);
+    expect(store.data.get(HISTORY_STORAGE_KEY) ?? '').not.toContain('teacher');
   });
 });

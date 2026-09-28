@@ -36,6 +36,12 @@ const pairs: [keyof ColorPalette, keyof ColorPalette, number][] = [
   ['outline', 'surfaceAlt', AA_NON_TEXT],
   ['focus', 'surface', AA_NON_TEXT],
   ['primary', 'surfaceAlt', AA_NON_TEXT],
+  // Brand saffron fills (hero cards, selected chips and tab) carry ink text.
+  ['onAccent', 'accent', AA_TEXT],
+  ['textSecondary', 'primaryContainer', AA_TEXT],
+  // The floating tab bar: unselected labels, and the selected tab's saffron against it.
+  ['onTabBar', 'tabBar', AA_TEXT],
+  ['accent', 'tabBar', AA_NON_TEXT],
 ];
 
 describe.each([

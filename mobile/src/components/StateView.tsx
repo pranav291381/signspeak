@@ -43,7 +43,7 @@ export function StateView({
 }: Props) {
   const { colors, spacing } = useTheme();
   const toneColors = {
-    neutral: { fg: colors.primary, bg: colors.primaryContainer },
+    neutral: { fg: colors.onAccent, bg: colors.accent },
     warning: { fg: colors.warning, bg: colors.warningBackground },
     danger: { fg: colors.danger, bg: colors.dangerBackground },
   }[tone];
@@ -63,10 +63,10 @@ export function StateView({
           {loading ? (
             <ActivityIndicator size="large" color={toneColors.fg} />
           ) : (
-            <Icon name={icon} size={34} color={toneColors.fg} />
+            <Icon name={icon} size={38} color={toneColors.fg} />
           )}
         </View>
-        <AppText variant="heading" style={styles.center}>
+        <AppText variant="title" style={styles.center}>
           {title}
         </AppText>
         {message ? (
@@ -102,9 +102,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   badge: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 84,
+    height: 84,
+    borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
   },

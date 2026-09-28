@@ -89,7 +89,8 @@ Environment note: `download.pytorch.org` is blocked by this development environm
 │   └── src/
 │       ├── app/            # expo-router routes (thin files that render feature screens)
 │       ├── components/     # design system: Screen, AppText, Button, Card, Notice, StateView…
-│       ├── theme/          # tokens: color (light/dark), spacing, typography, radii
+│       ├── theme/          # tokens: color (light/dark), spacing, typography, radii (see docs/design.md)
+│       ├── navigation/     # the floating tab bar
 │       ├── accessibility/  # reduce-motion and other a11y hooks
 │       ├── storage/        # KeyValueStore interface (AsyncStorage / in-memory for tests)
 │       ├── i18n/           # i18next setup, language registry
@@ -401,3 +402,4 @@ The first model is a small temporal classifier (1D temporal convolutions + GRU, 
 | D19 | Packs bundled as app assets for now | Works offline, no hosting. Revisit when the real pack's size is known: a large pack may need to be downloaded on first use | **Open, owner decision when the pack exists** (the 262-sign model is 1.9 MB, the motion pack for Text → ISL 2.2 MB) |
 | D20 | Train the first model on INCLUDE (Zenodo 4010759, CC BY 4.0), starting with its 9 greetings | A public ISL dataset recorded by Deaf signers, with a licence that allows reuse with attribution. Videos are processed only on the machine that trains; only model weights are committed. Credit (authors, licence, changes) is in the pack, shown in the app (Sign → Text, Settings → About) and in the README | Accepted (owner chose INCLUDE); all 262 signs included |
 | D21 | Text → ISL shows INCLUDE's signs as motion traced from one recording per sign (hand and body landmarks, cleaned for display), committed as `assets/motions/include-motion.signpack` | The owner asked for typed words to be shown as sign diagrams or motion. INCLUDE's CC BY 4.0 licence allows sharing adapted material with credit; the pack holds landmark numbers only (no video, no face), and its source, licence and changes are in the pack, the app (Text → ISL, Settings → About) and the README. Not yet reviewed by ISL educators: the app says where the signs come from and what is not shown | Accepted (owner request) |
+| D22 | Visual identity from the logo (saffron, ink, warm paper), floating tab bar, no new dependencies (react-native-svg gradients, React Native `Animated`) | Owner request for a professional, fluid redesign. The previous design is kept on the `ui-classic` branch so it can be restored; see `docs/design.md` | Accepted (owner request) |

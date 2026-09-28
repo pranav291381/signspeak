@@ -1,8 +1,10 @@
-import { StyleSheet, Switch, View } from 'react-native';
+import { Platform, StyleSheet, Switch, View } from 'react-native';
 
-import { MIN_TOUCH_TARGET, useTheme } from '@/theme';
+import { MIN_TOUCH_TARGET, useTheme, type TileColor } from '@/theme';
 
 import { AppText } from './AppText';
+import type { IconName } from './Icon';
+import { IconTile } from './IconTile';
 import { PressableScale } from './PressableScale';
 
 interface Props {
@@ -10,11 +12,14 @@ interface Props {
   hint?: string;
   value: boolean;
   onValueChange: (value: boolean) => void;
+  icon?: IconName;
+  /** Colour of the icon's tile (Settings-style rows). */
+  tile?: TileColor;
   testID?: string;
 }
 
 /** A labelled switch. The whole row is one touch target and one screen-reader element. */
-export function SwitchRow({ label, hint, value, onValueChange, testID }: Props) {
+export function SwitchRow({ label, hint, value, onValueChange, icon, tile, testID }: Props) {
   const { colors, spacing } = useTheme();
   return (
     <PressableScale
@@ -28,6 +33,7 @@ export function SwitchRow({ label, hint, value, onValueChange, testID }: Props) 
       onPress={() => onValueChange(!value)}
       style={[styles.row, { gap: spacing.md }]}
     >
+      {icon ? <IconTile icon={icon} tile={tile} /> : null}
       <View style={styles.text}>
         <AppText variant="bodyStrong">{label}</AppText>
         {hint ? (
@@ -42,6 +48,8 @@ export function SwitchRow({ label, hint, value, onValueChange, testID }: Props) 
         trackColor={{ true: colors.primary, false: colors.outline }}
         thumbColor={colors.surface}
         ios_backgroundColor={colors.outline}
+        // react-native-web colours the thumb of a switched-on switch separately (teal by default).
+        {...(Platform.OS === 'web' ? ({ activeThumbColor: colors.surface } as object) : null)}
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
       />
@@ -53,7 +61,8 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: MIN_TOUCH_TARGET,
+    minHeight: MIN_TOUCH_TARGET + 8,
+    paddingVertical: 6,
   },
   text: { flex: 1, gap: 2 },
 });
