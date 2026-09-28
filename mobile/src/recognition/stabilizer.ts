@@ -18,7 +18,6 @@ export interface StabilizerOptions {
 
 /** Segment mode: signs offered when not sure (see `judge`). */
 export const MAX_SUGGESTIONS = 3;
-const MIN_SUGGESTION_SCORE = 0.03;
 
 function topLabel(scores: readonly ScoredLabel[]): ScoredLabel | undefined {
   let best: ScoredLabel | undefined;
@@ -172,7 +171,7 @@ export class PredictionStabilizer {
     const ranked = [...prediction.scores].sort((a, b) => b.score - a.score);
     const [first, second] = ranked;
     const suggestions = ranked
-      .filter((s) => s.label !== UNKNOWN_LABEL && s.score >= MIN_SUGGESTION_SCORE)
+      .filter((s) => s.label !== UNKNOWN_LABEL && s.score > 0)
       .slice(0, MAX_SUGGESTIONS)
       .map((s) => s.label);
     if (!first || first.label === UNKNOWN_LABEL) return { status: 'uncertain', reason: 'unknown_sign', suggestions };

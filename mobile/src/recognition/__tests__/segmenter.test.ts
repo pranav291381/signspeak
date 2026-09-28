@@ -137,9 +137,17 @@ describe('RecognitionSession in segment mode', () => {
 
   it('offers the likeliest signs when not sure, and takes the one the user picks', async () => {
     const { source, recognizer, session, recognitions } = await setup();
-    recognizer.next = { scores: [{ label: 'hello', score: 0.5 }, { label: 'water', score: 0.45 }], latencyMs: 1 };
+    recognizer.next = {
+      scores: [
+        { label: 'hello', score: 0.5 },
+        { label: 'water', score: 0.45 },
+        { label: 'tea', score: 0 },
+      ],
+      latencyMs: 1,
+    };
     source.push([...rest(3), ...up(10), ...rest(5)]);
     await flush();
+    // Never a sign the model gives no chance at all.
     expect(session.getSnapshot().suggestions).toEqual(['hello', 'water']);
     session.choose('tea');
     expect(recognitions).toEqual([]);
@@ -156,8 +164,8 @@ describe('RecognitionSession in segment mode', () => {
     recognizer.next = {
       scores: [
         { label: 'hello', score: 0.8 },
-        { label: 'water', score: 0.15 },
-        { label: 'tea', score: 0.05 },
+        { label: 'water', score: 0.19 },
+        { label: 'tea', score: 0.01 },
       ],
       latencyMs: 1,
     };

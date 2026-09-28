@@ -120,17 +120,18 @@ Give each video in `videos.json` a `group` (who signed it, or the recording sess
 
 ## The included pack
 
-`mobile/assets/signpacks/include.signpack` (1.9 MB) is a model for all 262 signs of [INCLUDE](https://zenodo.org/records/4010759) (AI4Bharat / IIT Madras, ACM Multimedia 2020; CC BY 4.0; signed by Deaf students of St. Louis School for the Deaf, Chennai). It holds only model weights, labels and the source's name, licence and changes; no video and no landmark recordings.
+`mobile/assets/signpacks/include.signpack` (6.6 MB) is a whole-sign model (three networks: two GRUs and a transformer) for all 262 signs of [INCLUDE](https://zenodo.org/records/4010759) (AI4Bharat / IIT Madras, ACM Multimedia 2020; CC BY 4.0; signed by Deaf students of St. Louis School for the Deaf, Chennai). It holds only model weights, labels and the source's name, licence and changes; no video and no landmark recordings.
 
-How it was made: all 4,276 INCLUDE videos were analysed with `npm run export:landmarks` (1280 px wide), grouped by recording session (three takes each). Sign names were tidied for display only ("Ex. Monsoon" → "Monsoon", "big large" → "Big / large", capital first letter). For each sign the last session was held out for testing and the one before for validation; `train_from_landmarks.py --positives 10` trained on the rest, `tune:model` chose when to show a sign on the validation videos, and the shipped model was retrained on every recording (`--train-all`).
+How it was made: all 4,276 INCLUDE videos were analysed with `npm run export:landmarks` (1280 px wide), grouped by recording session (three takes each). Sign names were tidied for display only ("Ex. Monsoon" → "Monsoon", "big large" → "Big / large", capital first letter). For each sign the last session was held out for testing and the one before for validation. Run A (`train_segments.py`) trained on the rest; its temperature was fitted and `tune:model` chose when to show a sign on the validation videos (confidence 0.8, no margin). Run B also trained on the validation videos and was measured on the test ones with run A's settings. The shipped model was trained on every recording with the same settings (`--train-all`).
 
-| Test (held-out sessions) | Result |
+| Test (730 held-out videos, run B) | Result |
 | --- | --- |
-| Windows, model alone | 63% right sign, 86% in the top 5; 77% of rest windows "none of these" |
-| Live, `npm run eval:signpack` (730 videos played into the app's session, tuned settings) | 32% right, 4% wrong, 64% "not sure" |
-| Signs | 84 right on at least two thirds of their test videos, 36 sometimes, 140 not yet, 2 not tested |
+| Model alone, one prediction per video | 83% right sign, 93% in the top 3, 96% in the top 5 (run A, without the validation videos: 78%, 90%, 92%) |
+| Live, `npm run tune:model -- --evaluate --split test` (played into the app's session with rest before and after) | 64% right on the first try, 5% wrong, 31% "not sure" |
+| Right sign on screen, shown or offered for one tap (“Did you mean…?”, “Not right?”) | 92% |
+| Signs | 176 right on at least two thirds of their test videos, 30 sometimes, 45 never shown on their own but offered for one tap, 9 not yet, 2 not tested |
 
-Every sign and its result: [`include-signs.md`](include-signs.md). Limits: recording sessions may share signers, so this overstates accuracy for new signers; calibration is not verified (ECE 0.19), so the app shows no confidence level with the result. It has not been tried by users yet.
+Every sign and its result: [`include-signs.md`](include-signs.md). Limits: recording sessions may share signers and all signers come from one school, so this overstates accuracy for new signers; calibration is not verified (ECE 0.06 on the test videos, but not checked on other signers), so the app shows no confidence level with the result. It has not been tried by users yet. The previous model (one network reading the last 2 seconds, 32% right live) is replaced.
 
 ## Motion pack for Text → ISL
 
