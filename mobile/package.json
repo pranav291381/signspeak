@@ -61,7 +61,8 @@
     "install:signpack": "node scripts/install-sign-pack.mjs",
     "eval:signpack": "node scripts/eval-sign-pack.mjs",
     "export:landmarks": "node scripts/export-landmarks.mjs",
-    "tune:model": "node scripts/tune-model.mjs"
+    "tune:model": "node scripts/tune-model.mjs",
+    "build:motions": "node scripts/build-motion-pack.mjs"
   },
   "private": true
 }
