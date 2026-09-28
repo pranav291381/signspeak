@@ -1,5 +1,6 @@
 import { DEFAULT_SESSION_CONFIG, type SessionConfig } from './config';
 import { handsVisible } from './features';
+import { SignSegmenter } from './segmenter';
 import { PredictionStabilizer } from './stabilizer';
 import {
   RecognizerUnavailableError,
@@ -19,6 +20,11 @@ export interface SessionSnapshot {
   /** Live recognition status while running; null otherwise. */
   status: RecognitionStatus | null;
   reason?: UncertainReason;
+  /**
+   * Segment mode, to choose from: when not sure, the likeliest signs; after a
+   * sign is shown, the next likeliest, in case it was not the one made.
+   */
+  suggestions?: string[];
   /** True when results are simulated (demo mode). */
   simulated: boolean;
   recognizer: RecognizerInfo;
@@ -35,6 +41,9 @@ const MIN_PRESENT_FRACTION = 0.5;
 const MIN_HANDS_FRACTION = 0.15;
 /** Consecutive prediction failures before the session reports a model error. */
 const MAX_CONSECUTIVE_ERRORS = 3;
+/** Segment mode: frames in a row without a person, or without hands, before saying so (~0.5 s / 1 s). */
+const NO_SIGNER_FRAMES = 8;
+const NO_HANDS_FRAMES = 15;
 
 /**
  * Wires FrameSource → sliding window → SignRecognizer → PredictionStabilizer
@@ -48,6 +57,11 @@ export class RecognitionSession {
   private readonly stabilizer: PredictionStabilizer;
   private readonly config: SessionConfig;
   private readonly listeners = new Set<SessionListener>();
+  private readonly segmenter = new SignSegmenter();
+  /** Segment mode: a finished sign waiting while the previous one is still being recognized. */
+  private pendingSegment: { frames: LandmarkFrame[]; timestampMs: number } | null = null;
+  private framesWithoutSigner = 0;
+  private framesWithoutHands = 0;
 
   private window: LandmarkFrame[] = [];
   private framesSincePrediction = 0;
@@ -120,6 +134,8 @@ export class RecognitionSession {
     this.window = [];
     this.framesSincePrediction = 0;
     this.stabilizer.reset();
+    this.segmenter.reset();
+    this.pendingSegment = null;
     if (this.snapshot.state === 'running') {
       this.publish({ status: 'analyzing', reason: undefined });
     }
@@ -137,6 +153,10 @@ export class RecognitionSession {
     this.framesSincePrediction = 0;
     this.consecutiveErrors = 0;
     this.stabilizer.reset();
+    this.segmenter.reset();
+    this.pendingSegment = null;
+    this.framesWithoutSigner = 0;
+    this.framesWithoutHands = 0;
     this.publish({ state: 'running', status: 'analyzing', reason: undefined });
     const generation = this.generation;
     this.source.start((frame) => {
@@ -149,9 +169,15 @@ export class RecognitionSession {
     this.source.stop();
     this.inFlight = false;
     this.window = [];
+    this.segmenter.reset();
+    this.pendingSegment = null;
   }
 
   private onFrame(frame: LandmarkFrame): void {
+    if (this.config.mode === 'segment') {
+      this.onSegmentFrame(frame);
+      return;
+    }
     const { windowSize: size, windowMs } = this.recognizer.info;
     this.window.push(frame);
     if (windowMs) {
@@ -182,6 +208,28 @@ export class RecognitionSession {
     void this.predict([...this.window], frame.timestampMs);
   }
 
+  /** Segment mode: collect a sign while it is made; recognize it once it is finished. */
+  private onSegmentFrame(frame: LandmarkFrame): void {
+    this.framesWithoutSigner = frame.values === null ? this.framesWithoutSigner + 1 : 0;
+    this.framesWithoutHands = frame.values !== null && !handsVisible(frame.values) ? this.framesWithoutHands + 1 : 0;
+    const wasActive = this.segmenter.active;
+    const sign = this.segmenter.push(frame);
+    if (sign) {
+      if (this.inFlight) this.pendingSegment = { frames: sign, timestampMs: frame.timestampMs };
+      else void this.predict(sign, frame.timestampMs);
+      return;
+    }
+    if (this.segmenter.active) {
+      // A new sign has begun: the last result gives way to "watching".
+      if (!wasActive) this.apply({ status: 'analyzing' });
+      return;
+    }
+    if (this.inFlight) return;
+    if (this.framesWithoutSigner >= NO_SIGNER_FRAMES) this.apply({ status: 'no_signer' });
+    else if (this.config.requireHands && this.framesWithoutHands >= NO_HANDS_FRAMES) this.apply({ status: 'no_hands' });
+    else if (this.snapshot.status === 'no_signer' || this.snapshot.status === 'no_hands') this.apply({ status: 'analyzing' });
+  }
+
   private async predict(window: LandmarkFrame[], timestampMs: number): Promise<void> {
     const generation = this.generation;
     this.inFlight = true;
@@ -189,7 +237,9 @@ export class RecognitionSession {
       const prediction = await this.recognizer.predict(window);
       if (generation !== this.generation) return;
       this.consecutiveErrors = 0;
-      this.apply(this.stabilizer.update(prediction, timestampMs));
+      this.apply(
+        this.config.mode === 'segment' ? this.stabilizer.judge(prediction, timestampMs) : this.stabilizer.update(prediction, timestampMs),
+      );
     } catch {
       if (generation !== this.generation) return;
       this.consecutiveErrors += 1;
@@ -198,16 +248,39 @@ export class RecognitionSession {
         this.publish({ state: 'model_error', status: null, reason: undefined });
       }
     } finally {
-      if (generation === this.generation) this.inFlight = false;
+      if (generation === this.generation) {
+        this.inFlight = false;
+        const next = this.pendingSegment;
+        this.pendingSegment = null;
+        if (next) void this.predict(next.frames, next.timestampMs);
+      }
     }
+  }
+
+  /**
+   * The user picked one of the suggestions: it counts as recognized (marked as
+   * chosen), and replaces the sign just shown if there was one. Anything that
+   * is not currently suggested is ignored.
+   */
+  choose(label: string): void {
+    if (!this.snapshot.suggestions?.includes(label)) return;
+    const corrects = this.snapshot.status === 'recognized';
+    const recognition: Recognition = { label, band: null, timestampMs: Date.now(), chosen: true, ...(corrects ? { corrects } : {}) };
+    for (const l of this.listeners) l.onRecognition?.(recognition);
+    this.publish({ status: 'recognized', reason: undefined, suggestions: undefined });
   }
 
   private apply(step: ReturnType<PredictionStabilizer['update']>): void {
     if (step.recognition) {
       for (const l of this.listeners) l.onRecognition?.(step.recognition);
     }
-    if (step.status !== this.snapshot.status || step.reason !== this.snapshot.reason) {
-      this.publish({ status: step.status, reason: step.reason });
+    const suggestions = step.suggestions?.length ? step.suggestions : undefined;
+    if (
+      step.status !== this.snapshot.status ||
+      step.reason !== this.snapshot.reason ||
+      suggestions?.join() !== this.snapshot.suggestions?.join()
+    ) {
+      this.publish({ status: step.status, reason: step.reason, suggestions });
     }
   }
 

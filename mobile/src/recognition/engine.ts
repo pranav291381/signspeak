@@ -8,7 +8,7 @@ import type { PersonalSign } from '@/personal/types';
 
 import { MockSignRecognizer } from './recognizers/MockSignRecognizer';
 import { UnavailableRecognizer } from './recognizers/UnavailableRecognizer';
-import { DEFAULT_STABILIZER_CONFIG, type StabilizerConfig } from './config';
+import { DEFAULT_STABILIZER_CONFIG, type SessionConfig, type StabilizerConfig } from './config';
 import { RecognitionSession } from './session';
 import { NoFrameSource, SimulatedFrameSource } from './sources';
 import { PredictionStabilizer } from './stabilizer';
@@ -83,8 +83,13 @@ export function modelSession(recognizer: SignRecognizer, source: FrameSource): R
       calibrated: recognizer.info.calibrated,
       config: stabilizerConfigFor(recognizer.info),
     }),
-    config: { stride: 2, requireHands: true },
+    config: modelSessionConfig(recognizer.info),
   });
+}
+
+/** Session settings for a trained model (also used by scripts/lib/tune-model.ts). */
+export function modelSessionConfig(info: RecognizerInfo): Partial<SessionConfig> {
+  return { stride: 2, requireHands: true, mode: info.mode ?? 'window' };
 }
 
 /**

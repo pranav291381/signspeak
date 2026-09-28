@@ -1,4 +1,4 @@
-import { decodeTensor, weightShapes, type ModelPack } from './modelPack';
+import { decodeTensor, weightShapes, type EncodedTensor, type ModelConfig } from './modelPack';
 
 /**
  * Inference for the trained sign model (ml/signspeak_ml/models/temporal.py) in
@@ -39,11 +39,12 @@ export function softmax(logits: ArrayLike<number>, temperature = 1): Float64Arra
 
 export class TemporalModel {
   private readonly w: Record<string, Float32Array> = {};
-  readonly config: ModelPack['config'];
+  readonly config: ModelConfig;
 
-  constructor(pack: ModelPack) {
-    this.config = pack.config;
-    for (const key of Object.keys(weightShapes(pack.config))) this.w[key] = decodeTensor(pack.weights[key]!);
+  /** One network: a window pack's, or a member of a segment pack. */
+  constructor(model: { config: ModelConfig; weights: Record<string, EncodedTensor> }) {
+    this.config = model.config;
+    for (const key of Object.keys(weightShapes(model.config))) this.w[key] = decodeTensor(model.weights[key]!);
   }
 
   /** Logits for one window of frames (each `inputDim` values). */

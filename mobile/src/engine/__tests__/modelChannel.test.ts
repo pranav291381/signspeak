@@ -1,7 +1,7 @@
 import fixture from '../../../../shared/fixtures/model_parity_v1.json';
 import { ModelSignRecognizer } from '@/model/ModelSignRecognizer';
 import { parseModelPack } from '@/model/modelPack';
-import { TemporalModel } from '@/model/temporalModel';
+import { SignModel } from '@/model/signModel';
 import { MOTIONS, perform } from '@/test-utils/landmarks';
 
 import { EngineSignModel } from '../../../engine/model';
@@ -52,7 +52,7 @@ describe('EngineModelChannel + EngineSignModel', () => {
     channel.load(pack());
     const frames = windowOf();
     const remote = await channel.forward(frames);
-    const local = new TemporalModel(pack()).forward(frames);
+    const local = new SignModel(pack()).forward(frames);
     expect(remote).toHaveLength(local.length);
     // Frames travel rounded to 0.001, as the model's training data was.
     remote.forEach((value, i) => expect(value).toBeCloseTo(local[i]!, 2));

@@ -7,13 +7,13 @@
  */
 import type { EngineToHost, HostToEngine } from '../src/engine/protocol';
 import { parseModelPack } from '../src/model/modelPack';
-import { TemporalModel } from '../src/model/temporalModel';
+import { SignModel } from '../src/model/signModel';
 import { decodeSpecFrames, XY_FRAME_DIM } from '../src/personal/codec';
 
 export type ModelMessage = Extract<HostToEngine, { type: 'setModel' | 'predict' }>;
 
 export class EngineSignModel {
-  private model: TemporalModel | null = null;
+  private model: SignModel | null = null;
   /** The last pack could not be read. */
   private broken = false;
 
@@ -24,7 +24,7 @@ export class EngineSignModel {
       this.broken = false;
       if (message.pack !== null) {
         try {
-          this.model = new TemporalModel(parseModelPack(JSON.parse(message.pack)));
+          this.model = new SignModel(parseModelPack(JSON.parse(message.pack)));
         } catch {
           this.broken = true;
         }

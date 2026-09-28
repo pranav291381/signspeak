@@ -11,6 +11,10 @@
  * The chosen setting shows the right sign most often while keeping wrong signs
  * at or below --max-wrong. --write stores it in the pack (and in --also packs,
  * such as the final model trained on every recording).
+ *
+ * --evaluate measures the pack's own setting instead (e.g. on --split test,
+ * after choosing it on validation recordings); --details <file> writes what
+ * happened to each recording.
  */
 import { build } from 'esbuild';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -33,6 +37,8 @@ const { values: args } = parseArgs({
     'max-wrong': { type: 'string', default: '0.05' },
     write: { type: 'boolean', default: false },
     also: { type: 'string', multiple: true, default: [] },
+    evaluate: { type: 'boolean', default: false },
+    details: { type: 'string' },
   },
 });
 if (!args.pack || !args.data) fail('--pack and --data are required');
@@ -61,8 +67,11 @@ const rows = readFileSync(args.data, 'utf8')
   .map((line) => JSON.parse(line));
 let result;
 try {
+  const packJson = JSON.parse(readFileSync(args.pack, 'utf8'));
+  if (args.evaluate && !packJson.stabilizer) fail('--evaluate needs a pack with settings (tune it on validation recordings first)');
   result = await tune({
-    pack: JSON.parse(readFileSync(args.pack, 'utf8')),
+    pack: packJson,
+    fixed: args.evaluate ? packJson.stabilizer : undefined,
     rows,
     split: args.split,
     maxWrong,
@@ -77,14 +86,19 @@ try {
 
 const pct = (x) => `${(x * 100).toFixed(1)}%`;
 const line = (o) =>
-  `confidence ${o.minConfidence}, margin ${o.minMargin}, ${o.minStablePredictions} in a row: ${pct(o.correct)} right, ${pct(o.wrong)} wrong, ${pct(o.notSure)} not sure`;
+  `confidence ${o.minConfidence}, margin ${o.minMargin}, ${o.minStablePredictions} in a row: ${pct(o.correct)} right, ${pct(o.wrong)} wrong, ${pct(o.notSure)} not sure` +
+  (o.correctOrSuggested > o.correct ? ` (right or among the suggestions: ${pct(o.correctOrSuggested)})` : '');
 console.log(`${result.recordings} ${args.split} recordings of ${result.signs} signs`);
 if (result.defaults) console.log(`app defaults: ${line(result.defaults)}`);
 if (!result.chosen) {
   console.log(`no setting keeps wrong signs at or below ${pct(maxWrong)}`);
   process.exit(2);
 }
-console.log(`chosen (wrong at most ${pct(maxWrong)}): ${line(result.chosen)}`);
+console.log(args.evaluate ? `the pack's settings: ${line(result.chosen)}` : `chosen (wrong at most ${pct(maxWrong)}): ${line(result.chosen)}`);
+if (args.details) {
+  writeFileSync(args.details, JSON.stringify(result.details, null, 1));
+  console.log(`wrote per-recording results to ${args.details}`);
+}
 if (args.write) {
   const { minConfidence, minMargin, minStablePredictions, correct, wrong, notSure } = result.chosen;
   for (const path of [args.pack, ...args.also]) {

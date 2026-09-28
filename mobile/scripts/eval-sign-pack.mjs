@@ -31,6 +31,7 @@ const HELP = `Usage: npm run eval:signpack -- --pack <file.signpack> --manifest 
   --browser <name>    chrome, msedge, chromium, or a browser executable path
   --ffmpeg <path>     ffmpeg, for videos the browser cannot play (default: $FFMPEG or ffmpeg)
   --jobs <n>          Videos analysed at once (default 2)
+  --hand-model <m>    full (default) or lite: the lighter hand tracking slow phones switch to
 `;
 
 function fail(message) {
@@ -47,6 +48,7 @@ const { values: args } = parseArgs({
     browser: { type: 'string' },
     ffmpeg: { type: 'string' },
     jobs: { type: 'string', default: '2' },
+    'hand-model': { type: 'string', default: 'full' },
     help: { type: 'boolean', short: 'h' },
   },
 });
@@ -89,6 +91,7 @@ try {
     browser: args.browser ?? process.env.SIGNPACK_BROWSER,
     ffmpeg: args.ffmpeg ?? process.env.FFMPEG ?? 'ffmpeg',
     jobs: Math.max(1, Math.min(8, Number(args.jobs) || 1)),
+    handModel: args['hand-model'],
   });
 } catch (error) {
   fail(error instanceof RunnerError ? error.message : String(error));
