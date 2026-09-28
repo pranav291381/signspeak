@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { View } from 'react-native';
 
 import type { EngineErrorCode, EngineStatus } from '@/engine/protocol';
-import type { LandmarkCameraProps } from '@/engine/types';
+import type { LandmarkCameraProps, TrackingDetails } from '@/engine/types';
 
 /**
  * Stand-in for the WebView camera in Jest (installed in jest.setup.ts).
@@ -13,8 +13,8 @@ export const fakeCamera = {
   status(status: EngineStatus, progress?: number) {
     fakeCamera.props?.onStatus?.(status, progress);
   },
-  stats(fps: number, inferenceMs: number, delegate?: 'GPU' | 'CPU') {
-    fakeCamera.props?.onStats?.(fps, inferenceMs, delegate);
+  stats(fps: number, inferenceMs: number, delegate?: 'GPU' | 'CPU', note?: string, details?: TrackingDetails) {
+    fakeCamera.props?.onStats?.(fps, inferenceMs, delegate, note, details);
   },
   error(code: EngineErrorCode) {
     fakeCamera.props?.onError?.(code);

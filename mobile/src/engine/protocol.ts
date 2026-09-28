@@ -12,6 +12,8 @@ export interface EngineAssetSource {
   /** Folder containing the MediaPipe WASM loader + binary (trailing slash). */
   wasmBase: string;
   handModelUrl: string;
+  /** MediaPipe's lite hand landmark model, used where tracking is slow. */
+  handLiteModelUrl: string;
   poseModelUrl: string;
 }
 
@@ -21,9 +23,9 @@ export interface EngineConfig {
   targetFps: number;
   /** Tried in order until one loads and passes the integrity check. */
   sources: EngineAssetSource[];
-  /** SHA-256 (hex) pinned at build time: WASM by file name, models as 'model:hand' / 'model:pose'. */
+  /** SHA-256 (hex) pinned at build time: WASM by file name, models as 'model:hand' / 'model:pose' etc. */
   hashes: Record<string, string>;
-  /** Draw the tracked hand skeleton and arms over the preview. */
+  /** Draw the tracked hands, body and face over the preview. */
   showLandmarks: boolean;
   /** No smoothing or flashes (system "reduce motion" setting). */
   reduceMotion: boolean;
@@ -32,6 +34,8 @@ export interface EngineConfig {
    * where that is a laptop webcam facing the user.
    */
   mirrorUnknown: boolean;
+  /** The phone stopped the previous engine page (usually low memory): use fewer workers from now on. */
+  afterStop?: boolean;
 }
 
 export type EngineStatus = 'loading' | 'downloading' | 'starting_camera' | 'running' | 'paused';
@@ -43,21 +47,29 @@ export type EngineErrorCode =
   | 'insecure_context'
   | 'unsupported'
   | 'model_load_failed'
-  | 'integrity_failed';
+  | 'integrity_failed'
+  /** The phone stopped the camera page (usually low on memory). */
+  | 'engine_stopped';
 
 export type EngineToHost =
   | { type: 'status'; status: EngineStatus; progress?: number }
   | { type: 'error'; code: EngineErrorCode; detail?: string }
   /** One processed camera frame: feature spec v1 values, or null when nobody is in view. */
   | { type: 'frame'; t: number; v: number[] | null; hands: number }
-  /** Detection rate, time per detection, and whether MediaPipe runs on the GPU or CPU. */
+  /** Hand tracking rate, time per detection, and how tracking runs. */
   | {
       type: 'stats';
       fps: number;
       inferenceMs: number;
       delegate?: 'GPU' | 'CPU';
-      /** Why this delegate, e.g. the GPU's name, why it failed, or what was measured. */
+      /** Why this setup, e.g. the GPU's name, why it failed, or what was measured. */
       note?: string;
+      /** Hand model: full, or MediaPipe's lite one (faster, slightly less precise). */
+      model?: 'full' | 'lite';
+      /** Hands workers taking camera frames in turn (0: tracking on the page's main thread). */
+      workers?: number;
+      /** Body (pose) tracking rate. */
+      bodyFps?: number;
     }
   /** The sign model's logits for a `predict` request, or why there are none. */
   | { type: 'prediction'; id: number; logits: number[] | null; error?: PredictionError };

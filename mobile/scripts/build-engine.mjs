@@ -2,8 +2,9 @@
 /**
  * Bundles engine/engine.ts (+ @mediapipe/tasks-vision) into one self-contained
  * HTML page and writes it to src/engine/engineHtml.generated.ts, which the app
- * loads into a WebView (phones) or an iframe (web). The sign model's web worker
- * (engine/modelWorker.ts) is bundled first and embedded as a string.
+ * loads into a WebView (phones) or an iframe (web). The web workers (the sign
+ * model, engine/modelWorker.ts, and hand/body tracking, engine/tracker.ts) are
+ * bundled first and embedded as strings.
  *
  *   node scripts/build-engine.mjs          # regenerate
  *   node scripts/build-engine.mjs --check  # fail if the committed file is stale (CI)
@@ -26,11 +27,15 @@ const common = {
   logLevel: 'warning',
 };
 const worker = await build({ ...common, entryPoints: [join(root, 'engine/modelWorker.ts')], legalComments: 'none' });
+const tracker = await build({ ...common, entryPoints: [join(root, 'engine/tracker.ts')], legalComments: 'eof' });
 const result = await build({
   ...common,
   entryPoints: [join(root, 'engine/engine.ts')],
   legalComments: 'eof',
-  define: { __MODEL_WORKER__: JSON.stringify(worker.outputFiles[0].text) },
+  define: {
+    __MODEL_WORKER__: JSON.stringify(worker.outputFiles[0].text),
+    __TRACKER_WORKER__: JSON.stringify(tracker.outputFiles[0].text),
+  },
   // Escape "</script" inside strings so the bundle can be inlined in HTML.
   supported: { 'inline-script': false },
 });

@@ -6,13 +6,26 @@ import {
   DelegateTuner,
   FrameMeter,
   frameValues,
+  headCircle,
   isSoftwareRenderer,
+  isVisible,
+  maxHandWorkers,
   pickHands,
   shouldMirror,
   smoothPoints,
+  TrackingTuner,
   wasmFiles,
+  type TrackingSetup,
 } from '../../../engine/core';
-import { engineAssetSources, engineHashes, HAND_MODEL_KEY, POSE_MODEL_KEY, remoteSource } from '../assets';
+import {
+  engineAssetSources,
+  engineHashes,
+  HAND_LITE_BUNDLE_KEY,
+  HAND_LITE_MODEL_KEY,
+  HAND_MODEL_KEY,
+  POSE_MODEL_KEY,
+  remoteSource,
+} from '../assets';
 import { EngineFrameSource } from '../EngineFrameSource';
 import { buildEngineHtml, engineConfig, engineContentSecurityPolicy } from '../engineHtml';
 import manifest from '../mediapipeAssets.json';
@@ -172,6 +185,7 @@ describe('engine assets and config', () => {
     expect(web[0]).toEqual({
       wasmBase: 'http://localhost:8081/mediapipe/wasm/',
       handModelUrl: 'http://localhost:8081/mediapipe/hand_landmarker.task',
+      handLiteModelUrl: 'http://localhost:8081/mediapipe/hand_landmark_lite.tflite',
       poseModelUrl: 'http://localhost:8081/mediapipe/pose_landmarker_lite.task',
     });
     expect(web.at(-1)).toEqual(remoteSource());
@@ -191,7 +205,11 @@ describe('engine assets and config', () => {
     const hashes = engineHashes();
     expect(hashes[HAND_MODEL_KEY]).toBe(manifest.models.hand.sha256);
     expect(hashes[POSE_MODEL_KEY]).toBe(manifest.models.pose.sha256);
+    expect(hashes[HAND_LITE_MODEL_KEY]).toBe(manifest.models.handLite.sha256);
+    // The lite bundle the page makes is checked too, so a conversion that differs from the tested one is not used.
+    expect(hashes[HAND_LITE_BUNDLE_KEY]).toMatch(/^[0-9a-f]{64}$/);
     expect(hashes['vision_wasm_internal.wasm']).toMatch(/^[0-9a-f]{64}$/);
+    expect(remoteSource().handLiteModelUrl).toBe(manifest.models.handLite.url);
   });
 
   it('mirrors unknown cameras only on the web (laptop webcams)', () => {
@@ -243,3 +261,85 @@ describe('EngineFrameSource', () => {
     expect(source.simulated).toBe(false);
   });
 });
+
+describe('TrackingTuner', () => {
+  const options = { delegates: ['GPU', 'CPU'] as const, liteAvailable: () => true, maxWorkers: 3 };
+  /** Feeds one sample (20 results) taking `ms` each, arriving `rate` a second; returns the last decision. */
+  function feed(tuner: TrackingTuner, ms: number, rate: number, start = 0): TrackingSetup | null {
+    let decision: TrackingSetup | null = null;
+    for (let i = 0; i < TrackingTuner.SAMPLE; i++) decision = tuner.record(ms, start + (i * 1000) / rate) ?? decision;
+    return decision;
+  }
+
+  it('keeps a setup that is already fast', () => {
+    const tuner = new TrackingTuner({ delegate: 'GPU', model: 'full', workers: 1 }, { ...options });
+    expect(feed(tuner, 12, 30)).toBeNull();
+    expect(tuner.settled).toBe(true);
+    expect(tuner.summary()).toContain('GPU 12 ms');
+  });
+
+  it('moves a slow GPU to the CPU, then to the lite model, then adds workers while they help', () => {
+    const tuner = new TrackingTuner({ delegate: 'GPU', model: 'full', workers: 1 }, { ...options });
+    expect(feed(tuner, 300, 3)).toEqual({ delegate: 'CPU', model: 'full', workers: 1 });
+    tuner.ready();
+    // CPU faster than the GPU but still slow: the lite model.
+    expect(feed(tuner, 120, 7)).toEqual({ delegate: 'CPU', model: 'lite', workers: 1 });
+    tuner.ready();
+    expect(feed(tuner, 60, 10)).toEqual({ delegate: 'CPU', model: 'lite', workers: 2 });
+    tuner.ready();
+    expect(feed(tuner, 60, 19)).toBeNull();
+    expect(tuner.settled).toBe(true);
+    expect(tuner.summary()).toContain('10.0/s with 1 worker, 19.0/s with 2 workers');
+  });
+
+  it('goes back to one worker less when the extra one does not help', () => {
+    const tuner = new TrackingTuner({ delegate: 'CPU', model: 'lite', workers: 1 }, { ...options, delegates: ['CPU'] });
+    expect(feed(tuner, 30, 9)).toEqual({ delegate: 'CPU', model: 'lite', workers: 2 });
+    tuner.ready();
+    expect(feed(tuner, 30, 9.5)).toEqual({ delegate: 'CPU', model: 'lite', workers: 1 });
+    expect(tuner.settled).toBe(true);
+  });
+
+  it('stays with the full model when the lite one is not available, and stops at the worker limit', () => {
+    const tuner = new TrackingTuner({ delegate: 'CPU', model: 'full', workers: 1 }, { ...options, delegates: ['CPU'], liteAvailable: () => false, maxWorkers: 1 });
+    expect(feed(tuner, 120, 7)).toBeNull();
+    expect(tuner.setup).toEqual({ delegate: 'CPU', model: 'full', workers: 1 });
+    expect(tuner.settled).toBe(true);
+  });
+
+  it('skips choosing the delegate for a remembered setup, and stops when a change fails', () => {
+    const tuner = new TrackingTuner({ delegate: 'GPU', model: 'lite', workers: 2 }, { ...options, remembered: true });
+    expect(feed(tuner, 50, 12)).toEqual({ delegate: 'GPU', model: 'lite', workers: 3 });
+    tuner.revert({ delegate: 'GPU', model: 'lite', workers: 2 });
+    expect(tuner.settled).toBe(true);
+    expect(feed(tuner, 50, 12)).toBeNull();
+    expect(tuner.setup.workers).toBe(2);
+  });
+
+  it('uses the spare processor cores for hands workers', () => {
+    expect(maxHandWorkers(8)).toBe(3);
+    expect(maxHandWorkers(4)).toBe(2);
+    expect(maxHandWorkers(2)).toBe(1);
+    expect(maxHandWorkers(undefined)).toBe(2);
+  });
+});
+
+describe('body and face drawing', () => {
+  it('draws only the points the pose tracker sees', () => {
+    expect(isVisible({ visibility: 0.9 })).toBe(true);
+    expect(isVisible({ visibility: 0.2 })).toBe(false);
+    expect(isVisible({})).toBe(true);
+    expect(isVisible(undefined)).toBe(false);
+  });
+
+  it('circles the head between the ears, or around the eyes', () => {
+    const fromEars = headCircle([{ x: 100, y: 50 }, { x: 200, y: 50 }], null)!;
+    expect(fromEars.x).toBe(150);
+    expect(fromEars.r).toBeCloseTo(72, 5);
+    const fromEyes = headCircle(null, [{ x: 130, y: 40 }, { x: 170, y: 40 }])!;
+    expect(fromEyes.x).toBe(150);
+    expect(fromEyes.y).toBeGreaterThan(40);
+    expect(headCircle(null, null)).toBeNull();
+  });
+});
+

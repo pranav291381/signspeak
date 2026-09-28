@@ -2,10 +2,10 @@ import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, StyleSheet, useWindowDimensions, View } from 'react-native';
 
-import { AppText, Button, Icon } from '@/components';
+import { AppText, Button, Icon, PressableScale } from '@/components';
 import { LandmarkCamera } from '@/engine/LandmarkCamera';
 import type { EngineErrorCode, EngineFacing, EngineStatus } from '@/engine/protocol';
-import type { EngineLink } from '@/engine/types';
+import type { EngineLink, TrackingDetails } from '@/engine/types';
 import { useTheme } from '@/theme';
 
 interface Props {
@@ -58,7 +58,8 @@ export function CameraStage({
   const [status, setStatus] = useState<EngineStatus>('loading');
   const [progress, setProgress] = useState<number | undefined>(undefined);
   const [error, setError] = useState<EngineErrorCode | null>(null);
-  const [stats, setStats] = useState<{ fps: number; delegate?: 'GPU' | 'CPU' } | null>(null);
+  const [stats, setStats] = useState<({ fps: number; delegate?: 'GPU' | 'CPU'; note?: string } & TrackingDetails) | null>(null);
+  const [showDetails, setShowDetails] = useState(false);
   // Remounting the engine is the retry: it reloads models and reopens the camera.
   const [attempt, setAttempt] = useState(0);
   const running = status === 'running' && !error;
@@ -87,8 +88,8 @@ export function CameraStage({
         style={StyleSheet.absoluteFill}
         onFrame={onFrame}
         onStatus={update}
-        onStats={(fps, _inferenceMs, delegate, note) => {
-          setStats({ fps, delegate });
+        onStats={(fps, _inferenceMs, delegate, note, details) => {
+          setStats({ fps, delegate, note, ...details });
           logEngineNote(delegate, note);
         }}
         onError={(code) => {
@@ -107,15 +108,55 @@ export function CameraStage({
           ) : null}
           {overlayBottom ? <View style={[styles.bottom, { padding: spacing.md }]}>{overlayBottom}</View> : null}
           {stats && stats.fps > 0 ? (
-            <View
-              testID="tracking-rate"
-              pointerEvents="none"
-              style={[styles.rate, { backgroundColor: colors.scrim, borderRadius: radii.pill }]}
-            >
-              <AppText variant="caption" color="onScrim" style={styles.rateText}>
-                {t('camera.rate', { fps: Math.round(stats.fps), delegate: stats.delegate ?? '' })}
-              </AppText>
-            </View>
+            <>
+              {showDetails ? (
+                <View
+                  testID="tracking-details"
+                  accessible
+                  accessibilityLiveRegion="polite"
+                  style={[styles.details, { backgroundColor: colors.scrim, borderRadius: radii.md, padding: spacing.sm, gap: 2 }]}
+                >
+                  <AppText variant="label" color="onScrim">
+                    {t('camera.details.title')}
+                  </AppText>
+                  <AppText variant="caption" color="onScrim">
+                    {t('camera.details.hands', { fps: Math.round(stats.fps) })}
+                    {stats.model ? ` · ${t(`camera.details.model_${stats.model}`)}` : ''}
+                    {stats.workers !== undefined
+                      ? ` · ${stats.workers > 0 ? t('camera.details.workers', { count: stats.workers }) : t('camera.details.mainThread')}`
+                      : ''}
+                  </AppText>
+                  {stats.bodyFps !== undefined ? (
+                    <AppText variant="caption" color="onScrim">
+                      {t('camera.details.body', { fps: Math.round(stats.bodyFps) })}
+                    </AppText>
+                  ) : null}
+                  {stats.delegate ? (
+                    <AppText variant="caption" color="onScrim">
+                      {t('camera.details.runsOn', { delegate: stats.delegate })}
+                    </AppText>
+                  ) : null}
+                  {stats.note ? (
+                    <AppText variant="caption" color="onScrim" style={styles.note} selectable>
+                      {stats.note}
+                    </AppText>
+                  ) : null}
+                </View>
+              ) : null}
+              <PressableScale
+                testID="tracking-rate"
+                accessibilityRole="button"
+                accessibilityLabel={t(showDetails ? 'camera.details.hide' : 'camera.details.show')}
+                accessibilityState={{ expanded: showDetails }}
+                onPress={() => setShowDetails((open) => !open)}
+                hitSlop={8}
+                style={[styles.rate, { backgroundColor: colors.scrim, borderRadius: radii.pill }]}
+              >
+                <AppText variant="caption" color="onScrim" style={styles.rateText}>
+                  {t('camera.rate', { fps: Math.round(stats.fps), delegate: stats.delegate ?? '' })}
+                </AppText>
+              </PressableScale>
+            </>
           ) : null}
         </>
       ) : (
@@ -178,6 +219,8 @@ const styles = StyleSheet.create({
   text: { textAlign: 'center' },
   progressTrack: { width: '70%', height: 6, backgroundColor: 'rgba(255,255,255,0.25)', overflow: 'hidden' },
   progressFill: { height: 6 },
-  rate: { position: 'absolute', left: 12, bottom: 12, paddingHorizontal: 8, paddingVertical: 2 },
+  rate: { position: 'absolute', left: 12, bottom: 12, paddingHorizontal: 10, paddingVertical: 4 },
+  details: { position: 'absolute', left: 12, right: 12, bottom: 44 },
+  note: { opacity: 0.8, fontSize: 11, lineHeight: 15 },
   rateText: { fontSize: 11, lineHeight: 15 },
 });
