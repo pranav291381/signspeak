@@ -16,6 +16,7 @@ import argparse
 import base64
 import json
 import re
+import shutil
 import tempfile
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -175,6 +176,7 @@ def main() -> None:
         part: LandmarkWindowDataset(items, work, labels, train=part == "train", seed=args.seed)
         for part, items in samples.items()
     }
+    shutil.rmtree(work, ignore_errors=True)  # the datasets hold every window in memory now
     print({part: len(d) for part, d in datasets.items()}, "skipped:", dict(skipped))
 
     torch.set_num_threads(max(1, torch.get_num_threads()))
