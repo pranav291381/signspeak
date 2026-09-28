@@ -1,4 +1,5 @@
 import fixture from '../../../../shared/fixtures/model_parity_v1.json';
+import segmentFixture from '../../../../shared/fixtures/segment_parity_v2.json';
 import { ModelSignRecognizer } from '@/model/ModelSignRecognizer';
 import { parseModelPack } from '@/model/modelPack';
 import { SignModel } from '@/model/signModel';
@@ -57,6 +58,17 @@ describe('EngineModelChannel + EngineSignModel', () => {
     // Frames travel rounded to 0.001, as the model's training data was.
     remote.forEach((value, i) => expect(value).toBeCloseTo(local[i]!, 2));
     expect(link.sent.filter((m) => m.type === 'setModel')).toHaveLength(1);
+  });
+
+  it('runs a whole-sign (segment) pack in the engine page too', async () => {
+    const channel = new EngineModelChannel();
+    connect(channel);
+    const segmentPack = parseModelPack(JSON.parse(JSON.stringify(segmentFixture.pack)));
+    channel.load(segmentPack);
+    const sign = segmentFixture.frames.map((f) => Float32Array.from(f));
+    const remote = await channel.forward(sign);
+    const local = new SignModel(segmentPack).forward(sign);
+    remote.forEach((value, i) => expect(value).toBeCloseTo(local[i]!, 2));
   });
 
   it('sends the pack once, and again to a new page', async () => {

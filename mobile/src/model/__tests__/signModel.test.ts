@@ -33,6 +33,13 @@ describe('SignModel (segment packs)', () => {
     expect(Array.from(rich[5]!.slice(-3))).toEqual(Array.from(sign[5]!.slice(-3)));
   });
 
+  it('parses again as it was parsed: the app sends the parsed pack to the camera engine page', () => {
+    const once = parseModelPack(clone());
+    const twice = parseModelPack(JSON.parse(JSON.stringify(once)));
+    expect(twice).toEqual(once);
+    expect(new SignModel(twice).forward(frames())[0]).toBeCloseTo(fixture.logits[0]!, 4);
+  });
+
   it('rejects segment packs whose members do not fit', () => {
     const wrongDim = clone();
     wrongDim.members[1].features = 'xy';

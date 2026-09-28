@@ -179,7 +179,7 @@ export function parseModelPack(value: unknown): ModelPack {
   const stabilizer = parseStabilizer(value.stabilizer);
   return {
     format: MODEL_PACK_FORMAT,
-    version: MODEL_PACK_VERSION,
+    version: segment ? SEGMENT_PACK_VERSION : MODEL_PACK_VERSION,
     id,
     name,
     createdAt,
