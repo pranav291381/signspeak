@@ -1,9 +1,10 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { MIN_TOUCH_TARGET, useTheme } from '@/theme';
 
 import { AppText } from './AppText';
 import { Icon, type IconName } from './Icon';
+import { PressableScale } from './PressableScale';
 
 interface Props {
   label: string;
@@ -21,7 +22,9 @@ export function ListRow({ label, value, description, icon, onPress, tone = 'defa
   const { colors, radii, spacing } = useTheme();
   const fg = tone === 'danger' ? colors.danger : colors.text;
   return (
-    <Pressable
+    <PressableScale
+      pressedScale={0.985}
+      pressedOpacity={0.95}
       testID={testID}
       accessibilityRole="button"
       accessibilityLabel={[label, value, description].filter(Boolean).join('. ')}
@@ -52,7 +55,7 @@ export function ListRow({ label, value, description, icon, onPress, tone = 'defa
         </AppText>
       ) : null}
       <Icon name="chevron-right" size={22} color={colors.textSecondary} />
-    </Pressable>
+    </PressableScale>
   );
 }
 

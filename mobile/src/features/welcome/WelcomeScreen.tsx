@@ -1,9 +1,10 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Image, Pressable, StyleSheet, View } from 'react-native';
+import { Animated, Easing, Image, StyleSheet, View } from 'react-native';
 
-import { AppText, Button, Icon, Notice, RadioGroup, Screen, type IconName, type RadioOption } from '@/components';
+import { useReduceMotion } from '@/accessibility/useReduceMotion';
+import { AppText, Button, FadeIn, Icon, Notice, PressableScale, RadioGroup, Screen, type IconName, type RadioOption } from '@/components';
 import { selectableLanguages, type LanguageCode } from '@/i18n';
 import { useSettings } from '@/settings/SettingsProvider';
 import { darkColors, lightColors, useTheme, type ColorPalette, type ThemePreference } from '@/theme';
@@ -28,17 +29,20 @@ export function WelcomeScreen() {
   return (
     <Screen testID="welcome-screen" edges={['top', 'bottom', 'left', 'right']}>
       <StepDots index={index} />
-      {step === 'language' ? (
-        <LanguageStep
-          value={settings.appLanguage}
-          // At first launch the output language follows; it can differ later in Settings.
-          onChange={(language) => updateSettings({ appLanguage: language, outputLanguage: language })}
-        />
-      ) : null}
-      {step === 'appearance' ? (
-        <AppearanceStep value={settings.theme} onChange={(theme) => updateSettings({ theme })} />
-      ) : null}
-      {step === 'intro' ? <IntroStep /> : null}
+      {/* Each step eases in from below. */}
+      <FadeIn trigger={step} distance={14} duration={280}>
+        {step === 'language' ? (
+          <LanguageStep
+            value={settings.appLanguage}
+            // At first launch the output language follows; it can differ later in Settings.
+            onChange={(language) => updateSettings({ appLanguage: language, outputLanguage: language })}
+          />
+        ) : null}
+        {step === 'appearance' ? (
+          <AppearanceStep value={settings.theme} onChange={(theme) => updateSettings({ theme })} />
+        ) : null}
+        {step === 'intro' ? <IntroStep /> : null}
+      </FadeIn>
 
       <View style={{ flexGrow: 1 }} />
       <View style={{ gap: spacing.sm }}>
@@ -66,18 +70,23 @@ function StepDots({ index }: { index: number }) {
       style={styles.dots}
     >
       {STEPS.map((step, i) => (
-        <View
-          key={step}
-          style={{
-            height: 6,
-            width: i === index ? 28 : 6,
-            borderRadius: radii.pill,
-            backgroundColor: i <= index ? colors.primary : colors.outline,
-          }}
-        />
+        <StepDot key={step} active={i === index} color={i <= index ? colors.primary : colors.outline} radius={radii.pill} />
       ))}
     </View>
   );
+}
+
+/** One progress dot; the current step's dot stretches smoothly. */
+function StepDot({ active, color, radius }: { active: boolean; color: string; radius: number }) {
+  const reduceMotion = useReduceMotion();
+  const width = useState(() => new Animated.Value(active ? 28 : 6))[0];
+  useEffect(() => {
+    const target = active ? 28 : 6;
+    if (reduceMotion) width.setValue(target);
+    // Width is a layout property, so this runs on the JS thread; the dots are tiny.
+    else Animated.timing(width, { toValue: target, duration: 260, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start();
+  }, [active, reduceMotion, width]);
+  return <Animated.View style={{ height: 6, width, borderRadius: radius, backgroundColor: color }} />;
 }
 
 function LanguageStep({ value, onChange }: { value: LanguageCode; onChange: (code: LanguageCode) => void }) {
@@ -161,7 +170,7 @@ function ThemeCard({
     </View>
   );
   return (
-    <Pressable
+    <PressableScale
       testID={testID}
       accessibilityRole="radio"
       accessibilityLabel={label}
@@ -191,7 +200,7 @@ function ThemeCard({
         <Icon name={selected ? 'check-circle' : icon} size={18} color={selected ? colors.primary : colors.textSecondary} />
         <AppText variant="label">{label}</AppText>
       </View>
-    </Pressable>
+    </PressableScale>
   );
 }
 

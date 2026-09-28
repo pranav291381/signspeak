@@ -1,9 +1,10 @@
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { MIN_TOUCH_TARGET, useTheme } from '@/theme';
 
 import { AppText } from './AppText';
 import { Icon, type IconName } from './Icon';
+import { PressableScale } from './PressableScale';
 
 /** `secondary` is a tonal button: tinted background, primary-coloured label. */
 export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'danger' | 'ghost';
@@ -46,7 +47,7 @@ export function Button({
   const small = size === 'sm';
 
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label}
       accessibilityHint={accessibilityHint}
@@ -54,7 +55,9 @@ export function Button({
       disabled={inactive}
       onPress={onPress}
       testID={testID}
-      style={({ pressed }) => [
+      pressedScale={0.96}
+      pressedOpacity={0.88}
+      style={[
         styles.base,
         {
           minHeight: small ? MIN_TOUCH_TARGET : 52,
@@ -62,8 +65,7 @@ export function Button({
           borderColor: palette.border,
           borderRadius: radii.md + 2,
           paddingHorizontal: small ? spacing.md : spacing.lg,
-          opacity: inactive ? 0.45 : pressed ? 0.82 : 1,
-          transform: [{ scale: pressed && !inactive ? 0.985 : 1 }],
+          opacity: inactive ? 0.45 : 1,
         },
       ]}
     >
@@ -77,7 +79,7 @@ export function Button({
           {label}
         </AppText>
       </View>
-    </Pressable>
+    </PressableScale>
   );
 }
 

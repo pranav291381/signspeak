@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { useReduceMotion } from '@/accessibility/useReduceMotion';
-import { AppText, Button, Icon, IconButton } from '@/components';
+import { AppText, Button, Icon, IconButton, PressableScale } from '@/components';
 import { useTheme } from '@/theme';
 
 import { SignDiagram } from './SignDiagram';
@@ -105,7 +105,7 @@ export function SignSequencePlayer<T extends SequenceItem>({ items, onRecordMiss
         {items.map((item, i) => {
           const selected = i === index;
           return (
-            <Pressable
+            <PressableScale
               key={item.key}
               accessibilityRole="button"
               accessibilityLabel={t('diagram.jumpTo', { text: item.caption })}
@@ -124,7 +124,7 @@ export function SignSequencePlayer<T extends SequenceItem>({ items, onRecordMiss
               <AppText variant="label" style={{ color: selected ? colors.onPrimary : colors.text }}>
                 {item.caption}
               </AppText>
-            </Pressable>
+            </PressableScale>
           );
         })}
       </ScrollView>

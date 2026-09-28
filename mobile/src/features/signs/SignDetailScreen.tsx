@@ -1,9 +1,9 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { AppText, Button, Card, confirmAction, IconButton, Notice, Screen, StateView } from '@/components';
+import { AppText, Button, Card, confirmAction, IconButton, Notice, PressableScale, Screen, StateView } from '@/components';
 import { SignDiagram } from '@/diagram/SignDiagram';
 import { signText } from '@/personal/labels';
 import { usePersonalSigns } from '@/personal/PersonalSignsProvider';
@@ -94,7 +94,7 @@ function SignDetail({ sign }: { sign: PersonalSign }) {
         <View style={[styles.takes, { gap: spacing.sm }]}>
           {sign.samples.map((sample, i) => (
             <View key={`${sample.recordedAt}-${i}`} style={[styles.take, { gap: 2 }]}>
-              <Pressable
+              <PressableScale
                 testID={`take-${i}`}
                 accessibilityRole="button"
                 accessibilityLabel={t('signs.showTake', { number: i + 1 })}
@@ -111,7 +111,7 @@ function SignDetail({ sign }: { sign: PersonalSign }) {
                 <AppText variant="label" style={{ color: i === take ? colors.onPrimary : colors.text }}>
                   {t('signs.take', { number: i + 1 })}
                 </AppText>
-              </Pressable>
+              </PressableScale>
               <IconButton
                 testID={`delete-take-${i}`}
                 variant="plain"

@@ -1,4 +1,5 @@
 export { AppText, type TextColor } from './AppText';
+export { FadeIn } from './FadeIn';
 export { Button, type ButtonVariant } from './Button';
 export { Card } from './Card';
 export { Icon, type IconName } from './Icon';
@@ -7,6 +8,7 @@ export { ListRow } from './ListRow';
 export { NavCard } from './NavCard';
 export { Notice, type NoticeTone } from './Notice';
 export { Pill, type PillTone } from './Pill';
+export { PressableScale } from './PressableScale';
 export { RadioGroup, type RadioOption } from './RadioGroup';
 export { Screen } from './Screen';
 export { Section } from './Section';

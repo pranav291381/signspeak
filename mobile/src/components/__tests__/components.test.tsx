@@ -1,6 +1,10 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 
+import { Text } from 'react-native';
+
 import { Button } from '../Button';
+import { FadeIn } from '../FadeIn';
+import { PressableScale } from '../PressableScale';
 import { IconButton } from '../IconButton';
 import { ListRow } from '../ListRow';
 import { Notice } from '../Notice';
@@ -123,5 +127,53 @@ describe('ListRow', () => {
     render(<ListRow label="My signs" value="3" description="Signs taught on this phone" onPress={onPress} />);
     fireEvent.press(screen.getByRole('button', { name: 'My signs. 3. Signs taught on this phone' }));
     expect(onPress).toHaveBeenCalled();
+  });
+});
+
+describe('PressableScale', () => {
+  it('presses, reports press in and out, and resolves pressed styles and children', () => {
+    const onPress = jest.fn();
+    const onPressIn = jest.fn();
+    const onPressOut = jest.fn();
+    render(
+      <PressableScale
+        accessibilityRole="button"
+        accessibilityLabel="Go"
+        onPress={onPress}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+        style={({ pressed }) => ({ backgroundColor: pressed ? 'grey' : 'white' })}
+      >
+        {({ pressed }) => <Text>{pressed ? 'down' : 'up'}</Text>}
+      </PressableScale>,
+    );
+    const button = screen.getByRole('button', { name: 'Go' });
+    expect(screen.getByText('up')).toBeOnTheScreen();
+    fireEvent(button, 'pressIn', { nativeEvent: {} });
+    expect(onPressIn).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('down')).toBeOnTheScreen();
+    fireEvent(button, 'pressOut', { nativeEvent: {} });
+    expect(onPressOut).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('up')).toBeOnTheScreen();
+    fireEvent.press(button);
+    expect(onPress).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps a dimmed opacity for disabled controls', () => {
+    render(<Button label="Speak" disabled onPress={jest.fn()} />);
+    const style = screen.getByRole('button', { name: 'Speak' }).props.style;
+    const flat = Array.isArray(style) ? Object.assign({}, ...style.flat(Infinity)) : style;
+    expect(flat.opacity).toBe(0.45);
+  });
+});
+
+describe('FadeIn', () => {
+  it('shows its content', () => {
+    render(
+      <FadeIn trigger={1} pop>
+        <Text>Hello</Text>
+      </FadeIn>,
+    );
+    expect(screen.getByText('Hello')).toBeOnTheScreen();
   });
 });

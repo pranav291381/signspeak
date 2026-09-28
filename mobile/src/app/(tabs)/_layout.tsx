@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon, type IconName } from '@/components';
+import { useReduceMotion } from '@/accessibility/useReduceMotion';
 import { useSettings } from '@/settings/SettingsProvider';
 import { useTheme } from '@/theme';
 
@@ -20,6 +21,7 @@ export default function TabsLayout() {
   const { settings } = useSettings();
   const { colors, elevation, typography } = useTheme();
   const insets = useSafeAreaInsets();
+  const reduceMotion = useReduceMotion();
 
   // First launch: choose language and appearance before anything else.
   if (!settings.onboardingComplete) return <Redirect href="/welcome" />;
@@ -28,6 +30,8 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={({ route }) => ({
         headerShown: false,
+        // Switching tabs slides the screens slightly and cross-fades them.
+        animation: reduceMotion ? 'none' : 'shift',
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textSecondary,
         tabBarStyle: {

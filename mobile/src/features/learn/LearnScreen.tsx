@@ -1,9 +1,9 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { AppText, Button, Card, Icon, Notice, Pill, Screen, type IconName } from '@/components';
+import { AppText, Button, Card, Icon, Notice, Pill, PressableScale, Screen, type IconName } from '@/components';
 import { usePersonalSigns } from '@/personal/PersonalSignsProvider';
 import { signIdFor } from '@/personal/store';
 import { ALPHABET } from '@/personal/types';
@@ -92,7 +92,7 @@ function Tip({ id, icon, first }: { id: string; icon: IconName; first: boolean }
   const body = t(`learn.tips.${id}.body` as 'learn.tips.attention.body');
   return (
     <View style={{ borderTopWidth: first ? 0 : 1, borderTopColor: colors.border }}>
-      <Pressable
+      <PressableScale
         testID={`tip-${id}`}
         accessibilityRole="button"
         accessibilityLabel={title}
@@ -110,7 +110,7 @@ function Tip({ id, icon, first }: { id: string; icon: IconName; first: boolean }
           {title}
         </AppText>
         <Icon name={open ? 'chevron-up' : 'chevron-down'} size={22} color={colors.textSecondary} />
-      </Pressable>
+      </PressableScale>
       {open ? (
         <AppText
           testID={`tip-${id}-body`}

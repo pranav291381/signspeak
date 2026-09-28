@@ -26,6 +26,19 @@ interface Props {
   testID?: string;
 }
 
+let lastNote = '';
+/**
+ * Why tracking runs on the GPU or the CPU (the renderer's name, a GPU that
+ * failed to start, measured times). Logged once per change: it shows in the
+ * terminal running `npm start`, to diagnose slow phones.
+ */
+function logEngineNote(delegate: 'GPU' | 'CPU' | undefined, note: string | undefined): void {
+  const line = `${delegate ?? '?'}: ${note ?? ''}`;
+  if (!note || line === lastNote) return;
+  lastNote = line;
+  console.info(`[SignSpeak camera] tracking on ${line}`);
+}
+
 /** Camera preview with live hand tracking, its loading and error states, and overlay slots. */
 export function CameraStage({
   facing,
@@ -74,7 +87,10 @@ export function CameraStage({
         style={StyleSheet.absoluteFill}
         onFrame={onFrame}
         onStatus={update}
-        onStats={(fps, _inferenceMs, delegate) => setStats({ fps, delegate })}
+        onStats={(fps, _inferenceMs, delegate, note) => {
+          setStats({ fps, delegate });
+          logEngineNote(delegate, note);
+        }}
         onError={(code) => {
           setError(code);
           onReadyChange?.(false);

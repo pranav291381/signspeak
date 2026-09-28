@@ -1,9 +1,10 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { MIN_TOUCH_TARGET, useTheme } from '@/theme';
 
 import { AppText } from './AppText';
 import { Icon, type IconName } from './Icon';
+import { PressableScale } from './PressableScale';
 
 interface Props {
   title: string;
@@ -25,12 +26,14 @@ export function NavCard({ title, description, icon, onPress, tone = 'default', a
   const fgSecondary = hero ? colors.onPrimary : colors.textSecondary;
 
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityLabel={`${accessibilityLabel ?? title}. ${description}`}
       onPress={onPress}
       testID={testID}
-      style={({ pressed }) => [
+      pressedScale={0.975}
+      pressedOpacity={0.94}
+      style={[
         styles.card,
         hero ? null : elevation.card,
         {
@@ -39,8 +42,6 @@ export function NavCard({ title, description, icon, onPress, tone = 'default', a
           borderRadius: radii.lg,
           padding: spacing.lg,
           gap: spacing.lg,
-          opacity: pressed ? 0.88 : 1,
-          transform: [{ scale: pressed ? 0.99 : 1 }],
         },
       ]}
     >
@@ -61,7 +62,7 @@ export function NavCard({ title, description, icon, onPress, tone = 'default', a
         </AppText>
       </View>
       <Icon name="chevron-right" size={24} color={fgSecondary} />
-    </Pressable>
+    </PressableScale>
   );
 }
 

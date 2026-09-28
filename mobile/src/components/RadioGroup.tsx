@@ -1,9 +1,10 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { MIN_TOUCH_TARGET, useTheme } from '@/theme';
 
 import { AppText } from './AppText';
 import { Icon } from './Icon';
+import { PressableScale } from './PressableScale';
 
 export interface RadioOption<T extends string> {
   value: T;
@@ -37,7 +38,9 @@ export function RadioGroup<T extends string>({ label, hint, options, value, onCh
       {options.map((option) => {
         const selected = option.value === value;
         return (
-          <Pressable
+          <PressableScale
+            pressedScale={0.98}
+            pressedOpacity={0.95}
             key={option.value}
             testID={testID ? `${testID}-${option.value}` : undefined}
             accessibilityRole="radio"
@@ -69,7 +72,7 @@ export function RadioGroup<T extends string>({ label, hint, options, value, onCh
               color={selected ? colors.primary : colors.outline}
               size={22}
             />
-          </Pressable>
+          </PressableScale>
         );
       })}
     </View>

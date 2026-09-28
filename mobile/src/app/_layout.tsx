@@ -2,6 +2,7 @@ import { useFonts } from 'expo-font';
 import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useMemo, type ReactNode } from 'react';
+import { Platform } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -54,7 +55,8 @@ function AppStack() {
           headerTintColor: colors.text,
           headerTitleStyle: { fontSize: 17, fontFamily: typography.heading.fontFamily, fontWeight: typography.heading.fontWeight },
           contentStyle: { backgroundColor: colors.background },
-          animation: reduceMotion ? 'none' : 'default',
+          // The same smooth slide (with the previous screen easing back) on Android and iOS.
+          animation: reduceMotion ? 'none' : Platform.OS === 'android' ? 'ios_from_right' : 'default',
         }}
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false, title: t('home.title') }} />

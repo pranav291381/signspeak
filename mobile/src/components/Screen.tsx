@@ -5,6 +5,7 @@ import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme';
 
 import { AppText } from './AppText';
+import { FadeIn } from './FadeIn';
 
 interface Props {
   children: ReactNode;
@@ -49,21 +50,24 @@ export function Screen({ children, scroll = true, title, subtitle, headerAction,
 
   return (
     <SafeAreaView edges={safeEdges} style={[styles.flex, { backgroundColor: colors.background }]}>
-      {scroll ? (
-        <ScrollView
-          testID={testID}
-          contentContainerStyle={[styles.grow, styles.centered, padding]}
-          keyboardShouldPersistTaps="handled"
-        >
-          {header}
-          {children}
-        </ScrollView>
-      ) : (
-        <View testID={testID} style={[styles.flex, styles.centered, padding]}>
-          {header}
-          {children}
-        </View>
-      )}
+      {/* Content eases in when a screen opens (not with "reduce motion"). */}
+      <FadeIn style={styles.flex} distance={6} duration={220}>
+        {scroll ? (
+          <ScrollView
+            testID={testID}
+            contentContainerStyle={[styles.grow, styles.centered, padding]}
+            keyboardShouldPersistTaps="handled"
+          >
+            {header}
+            {children}
+          </ScrollView>
+        ) : (
+          <View testID={testID} style={[styles.flex, styles.centered, padding]}>
+            {header}
+            {children}
+          </View>
+        )}
+      </FadeIn>
     </SafeAreaView>
   );
 }

@@ -1,8 +1,7 @@
-import { Pressable } from 'react-native';
-
 import { MIN_TOUCH_TARGET, useTheme } from '@/theme';
 
 import { Icon, type IconName } from './Icon';
+import { PressableScale } from './PressableScale';
 
 interface Props {
   icon: IconName;
@@ -38,7 +37,7 @@ export function IconButton({
   const dimension = Math.max(size, MIN_TOUCH_TARGET);
 
   return (
-    <Pressable
+    <PressableScale
       testID={testID}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
@@ -46,17 +45,19 @@ export function IconButton({
       disabled={disabled}
       onPress={onPress}
       hitSlop={4}
-      style={({ pressed }) => ({
+      pressedScale={0.88}
+      pressedOpacity={0.8}
+      style={{
         width: dimension,
         height: dimension,
         borderRadius: dimension / 2,
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: palette.bg,
-        opacity: disabled ? 0.4 : pressed ? 0.75 : 1,
-      })}
+        opacity: disabled ? 0.4 : 1,
+      }}
     >
       <Icon name={icon} size={Math.round(dimension * 0.46)} color={palette.fg} />
-    </Pressable>
+    </PressableScale>
   );
 }

@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
-import { AppText, Icon, Notice, type IconName } from '@/components';
+import { AppText, FadeIn, Icon, Notice, type IconName } from '@/components';
 import type { SessionSnapshot } from '@/recognition/session';
 import type { Recognition } from '@/recognition/types';
 import { useTheme } from '@/theme';
@@ -69,11 +69,13 @@ export function RecognitionPanel({ snapshot, paused, latest, transcript }: Props
           },
         ]}
       >
-        <Icon name={STATUS_ICONS[key]} color={uncertain ? colors.warning : colors.primary} size={22} />
-        <View style={styles.flex}>
-          <AppText variant="label">{t(`signToText.status.${key}`)}</AppText>
-          {hint ? <AppText variant="caption">{hint}</AppText> : null}
-        </View>
+        <FadeIn trigger={key} distance={4} duration={180} style={[styles.status, styles.flex, { gap: spacing.md }]}>
+          <Icon name={STATUS_ICONS[key]} color={uncertain ? colors.warning : colors.primary} size={22} />
+          <View style={styles.flex}>
+            <AppText variant="label">{t(`signToText.status.${key}`)}</AppText>
+            {hint ? <AppText variant="caption">{hint}</AppText> : null}
+          </View>
+        </FadeIn>
       </View>
 
       <View testID="recognition-result" style={{ gap: spacing.xs, minHeight: 72, justifyContent: 'center' }}>
@@ -82,9 +84,12 @@ export function RecognitionPanel({ snapshot, paused, latest, transcript }: Props
             <AppText variant="overline" color="textSecondary">
               {t('signToText.result.label')}
             </AppText>
-            <AppText variant="display" accessibilityRole="text" testID="recognition-text" style={{ fontSize: 40, lineHeight: 48 }}>
-              {latest.text}
-            </AppText>
+            {/* Each new result pops in. */}
+            <FadeIn trigger={latest.recognition.timestampMs} pop distance={6} duration={260}>
+              <AppText variant="display" accessibilityRole="text" testID="recognition-text" style={{ fontSize: 40, lineHeight: 48 }}>
+                {latest.text}
+              </AppText>
+            </FadeIn>
             {latest.recognition.band ? (
               <AppText variant="caption" color="textSecondary">
                 {t(`signToText.result.${latest.recognition.band}`)}
@@ -106,17 +111,18 @@ export function RecognitionPanel({ snapshot, paused, latest, transcript }: Props
           </AppText>
           <View style={[styles.words, { gap: spacing.xs }]}>
             {transcript.map((word, i) => (
-              <View
-                key={`${i}-${word.text}`}
-                style={[
-                  styles.word,
-                  { borderRadius: radii.pill, backgroundColor: word.spelled ? colors.surfaceAlt : colors.primaryContainer },
-                ]}
-              >
-                <AppText variant="label" style={{ color: word.spelled ? colors.text : colors.onPrimaryContainer }}>
-                  {word.text}
-                </AppText>
-              </View>
+              <FadeIn key={`${i}-${word.text}`} distance={4} duration={200}>
+                <View
+                  style={[
+                    styles.word,
+                    { borderRadius: radii.pill, backgroundColor: word.spelled ? colors.surfaceAlt : colors.primaryContainer },
+                  ]}
+                >
+                  <AppText variant="label" style={{ color: word.spelled ? colors.text : colors.onPrimaryContainer }}>
+                    {word.text}
+                  </AppText>
+                </View>
+              </FadeIn>
             ))}
           </View>
           <AppText variant="caption" color="textSecondary">
