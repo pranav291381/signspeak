@@ -1,4 +1,4 @@
-# ISL Connect (`signspeak`)
+# SignSpeak
 
 A mobile app to help people communicate using **Indian Sign Language (ISL)**, built with and for Deaf ISL users, their families, and the hearing people they meet every day.
 
@@ -8,7 +8,7 @@ A mobile app to help people communicate using **Indian Sign Language (ISL)**, bu
 > - Text → ISL, Learn and teaching your own signs are **parked** (the code is kept). The app ships no invented ISL content.
 > - The Hindi interface is a draft awaiting native-speaker review.
 >
-> ISL Connect is **not** a replacement for qualified ISL interpreters.
+> SignSpeak is **not** a replacement for qualified ISL interpreters.
 
 ## What is in the app
 

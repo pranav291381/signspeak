@@ -61,7 +61,7 @@ export function isIssueType(value: unknown): value is IssueType {
 
 /** Plain-text version for the share sheet (email, WhatsApp, etc. chosen by the user). */
 export function formatForSharing(report: FeedbackReport): string {
-  return ['ISL Connect feedback', JSON.stringify(report, null, 2)].join('\n\n');
+  return ['SignSpeak feedback', JSON.stringify(report, null, 2)].join('\n\n');
 }
 
 export type SubmitResult =

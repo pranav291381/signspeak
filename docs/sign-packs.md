@@ -21,7 +21,7 @@ You need Node.js 22, the repository with `npm ci` done in `mobile/`, and Chrome 
      "source": {
        "name": "Example Deaf Club",
        "url": "https://example.org/",
-       "permission": "Recorded for ISL Connect by consenting signers (2026)."
+       "permission": "Recorded for SignSpeak by consenting signers (2026)."
      },
      "language": "en",
      "signs": [
@@ -41,7 +41,7 @@ You need Node.js 22, the repository with `npm ci` done in `mobile/`, and Chrome 
    ```bash
    npm run manifest:signpack -- <videos folder> --out vocabulary.json --id deaf-club-2026 \
      --name "Deaf club recordings" --source-name "Example Deaf Club" \
-     --source-url https://example.org/ --permission "Recorded for ISL Connect by consenting signers (2026)."
+     --source-url https://example.org/ --permission "Recorded for SignSpeak by consenting signers (2026)."
    ```
 
    Each file name becomes the sign's meaning. Check them before building: titles often carry extra words ("Hello - ISL", "Hello (1)") to remove from `text`.

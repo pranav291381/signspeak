@@ -1,4 +1,4 @@
-# Product specification — ISL Connect
+# Product specification — SignSpeak
 
 Status: **draft v0.1**. It will be refined with NGO partners, Deaf ISL users and qualified ISL educators before any pilot.
 

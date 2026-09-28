@@ -36,7 +36,7 @@ const html = `<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <meta http-equiv="Content-Security-Policy" content="/*ENGINE_CSP*/">
-<title>ISL Connect camera</title>
+<title>SignSpeak camera</title>
 <style>
 html,body{margin:0;height:100%;background:#0E1014;overflow:hidden}
 #stage{position:relative;width:100%;height:100%}

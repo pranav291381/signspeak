@@ -1,4 +1,4 @@
-# ISL Connect — mobile app
+# SignSpeak — mobile app
 
 Expo (SDK 57) + React Native + TypeScript. Architecture: [`../docs/architecture.md`](../docs/architecture.md).
 

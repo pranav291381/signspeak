@@ -1,4 +1,4 @@
-"""ISL Connect ML pipeline.
+"""SignSpeak ML pipeline.
 
 video -> landmarks (FeatureExtractor) -> normalized feature sequence (feature spec v1)
 -> temporal classifier -> calibrated scores -> (on device) stabilizer -> text.

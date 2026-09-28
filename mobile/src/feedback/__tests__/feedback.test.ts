@@ -50,6 +50,6 @@ describe('submitFeedback', () => {
 
 it('formats a readable report for sharing', () => {
   const text = formatForSharing(report);
-  expect(text).toContain('ISL Connect feedback');
+  expect(text).toContain('SignSpeak feedback');
   expect(JSON.parse(text.split('\n\n')[1] ?? '')).toEqual(report);
 });

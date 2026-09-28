@@ -42,14 +42,15 @@ describe('first launch', () => {
     await storeSettings({});
     renderRouter(APP_DIR, { initialUrl: '/' });
     fireEvent.press(await screen.findByTestId('welcome-language-hi'));
-    expect(await screen.findByText('ISL Connect में आपका स्वागत है')).toBeOnTheScreen();
+    expect(await screen.findByText('SignSpeak में आपका स्वागत है')).toBeOnTheScreen();
     await waitFor(async () => {
       const saved = JSON.parse((await AsyncStorage.getItem(SETTINGS_KEY)) ?? '{}');
       expect(saved).toMatchObject({ appLanguage: 'hi', outputLanguage: 'hi' });
     });
     // Leave the shared i18n instance in English for other tests.
     fireEvent.press(screen.getByTestId('welcome-language-en'));
-    expect(await screen.findByText('Welcome to ISL Connect')).toBeOnTheScreen();
+    expect(await screen.findByText('Welcome to SignSpeak')).toBeOnTheScreen();
+    expect(screen.getByTestId('welcome-logo')).toBeOnTheScreen();
   });
 });
 
