@@ -4,7 +4,7 @@ Each phase ends with passing tests, updated documentation and logical commits. S
 
 Legend: ✅ done · 🟡 built, but waiting for verified content, a dataset or a decision · ⏳ not started · 🔒 blocked on external input
 
-Sign → Text now recognizes an installed **sign vocabulary**, with a builder that turns sign videos into sign packs using the app's own hand tracking (`docs/sign-packs.md`). The first model is included: 9 greetings trained on the public INCLUDE dataset (CC BY 4.0), 26 of 29 held-out recordings right live, none wrong (early test, not yet tried by users). A model for all 262 INCLUDE words is in progress. Teaching your own signs, Text → ISL and Learn are parked.
+Sign → Text now recognizes an installed **sign vocabulary**, with a builder that turns sign videos into sign packs using the app's own hand tracking (`docs/sign-packs.md`). A model for all 262 signs of the public INCLUDE dataset (CC BY 4.0) is included: live on held-out recordings 32% right, 4% wrong, 64% "not sure"; 84 signs reliable (`docs/include-signs.md`). Not yet tried by users; more signers per sign are the way to better accuracy. Teaching your own signs, Text → ISL and Learn are parked.
 
 | # | Phase | Status | Deliverables | Exit criteria |
 | --- | --- | --- | --- | --- |

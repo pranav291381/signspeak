@@ -9,5 +9,5 @@ export interface BundledSignPack {
 }
 
 export const BUNDLED_SIGN_PACKS: readonly BundledSignPack[] = [
-  { id: 'include-greet', asset: require('../../assets/signpacks/include-greet.signpack') },
+  { id: 'include', asset: require('../../assets/signpacks/include.signpack') },
 ];

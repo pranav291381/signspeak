@@ -220,7 +220,7 @@ def main() -> None:
     )
     evaluation = {
         "split": "per sign, whole recording groups held out (test: last group, validation: the one before)",
-        "test_videos": int(signs.sum()),
+        "test_sign_windows": int(signs.sum()),
         "test_top1": float((probs[signs].argmax(1) == test_y[signs]).mean()),
         "test_top5": float(np.mean([t in row for t, row in zip(test_y[signs], top5[signs], strict=True)])),
         "test_rest_windows": int((~signs).sum()),
