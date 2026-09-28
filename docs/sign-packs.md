@@ -89,42 +89,50 @@ npm run eval:signpack -- --pack build/deaf-club-2026.signpack --manifest test.js
 
 ## Trained models
 
-With several videos per sign from several signers, a trained model recognizes new people far better than matching recordings (see `docs/architecture.md` §6.5):
+With several videos per sign from several signers, a trained model recognizes new people far better than matching recordings (see `docs/architecture.md` §6.5). The app's models read a **whole sign**: the camera screen waits until the hands come down, then recognizes everything signed since they rose (`mode: "segment"`, pack version 2). Several small networks are averaged (`members`).
 
 ```bash
 # in mobile/: videos → hand positions
 npm run export:landmarks -- --manifest videos.json --out landmarks.jsonl
-# in ml/: train with whole groups held out; writes build/model/my-model.signpack and report.json
-python scripts/train_from_landmarks.py --data landmarks.jsonl --out build/model \
-  --id my-model --name "…" --source-name "…" --source-url "…" --permission "…" --positives 10
-# optional, in ml/: the model to ship, trained on every recording with the same settings
-python scripts/train_from_landmarks.py --data landmarks.jsonl --out build/final --train-all \
-  --epochs <best_epoch + 1> --temperature <temperature> --evaluation-from build/model/report.json  --id my-model …
-# in mobile/: when to show a sign, chosen on the validation recordings
-npm run tune:model -- --pack build/model/my-model.signpack --data landmarks.jsonl --write --also build/final/my-model.signpack
-# in mobile/: accuracy on the test recordings, live, then install
-npm run eval:signpack -- --pack build/model/my-model.signpack --manifest test.json
+# in ml/: run A, trained on the training recordings; writes build/a/my-model.signpack and report.json
+python scripts/train_segments.py --data landmarks.jsonl --out build/a \
+  --id my-model --name "…" --source-name "…" --source-url "…" --permission "…"
+# in ml/: run B, also trained on the validation recordings, still tested on the test ones
+python scripts/train_segments.py --data landmarks.jsonl --out build/b --train-val --temperature <run A's> --id my-model …
+# in ml/: the model to ship, trained on every recording
+python scripts/train_segments.py --data landmarks.jsonl --out build/final --train-all \
+  --temperature <run A's> --evaluation-from build/b/report.json --id my-model …
+# in mobile/: when to show a sign, chosen on the validation recordings with run A, written into all three packs
+npm run tune:model -- --pack build/a/my-model.signpack --data landmarks.jsonl --write \
+  --also build/b/my-model.signpack --also build/final/my-model.signpack
+# in mobile/: accuracy on the test recordings, live, with those settings
+npm run tune:model -- --pack build/b/my-model.signpack --data landmarks.jsonl --split test --evaluate --details test.json
 npm run install:signpack -- build/final/my-model.signpack
 ```
 
-Give each video in `videos.json` a `group` (who signed it, or the recording session): for each sign the last group is held out for testing and the one before for validation. A model pack is installed and loaded like a sign pack; when one is installed, Sign → Text uses it.
+Give each video in `videos.json` a `group` (who signed it, or the recording session): for each sign the last group is held out for testing and the one before for validation.
 
-- **When a sign is shown.** `tune:model` plays the validation recordings through the app's own recognition session and tries settings for how sure the model must be (confidence, lead over the next sign, predictions in a row). It keeps the one that shows the right sign most often while showing a wrong sign for at most 5% of recordings (`--max-wrong`), and stores it in the pack. Without it the app's defaults apply.
-- **The shipped model.** `--train-all` trains on every recording (no held-out data) for the epoch count and with the temperature of the held-out run, which is what the accuracy figures describe. Signs with few recording sessions gain the most. Its calibration is never claimed.
+- **Members.** `--members` lists the networks as `arch:features:seed`: `gru` (convolutions and a bidirectional GRU) or `tf` (a small transformer); `xy` (hand and arm positions) or `xy+hands+vel` (also each hand's shape relative to its wrist, and how every point moved). Their logits are averaged; networks that read different things make different mistakes.
+- **When a sign is shown.** `tune:model` plays the validation recordings through the app's own recognition session and tries settings for how sure the model must be (confidence, lead over the next sign). It keeps the one that shows the right sign most often while showing a wrong sign for at most 5% of recordings (`--max-wrong`), and stores it in the pack. When the model is less sure, the app shows its three likeliest signs as “Did you mean…?”; `tune:model` reports how often the right one is among them.
+- **Measuring.** `--evaluate` measures the pack's own settings instead of choosing new ones (use it on `--split test`); `--details` writes each recording's result. To see a slower phone's view, analyse the test videos with the lighter hand model that such phones switch to (`npm run export:landmarks -- --hand-model lite …`) and measure on that file with `--split all`.
+- **The shipped model.** `--train-all` trains on every recording (no held-out data) with the held-out runs' settings, which is what the accuracy figures describe. Its calibration is never claimed.
+- **Older packs.** Version-1 packs (one network reading the last 32 frames, `scripts/train_from_landmarks.py`) still load.
 
 ## The included pack
 
-`mobile/assets/signpacks/include.signpack` (1.9 MB) is a model for all 262 signs of [INCLUDE](https://zenodo.org/records/4010759) (AI4Bharat / IIT Madras, ACM Multimedia 2020; CC BY 4.0; signed by Deaf students of St. Louis School for the Deaf, Chennai). It holds only model weights, labels and the source's name, licence and changes; no video and no landmark recordings.
+`mobile/assets/signpacks/include.signpack` (6.6 MB) is a whole-sign model (three networks: two GRUs and a transformer) for all 262 signs of [INCLUDE](https://zenodo.org/records/4010759) (AI4Bharat / IIT Madras, ACM Multimedia 2020; CC BY 4.0; signed by Deaf students of St. Louis School for the Deaf, Chennai). It holds only model weights, labels and the source's name, licence and changes; no video and no landmark recordings.
 
-How it was made: all 4,276 INCLUDE videos were analysed with `npm run export:landmarks` (1280 px wide), grouped by recording session (three takes each). Sign names were tidied for display only ("Ex. Monsoon" → "Monsoon", "big large" → "Big / large", capital first letter). For each sign the last session was held out for testing and the one before for validation; `train_from_landmarks.py --positives 10` trained on the rest, `tune:model` chose when to show a sign on the validation videos, and the shipped model was retrained on every recording (`--train-all`).
+How it was made: all 4,276 INCLUDE videos were analysed with `npm run export:landmarks` (1280 px wide), grouped by recording session (three takes each). Sign names were tidied for display only ("Ex. Monsoon" → "Monsoon", "big large" → "Big / large", capital first letter). For each sign the last session was held out for testing and the one before for validation. Run A (`train_segments.py`) trained on the rest; its temperature was fitted and `tune:model` chose when to show a sign on the validation videos (confidence 0.8, no margin). Run B also trained on the validation videos and was measured on the test ones with run A's settings. The shipped model was trained on every recording with the same settings (`--train-all`).
 
-| Test (held-out sessions) | Result |
+| Test (730 held-out videos, run B) | Result |
 | --- | --- |
-| Windows, model alone | 63% right sign, 86% in the top 5; 77% of rest windows "none of these" |
-| Live, `npm run eval:signpack` (730 videos played into the app's session, tuned settings) | 32% right, 4% wrong, 64% "not sure" |
-| Signs | 84 right on at least two thirds of their test videos, 36 sometimes, 140 not yet, 2 not tested |
+| Model alone, one prediction per video | 83% right sign, 93% in the top 3, 96% in the top 5 (run A, without the validation videos: 78%, 90%, 92%) |
+| Live, `npm run tune:model -- --evaluate --split test` (played into the app's session with rest before and after) | 64% right on the first try, 5% wrong, 31% "not sure" |
+| Right sign on screen, shown or offered for one tap (“Did you mean…?”, “Not right?”) | 92% |
+| Slow phones (lite hand model), one test video per sign | 64% right on the first try, 5% wrong, right sign on screen 92% (the same 260 videos with the full model: 68%, 4%, 94%) |
+| Signs | 176 right on at least two thirds of their test videos, 30 sometimes, 45 never shown on their own but offered for one tap, 9 not yet, 2 not tested |
 
-Every sign and its result: [`include-signs.md`](include-signs.md). Limits: recording sessions may share signers, so this overstates accuracy for new signers; calibration is not verified (ECE 0.19), so the app shows no confidence level with the result. It has not been tried by users yet.
+Every sign and its result: [`include-signs.md`](include-signs.md). Limits: recording sessions may share signers and all signers come from one school, so this overstates accuracy for new signers; calibration is not verified (ECE 0.06 on the test videos, but not checked on other signers), so the app shows no confidence level with the result. It has not been tried by users yet. The previous model (one network reading the last 2 seconds, 32% right live) is replaced.
 
 ## Motion pack for Text → ISL
 

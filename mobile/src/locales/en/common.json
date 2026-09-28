@@ -168,12 +168,20 @@
       "unknown_sign": "This sign may not be in the app's vocabulary yet.",
       "unstable": "Hold each sign clearly."
     },
+    "suggestions": {
+      "title": "Did you mean…?",
+      "choose": "Choose {{text}}",
+      "notRight": "Not right?",
+      "instead": "Choose {{text}} instead"
+    },
     "result": {
       "label": "Last recognised",
       "empty": "Recognised signs will appear here.",
+      "segmentHint": "Make one sign at a time, then lower your hands.",
       "high": "High confidence",
       "medium": "Medium confidence",
-      "emergency": "Emergency-related sign. If someone needs urgent help, call 112."
+      "emergency": "Emergency-related sign. If someone needs urgent help, call 112.",
+      "chosen": "Chosen from the suggestions"
     },
     "controls": {
       "pause": "Pause",

@@ -33,6 +33,7 @@ const { values: args } = parseArgs({
     browser: { type: 'string' },
     ffmpeg: { type: 'string' },
     jobs: { type: 'string', default: '2' },
+    'hand-model': { type: 'string', default: 'full' },
   },
 });
 if (!args.manifest || !args.out) fail('--manifest and --out are required');
@@ -59,6 +60,7 @@ try {
     browser: args.browser ?? process.env.SIGNPACK_BROWSER,
     ffmpeg: args.ffmpeg ?? process.env.FFMPEG ?? 'ffmpeg',
     jobs: Math.max(1, Math.min(8, Number(args.jobs) || 1)),
+    handModel: args['hand-model'],
   });
 } catch (error) {
   fail(error instanceof RunnerError ? error.message : String(error));

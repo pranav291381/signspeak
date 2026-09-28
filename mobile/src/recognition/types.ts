@@ -71,6 +71,8 @@ export interface RecognizerInfo {
   windowMs?: number;
   /** When to show a sign, tuned for this recognizer; the app's defaults otherwise. */
   stabilizer?: ModelStabilizerSettings | null;
+  /** `segment`: recognizes whole signs once they are finished (see RecognitionSession). */
+  mode?: 'window' | 'segment';
 }
 
 export interface SignRecognizer {
@@ -94,6 +96,10 @@ export type UncertainReason = 'low_confidence' | 'ambiguous' | 'unknown_sign' | 
 
 export interface Recognition {
   label: string;
+  /** Chosen by the user from the suggestions, rather than recognized on its own. */
+  chosen?: boolean;
+  /** Chosen to replace the sign shown just before (it was not the one made). */
+  corrects?: boolean;
   /** Null when the recognizer is not calibrated: never show a number or band then. */
   band: ConfidenceBand | null;
   timestampMs: number;
@@ -113,4 +119,9 @@ export interface StabilizerStep {
   status: RecognitionStatus;
   reason?: UncertainReason;
   recognition?: Recognition;
+  /**
+   * Segment mode, to choose from: when not sure, the likeliest signs; after a
+   * sign is shown, the next likeliest, in case it was not the one made.
+   */
+  suggestions?: string[];
 }

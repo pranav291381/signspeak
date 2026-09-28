@@ -3,6 +3,11 @@ import { decodeTensor, ModelPackError, parseModelPack } from '../modelPack';
 import { softmax, TemporalModel } from '../temporalModel';
 
 const clone = () => JSON.parse(JSON.stringify(fixture.pack));
+/** The window pack's one network. */
+const network = () => {
+  const pack = parseModelPack(clone());
+  return { config: pack.config!, weights: pack.weights! };
+};
 
 function inputFrames(): Float32Array[] {
   const flat = decodeTensor(fixture.input);
@@ -12,13 +17,13 @@ function inputFrames(): Float32Array[] {
 
 describe('TemporalModel', () => {
   it('gives the same logits as PyTorch', () => {
-    const model = new TemporalModel(parseModelPack(clone()));
+    const model = new TemporalModel(network());
     const logits = model.forward(inputFrames());
     fixture.logits.forEach((expected, i) => expect(logits[i]).toBeCloseTo(expected, 4));
   });
 
   it('gives finite scores when nobody is in view', () => {
-    const model = new TemporalModel(parseModelPack(clone()));
+    const model = new TemporalModel(network());
     const logits = model.forward(Array.from({ length: 8 }, () => new Float32Array(156)));
     expect(Array.from(logits).every(Number.isFinite)).toBe(true);
   });

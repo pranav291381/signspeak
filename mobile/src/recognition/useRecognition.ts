@@ -33,6 +33,8 @@ export interface RecognitionController {
   clear(): void;
   /** Recreate the session, e.g. after a model error. */
   restart(): void;
+  /** Take one of the snapshot's suggestions as the sign that was made. */
+  choose(label: string): void;
 }
 
 export function useRecognition({
@@ -65,7 +67,8 @@ export function useRecognition({
       onSnapshot: setSnapshot,
       onRecognition: (recognition) => {
         if (!isDisplayableRef.current(recognition.label)) return;
-        setResults((prev) => [...prev, recognition].slice(-MAX_RESULTS));
+        // A correction replaces the sign shown just before it.
+        setResults((prev) => [...(recognition.corrects ? prev.slice(0, -1) : prev), recognition].slice(-MAX_RESULTS));
         onRecognitionRef.current?.(recognition);
       },
     });
@@ -92,5 +95,7 @@ export function useRecognition({
 
   const restart = useCallback(() => setAttempt((n) => n + 1), []);
 
-  return { snapshot, results, clear, restart };
+  const choose = useCallback((label: string) => sessionRef.current?.choose(label), []);
+
+  return { snapshot, results, clear, restart, choose };
 }

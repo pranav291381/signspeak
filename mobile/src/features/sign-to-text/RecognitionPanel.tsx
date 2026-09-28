@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
-import { AppText, FadeIn, Icon, LiveDot, Notice, type IconName } from '@/components';
+import { AppText, FadeIn, Icon, LiveDot, Notice, PressableScale, type IconName } from '@/components';
 import type { SessionSnapshot } from '@/recognition/session';
 import type { Recognition } from '@/recognition/types';
 import { useTheme } from '@/theme';
@@ -42,10 +42,13 @@ interface Props {
   paused: boolean;
   latest: { recognition: Recognition; text: string; emergency: boolean } | null;
   transcript: TranscriptWord[];
+  /** When not sure: the likeliest signs, to pick the one that was made. */
+  suggestions?: { label: string; text: string }[];
+  onChoose?: (label: string) => void;
 }
 
 /** Live status, the most recent trustworthy result, and everything recognized so far. */
-export function RecognitionPanel({ snapshot, paused, latest, transcript }: Props) {
+export function RecognitionPanel({ snapshot, paused, latest, transcript, suggestions = [], onChoose }: Props) {
   const { t } = useTranslation();
   const { colors, radii, spacing } = useTheme();
   const key = statusKey(snapshot, paused);
@@ -82,6 +85,32 @@ export function RecognitionPanel({ snapshot, paused, latest, transcript }: Props
         </FadeIn>
       </View>
 
+      {uncertain && suggestions.length > 0 && onChoose ? (
+        <FadeIn trigger={suggestions.map((s) => s.label).join()} distance={6} duration={220}>
+          <View testID="recognition-suggestions" style={{ gap: spacing.sm }}>
+            <AppText variant="overline" color="textSecondary" accessibilityRole="header">
+              {t('signToText.suggestions.title')}
+            </AppText>
+            <View style={[styles.words, { gap: spacing.sm }]}>
+              {suggestions.map((s) => (
+                <PressableScale
+                  key={s.label}
+                  testID={`suggestion-${s.label}`}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('signToText.suggestions.choose', { text: s.text })}
+                  onPress={() => onChoose(s.label)}
+                  style={[styles.suggestion, { borderRadius: radii.pill, backgroundColor: colors.primaryContainer }]}
+                >
+                  <AppText variant="bodyStrong" style={{ color: colors.onPrimaryContainer }}>
+                    {s.text}
+                  </AppText>
+                </PressableScale>
+              ))}
+            </View>
+          </View>
+        </FadeIn>
+      ) : null}
+
       <View testID="recognition-result" style={[styles.result, { gap: spacing.xs }]}>
         {latest ? (
           <>
@@ -94,12 +123,35 @@ export function RecognitionPanel({ snapshot, paused, latest, transcript }: Props
                 {latest.text}
               </AppText>
             </FadeIn>
-            {latest.recognition.band ? (
+            {latest.recognition.chosen ? (
+              <AppText variant="caption" color="textSecondary" testID="recognition-chosen">
+                {t('signToText.result.chosen')}
+              </AppText>
+            ) : latest.recognition.band ? (
               <AppText variant="caption" color="textSecondary">
                 {t(`signToText.result.${latest.recognition.band}`)}
               </AppText>
             ) : null}
             {latest.emergency ? <Notice tone="danger" message={t('signToText.result.emergency')} /> : null}
+            {key === 'recognized' && suggestions.length > 0 && onChoose ? (
+              <View testID="recognition-alternatives" style={[styles.status, styles.words, { gap: spacing.xs, marginTop: spacing.xs }]}>
+                <AppText variant="caption" color="textSecondary">
+                  {t('signToText.suggestions.notRight')}
+                </AppText>
+                {suggestions.map((s) => (
+                  <PressableScale
+                    key={s.label}
+                    testID={`alternative-${s.label}`}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('signToText.suggestions.instead', { text: s.text })}
+                    onPress={() => onChoose(s.label)}
+                    style={[styles.alternative, { borderRadius: radii.pill, borderColor: colors.outline }]}
+                  >
+                    <AppText variant="label">{s.text}</AppText>
+                  </PressableScale>
+                ))}
+              </View>
+            ) : null}
           </>
         ) : (
           <View style={[styles.empty, { gap: spacing.sm }]}>
@@ -109,6 +161,11 @@ export function RecognitionPanel({ snapshot, paused, latest, transcript }: Props
             <AppText variant="body" color="textSecondary" style={styles.center}>
               {t('signToText.result.empty')}
             </AppText>
+            {snapshot?.recognizer.mode === 'segment' ? (
+              <AppText variant="caption" color="textSecondary" style={styles.center} testID="segment-hint">
+                {t('signToText.result.segmentHint')}
+              </AppText>
+            ) : null}
           </View>
         )}
       </View>
@@ -153,4 +210,6 @@ const styles = StyleSheet.create({
   emptyIcon: { width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   words: { flexDirection: 'row', flexWrap: 'wrap' },
   word: { paddingHorizontal: 14, paddingVertical: 7 },
+  suggestion: { paddingHorizontal: 18, minHeight: 48, justifyContent: 'center' },
+  alternative: { paddingHorizontal: 14, minHeight: 44, justifyContent: 'center', borderWidth: 1 },
 });

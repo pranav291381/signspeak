@@ -13,7 +13,7 @@ import { ModelSignRecognizer } from '@/model/ModelSignRecognizer';
 import { parseModelPack, type ModelStabilizerSettings } from '@/model/modelPack';
 import { decodeSpecFrames } from '@/personal/codec';
 import { SAMPLE_FPS } from '@/personal/sample';
-import { isEmergencyLabel, stabilizerConfigFor } from '@/recognition/engine';
+import { isEmergencyLabel, modelSessionConfig, stabilizerConfigFor } from '@/recognition/engine';
 import { RecognitionSession } from '@/recognition/session';
 import { PredictionStabilizer } from '@/recognition/stabilizer';
 import type { FrameSource, LandmarkFrame, RawPrediction, SignRecognizer } from '@/recognition/types';
@@ -28,6 +28,11 @@ export interface Outcome extends ModelStabilizerSettings {
   correct: number;
   wrong: number;
   notSure: number;
+  /**
+   * Right sign shown, or (segment mode) offered for one tap: among the
+   * suggestions when not sure, or the alternatives under a wrong sign.
+   */
+  correctOrSuggested: number;
 }
 
 const REST_BEFORE_FRAMES = 2 * SAMPLE_FPS;
@@ -78,17 +83,23 @@ async function play(
   recognizer: SignRecognizer,
   settings: ModelStabilizerSettings | null,
   nextTask: NextTask,
-): Promise<string[]> {
+): Promise<{ shown: string[]; suggested: string[] }> {
   const source = new ManualSource();
   const info = { ...recognizer.info, stabilizer: settings };
   const session = new RecognitionSession({
     source,
     recognizer,
     stabilizer: new PredictionStabilizer({ isEmergency: isEmergencyLabel, calibrated: info.calibrated, config: stabilizerConfigFor(info) }),
-    config: { stride: 2, requireHands: true },
+    config: modelSessionConfig(info),
   });
   const shown: string[] = [];
-  session.subscribe({ onRecognition: (r) => shown.push(r.label) });
+  let suggested: string[] = [];
+  session.subscribe({
+    onRecognition: (r) => shown.push(r.label),
+    onSnapshot: (s) => {
+      if (s.suggestions?.length) suggested = s.suggestions;
+    },
+  });
   await session.start();
   const held = (count: number, frame: Float32Array | null | undefined) => Array.from({ length: count }, () => frame ?? null);
   let t = 0;
@@ -98,11 +109,17 @@ async function play(
     await nextTask();
   }
   session.stop();
-  return shown;
+  return { shown, suggested };
 }
 
-export function grid(): ModelStabilizerSettings[] {
+export function grid(mode: 'window' | 'segment' = 'window'): ModelStabilizerSettings[] {
   const out: ModelStabilizerSettings[] = [];
+  if (mode === 'segment') {
+    // One prediction per sign: only the confidence and the lead over the runner-up matter.
+    for (const minConfidence of [0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9])
+      for (const minMargin of [0, 0.05, 0.1, 0.15, 0.2, 0.3]) if (minMargin < minConfidence) out.push({ minConfidence, minMargin, minStablePredictions: 1 });
+    return out;
+  }
   for (const minConfidence of [0.5, 0.6, 0.7, 0.8, 0.85, 0.9, 0.95])
     for (const minMargin of [0.15, 0.3, 0.5])
       for (const minStablePredictions of [3, 4, 5, 6, 8]) if (minMargin < minConfidence) out.push({ minConfidence, minMargin, minStablePredictions });
@@ -116,6 +133,14 @@ export function choose(outcomes: readonly Outcome[], maxWrong: number): Outcome 
   return allowed[0] ?? null;
 }
 
+/** What happened to one recording under a setting. */
+export interface RecordingOutcome {
+  text: string;
+  verdict: 'correct' | 'wrong' | 'not sure';
+  /** Not shown, but offered for one tap (suggestions, or alternatives under a wrong sign). */
+  suggested: boolean;
+}
+
 export interface TuneResult {
   /** Held-out recordings used, and how many signs they show. */
   recordings: number;
@@ -124,6 +149,8 @@ export interface TuneResult {
   /** The app's default settings, for comparison. */
   defaults: Outcome | undefined;
   chosen: Outcome | null;
+  /** Per recording, under the chosen setting. */
+  details: RecordingOutcome[];
 }
 
 export async function tune(options: {
@@ -133,6 +160,8 @@ export async function tune(options: {
   maxWrong: number;
   nextTask: NextTask;
   progress?: (done: number, total: number) => void;
+  /** Evaluate this setting only (e.g. the pack's own, chosen on other recordings) instead of choosing one. */
+  fixed?: ModelStabilizerSettings;
 }): Promise<TuneResult> {
   const pack = parseModelPack(options.pack);
   const split = splitOf(options.rows);
@@ -164,9 +193,12 @@ export async function tune(options: {
   }
 
   const outcomes: Outcome[] = [];
-  for (const settings of grid()) {
+  const details = new Map<Outcome, RecordingOutcome[]>();
+  for (const settings of options.fixed ? [options.fixed] : grid(pack.mode)) {
     let correct = 0;
     let wrong = 0;
+    let suggestedRight = 0;
+    const perRecording: RecordingOutcome[] = [];
     for (const [i, frames] of recordings.entries()) {
       const log = logs[i]!;
       let k = 0;
@@ -176,19 +208,34 @@ export async function tune(options: {
         dispose: () => undefined,
         predict: async () => log[Math.min(k++, log.length - 1)]!,
       };
-      const shown = await play(frames, replay, settings, options.nextTask);
+      const { shown, suggested } = await play(frames, replay, settings, options.nextTask);
+      const label = `${pack.id}:${slug(cases[i]!.text)}`;
       // As scripts/eval-sign-pack.mjs: the first sign shown decides.
-      if (shown[0] === `${pack.id}:${slug(cases[i]!.text)}`) correct += 1;
-      else if (shown.length > 0) wrong += 1;
+      const verdict = shown[0] === label ? 'correct' : shown.length > 0 ? 'wrong' : 'not sure';
+      const offered = verdict !== 'correct' && suggested.includes(label);
+      if (verdict === 'correct') correct += 1;
+      else if (verdict === 'wrong') wrong += 1;
+      if (offered) suggestedRight += 1;
+      perRecording.push({ text: cases[i]!.text, verdict, suggested: offered });
     }
     const n = recordings.length;
-    outcomes.push({ ...settings, correct: correct / n, wrong: wrong / n, notSure: (n - correct - wrong) / n });
+    const outcome: Outcome = {
+      ...settings,
+      correct: correct / n,
+      wrong: wrong / n,
+      notSure: (n - correct - wrong) / n,
+      correctOrSuggested: (correct + suggestedRight) / n,
+    };
+    outcomes.push(outcome);
+    details.set(outcome, perRecording);
   }
+  const chosen = options.fixed ? outcomes[0]! : choose(outcomes, options.maxWrong);
   return {
     recordings: cases.length,
     signs: new Set(cases.map((c) => c.text)).size,
     outcomes,
     defaults: outcomes.find((o) => o.minConfidence === 0.7 && o.minMargin === 0.15 && o.minStablePredictions === 4),
-    chosen: choose(outcomes, options.maxWrong),
+    chosen,
+    details: chosen ? details.get(chosen)! : [],
   };
 }

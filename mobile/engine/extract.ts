@@ -22,6 +22,7 @@ import type { FrameSource, LandmarkFrame, SignRecognizer } from '../src/recognit
 import { packReferences } from '../src/signpack/parse';
 import type { SignPack } from '../src/signpack/types';
 import { frameValues, wasmFiles, type HandsResultLike } from './core';
+import { liteHandBundle } from './liteHand';
 
 export interface ExtractResult {
   ok: boolean;
@@ -87,9 +88,16 @@ async function init(): Promise<void> {
   const simd = await FilesetResolver.isSimdSupported();
   const { loader, binary } = wasmFiles(simd);
   const fileset = { wasmLoaderPath: base + 'wasm/' + loader, wasmBinaryPath: base + 'wasm/' + binary };
+  // `?hand=lite`: the lighter hand model that slow phones switch to (engine/core.ts TrackingTuner),
+  // to measure recognition as those phones see it.
+  const lite = new URLSearchParams(location.search).get('hand') === 'lite';
+  const fetchBytes = async (file: string) => new Uint8Array(await (await fetch(base + file)).arrayBuffer());
+  const handModel = lite
+    ? { modelAssetBuffer: liteHandBundle(await fetchBytes('hand_landmarker.task'), await fetchBytes('hand_landmark_lite.tflite')) }
+    : { modelAssetPath: base + 'hand_landmarker.task' };
   // CPU: deterministic, and never slower than a software GPU.
   hands = await HandLandmarker.createFromOptions(fileset, {
-    baseOptions: { modelAssetPath: base + 'hand_landmarker.task', delegate: 'CPU' },
+    baseOptions: { ...handModel, delegate: 'CPU' },
     runningMode: 'VIDEO',
     numHands: 2,
     minHandDetectionConfidence: 0.5,

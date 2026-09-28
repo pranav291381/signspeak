@@ -1,5 +1,5 @@
 import { signing } from '@/recognition/features';
-import { COORDS, PRESENCE_START } from '@/recognition/featureSpec';
+import { COORDS, FRAME_DIM, PRESENCE_START } from '@/recognition/featureSpec';
 import {
   UNKNOWN_LABEL,
   type LandmarkFrame,
@@ -10,7 +10,8 @@ import {
 
 import type { ModelPack } from './modelPack';
 import type { RemoteModel } from './remote';
-import { softmax, TemporalModel } from './temporalModel';
+import { SignModel } from './signModel';
+import { softmax } from './temporalModel';
 
 /** Frames with a hand or wrist raised needed in a window before the model is asked. */
 const MIN_RAISED_FRAMES = 3;
@@ -34,7 +35,7 @@ export function withoutDepth(values: ArrayLike<number>, dim: number): Float32Arr
  */
 export class ModelSignRecognizer implements SignRecognizer {
   readonly info: RecognizerInfo;
-  private model: TemporalModel | null = null;
+  private model: SignModel | null = null;
   private loaded = false;
   private readonly labels: string[];
 
@@ -52,20 +53,22 @@ export class ModelSignRecognizer implements SignRecognizer {
       featureSpecVersion: pack.featureSpecVersion,
       windowSize: pack.windowFrames,
       stabilizer: pack.stabilizer,
+      mode: pack.mode,
     };
   }
 
   async load(): Promise<void> {
     if (this.remote) this.remote.load(this.pack);
-    else this.model = new TemporalModel(this.pack);
+    else this.model = new SignModel(this.pack);
     this.loaded = true;
   }
 
   async predict(window: readonly LandmarkFrame[]): Promise<RawPrediction> {
     const started = now();
     if (!this.loaded) throw new Error('Model not loaded');
-    const dim = this.pack.config.inputDim;
-    const frames = window.slice(-this.pack.windowFrames).map((f) => (f.values ? withoutDepth(f.values, dim) : new Float32Array(dim)));
+    // Window packs read the last frames; segment packs a whole sign, however long.
+    const recent = this.pack.mode === 'segment' ? window : window.slice(-this.pack.windowFrames);
+    const frames = recent.map((f) => (f.values ? withoutDepth(f.values, FRAME_DIM) : new Float32Array(FRAME_DIM)));
     if (frames.filter((f) => signing(f)).length < MIN_RAISED_FRAMES) {
       // Hands down or out of view: nothing is being signed.
       return { scores: [{ label: UNKNOWN_LABEL, score: 1 }], latencyMs: now() - started, idle: true };
@@ -83,7 +86,7 @@ export class ModelSignRecognizer implements SignRecognizer {
     this.loaded = false;
   }
 
-  private local(): TemporalModel {
-    return (this.model ??= new TemporalModel(this.pack));
+  private local(): SignModel {
+    return (this.model ??= new SignModel(this.pack));
   }
 }

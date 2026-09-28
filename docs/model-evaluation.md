@@ -1,6 +1,6 @@
 # Model evaluation
 
-Status: **no trained model exists, so there are no results to report.** This document defines how every model must be evaluated before it can ship, and what must be published with it.
+Status: one trained model ships, for the 262 signs of the INCLUDE dataset (results in §8). It was tested on held-out recording sessions of INCLUDE's signers, not yet on new signers or with users, so it does **not** meet the proposed release criteria in §4. This document defines how every model must be evaluated before it can ship, and what must be published with it.
 
 ## 1. What we evaluate on
 
@@ -69,8 +69,18 @@ Measure on at least one low-end and one mid-range Android phone:
 
 ## 8. Current results
 
-| Model | Dataset | Test signers | Macro F1 | Wrong sign shown @0.7 | Calibrated |
+INCLUDE (262 signs, 4,276 videos, CC BY 4.0). For each sign the last recording session (730 videos) is the test set and the one before the validation set. INCLUDE does not say who signed each video, so test sessions may share signers with training ones; all signers are Deaf students of one school. Settings (temperature, when a sign is shown) were chosen on validation with a model trained without it (run A); the model measured is run B, which was also trained on the validation videos. The model in the app is trained on every recording with the same settings. Commands: [`sign-packs.md`](sign-packs.md#trained-models).
+
+| Model | Model alone: top 1 / top 3 | Live: right on first try / wrong / "not sure" | Live: right sign on screen (shown or one tap away) | ECE | Calibrated |
 | --- | --- | --- | --- | --- | --- |
-| *(none)* | *(no dataset yet)* | — | — | — | — |
+| Whole-sign, 3 networks (run B, shipped as trained on everything) | 83.3% / 92.9% | 64.0% / 4.8% / 31.2% | 92.3% | 0.06 | no |
+| Same, run A (without the validation videos) | 77.7% / 89.6% | 55.1% / 5.1% / 39.9% | 87.1%* | 0.07 | no |
+| Window model (previous, replaced) | 63% of windows | 32% / 4% / 64% | — | 0.19 | no |
+
+Slow phones use MediaPipe's lite hand model. On one test video per sign (260), analysed with each: full 68.1% right on the first try, 4.2% wrong, right sign on screen 93.5%; lite 63.5%, 5.0%, 92.3%.
+
+\* Measured when the app still hid suggestions below 3% probability; run B with that rule: 90.1%. The rule was dropped after it cost 1.4 points on validation.
+
+"Live" means each test video was played frame by frame, with rest before and after, through the app's own `RecognitionSession` (`npm run tune:model -- --evaluate --split test`). Per sign: [`include-signs.md`](include-signs.md). Against §4 the model falls short on unseen signers (not measured), the wrong-sign rate (4.8% at the app's setting, target 2%) and per-sign recall (84 of the 260 tested signs are right on fewer than two thirds of their test videos).
 
 The automated tests train on **synthetic** geometric patterns only to prove that the pipeline works end to end. Those numbers say nothing about ISL and must never be reported as model performance.

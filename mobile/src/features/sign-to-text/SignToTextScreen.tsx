@@ -91,7 +91,7 @@ export function SignToTextScreen({ sessionFactory }: Props) {
     [describe, hapticsEnabled, autoSpeak, demoMode, speak, addToHistory, t],
   );
 
-  const { snapshot, results, clear, restart } = useRecognition({
+  const { snapshot, results, clear, restart, choose } = useRecognition({
     demoMode,
     vocabulary: vocabulary?.references ?? NO_REFERENCES,
     model: vocabulary?.model ?? null,
@@ -114,6 +114,16 @@ export function SignToTextScreen({ sessionFactory }: Props) {
   const latest = last ? { recognition: last.recognition, text: last.described.text, emergency: last.described.emergency } : null;
   const spokenText = transcript.map((w) => w.text).join(' ');
   const spokenLanguage = last?.described.language ?? outputLanguage;
+
+  // Signs to choose from when the app is not sure (only ones it can show as text).
+  const suggestions = useMemo(
+    () =>
+      (snapshot?.suggestions ?? []).flatMap((label) => {
+        const described = describe(label);
+        return described ? [{ label, text: described.text }] : [];
+      }),
+    [snapshot?.suggestions, describe],
+  );
 
   const vocabularyLoading = !demoMode && (vocabularyState.status === 'idle' || vocabularyState.status === 'loading');
   const vocabularyMissing = !demoMode && vocabularyState.status === 'empty';
@@ -218,7 +228,14 @@ export function SignToTextScreen({ sessionFactory }: Props) {
         </Card>
       ) : (
         <Card style={{ gap: spacing.lg }}>
-          <RecognitionPanel snapshot={snapshot} paused={userPaused} latest={latest} transcript={transcript} />
+          <RecognitionPanel
+            snapshot={snapshot}
+            paused={userPaused}
+            latest={latest}
+            transcript={transcript}
+            suggestions={suggestions}
+            onChoose={choose}
+          />
           <View style={[styles.row, { gap: spacing.sm }]}>
             <View style={styles.flex}>
               <SpeakButton text={spokenText} language={spokenLanguage} speech={speech} testID="speak-transcript" />

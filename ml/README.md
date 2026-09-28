@@ -55,9 +55,14 @@ signspeak-ml train --root /tmp/syn --out /tmp/syn-pack --epochs 5
 | `data/splits.py` | — | Signer-level splits and leakage checks |
 | `data/dataset.py` | `DatasetLoader` | Annotations + features → train/val/test datasets |
 | `models/temporal.py` | — | `TemporalSignClassifier` (temporal CNN + BiGRU + attention pooling, ~0.5 M params) |
+| `models/segment_transformer.py` | — | `SegmentTransformer` (small pre-norm transformer over a whole sign; segment packs) |
 | `training/trainer.py` | `ModelTrainer` | Seeded training, class weighting, early stopping on validation signers |
 | `evaluation/` | `Evaluator` | Accuracy, P/R/F1, confusion, per-sign, per-signer, selective ("wrong sign shown"), calibration, latency |
 | `inference/` | `InferenceEngine`, `SignRecognizer` | Checksummed model packs; ranked label probabilities for a window |
+
+## Training the app's model from landmark recordings
+
+`scripts/train_segments.py` trains the app's whole-sign model (segment pack, several averaged networks) from recordings exported with the app's own tracking; `scripts/train_from_landmarks.py` trains the older window model. Steps and options: [`docs/sign-packs.md`](../docs/sign-packs.md#trained-models). `scripts/make_segment_fixture.py` regenerates the parity fixture that pins the app's TypeScript to these models.
 
 ## Updating the feature contract
 

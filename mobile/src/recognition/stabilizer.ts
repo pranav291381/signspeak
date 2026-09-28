@@ -16,6 +16,9 @@ export interface StabilizerOptions {
   calibrated?: boolean;
 }
 
+/** Segment mode: signs offered when not sure (see `judge`). */
+export const MAX_SUGGESTIONS = 3;
+
 function topLabel(scores: readonly ScoredLabel[]): ScoredLabel | undefined {
   let best: ScoredLabel | undefined;
   for (const s of scores) {
@@ -156,6 +159,31 @@ export class PredictionStabilizer {
     this.predictionsWithoutResult = 0;
     this.recentReasons = [];
     return { status: 'recognized', recognition };
+  }
+
+  /**
+   * Segment mode: one prediction for a whole, finished sign. It is shown when
+   * its score reaches the confidence threshold (stricter for emergency signs)
+   * and leads the runner-up by the margin; otherwise the app says it is not sure.
+   */
+  judge(prediction: RawPrediction, timestampMs: number): StabilizerStep {
+    if (prediction.idle) return { status: 'analyzing' };
+    const ranked = [...prediction.scores].sort((a, b) => b.score - a.score);
+    const [first, second] = ranked;
+    const suggestions = ranked
+      .filter((s) => s.label !== UNKNOWN_LABEL && s.score > 0)
+      .slice(0, MAX_SUGGESTIONS)
+      .map((s) => s.label);
+    if (!first || first.label === UNKNOWN_LABEL) return { status: 'uncertain', reason: 'unknown_sign', suggestions };
+    const minConfidence = this.isEmergency(first.label) ? this.config.emergencyMinConfidence : this.config.minConfidence;
+    if (first.score < minConfidence) return { status: 'uncertain', reason: 'low_confidence', suggestions };
+    if (first.score - (second?.score ?? 0) < this.config.minMargin) return { status: 'uncertain', reason: 'ambiguous', suggestions };
+    const band = this.calibrated ? (first.score >= this.config.highConfidenceThreshold ? 'high' : 'medium') : null;
+    return {
+      status: 'recognized',
+      recognition: { label: first.label, band, timestampMs },
+      suggestions: suggestions.filter((label) => label !== first.label).slice(0, MAX_SUGGESTIONS - 1),
+    };
   }
 
   private mayEmit(label: string, timestampMs: number): boolean {

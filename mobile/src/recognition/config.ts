@@ -49,11 +49,18 @@ export interface SessionConfig {
    * a hand, report `no_hands` instead of predicting.
    */
   requireHands: boolean;
+  /**
+   * `window`: predict on a sliding window and show a sign once predictions
+   * agree (see PredictionStabilizer). `segment`: wait until a sign is finished
+   * (the hands come down) and recognize it whole, once (see SignSegmenter).
+   */
+  mode: 'window' | 'segment';
 }
 
 export const DEFAULT_SESSION_CONFIG: SessionConfig = {
   stride: 4,
   requireHands: false,
+  mode: 'window',
 };
 
 export function validateStabilizerConfig(config: StabilizerConfig): void {

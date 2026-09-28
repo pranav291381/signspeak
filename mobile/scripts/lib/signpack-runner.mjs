@@ -80,7 +80,12 @@ async function launchBrowser(choice) {
 /**
  * @param {{ root: string, cacheDir: string, browser?: string, ffmpeg?: string, delayMs?: number, jobs?: number }} options
  */
-export async function createRunner({ root, cacheDir, browser: browserChoice, ffmpeg = 'ffmpeg', delayMs = 500, jobs = 2 }) {
+/**
+ * `handModel: 'lite'` tracks hands with the lighter model that slow phones switch to,
+ * to measure recognition as those phones see it (cached separately).
+ */
+export async function createRunner({ root, cacheDir, browser: browserChoice, ffmpeg = 'ffmpeg', delayMs = 500, jobs = 2, handModel = 'full' }) {
+  if (handModel !== 'full' && handModel !== 'lite') throw new RunnerError(`unknown hand model ${handModel} (full or lite)`);
   const mediapipeDir = join(root, 'public/mediapipe');
   const mediapipeManifest = JSON.parse(readFileSync(join(root, 'src/engine/mediapipeAssets.json'), 'utf8'));
   for (const { file } of Object.values(mediapipeManifest.models)) {
@@ -100,7 +105,12 @@ export async function createRunner({ root, cacheDir, browser: browserChoice, ffm
   const pageScript = bundle.outputFiles[0].text;
   const page = `<!doctype html><html><head><meta charset="utf-8"><title>SignSpeak sign pack builder</title></head><body><script>${pageScript}</script></body></html>`;
   // Cached results are reused only if they were made by this exact extractor and these models.
-  const extractorVersion = createHash('sha1').update(pageScript).update(JSON.stringify(mediapipeManifest.models)).digest('hex').slice(0, 12);
+  const extractorVersion = createHash('sha1')
+    .update(pageScript)
+    .update(JSON.stringify(mediapipeManifest.models))
+    .update(handModel)
+    .digest('hex')
+    .slice(0, 12);
 
   const videoFiles = new Map();
   const server = createServer((request, response) => {
@@ -186,7 +196,7 @@ export async function createRunner({ root, cacheDir, browser: browserChoice, ffm
   }
 
   async function extractVideo(pageHandle, entry, raw) {
-    const cached = join(resultDir, `${entry.key}${raw ? '.raw' : ''}.json`);
+    const cached = join(resultDir, `${entry.key}${raw ? '.raw' : ''}${handModel === 'lite' ? '.lite' : ''}.json`);
     if (existsSync(cached)) {
       const result = JSON.parse(readFileSync(cached, 'utf8'));
       if (result.extractorVersion === extractorVersion) return { ...result, cached: true };
@@ -215,7 +225,7 @@ export async function createRunner({ root, cacheDir, browser: browserChoice, ffm
   async function openPage() {
     const pageHandle = await browser.newPage();
     pageHandle.on('pageerror', (error) => console.warn(`  page error: ${error.message}`));
-    await pageHandle.goto(origin);
+    await pageHandle.goto(`${origin}/?hand=${handModel}`);
     await pageHandle.evaluate(() => window.__extractReady);
     return pageHandle;
   }

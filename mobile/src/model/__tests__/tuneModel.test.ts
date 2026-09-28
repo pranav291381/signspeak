@@ -4,6 +4,14 @@ import { MOTIONS, perform } from '@/test-utils/landmarks';
 
 import { choose, grid, splitOf, tune, type Outcome, type Row } from '../../../scripts/lib/tune-model';
 
+describe('segment mode grid', () => {
+  it('varies only the confidence and the margin', () => {
+    const settings = grid('segment');
+    expect(settings.every((s) => s.minStablePredictions === 1 && s.minMargin < s.minConfidence)).toBe(true);
+    expect(new Set(settings.map((s) => s.minConfidence)).size).toBeGreaterThan(5);
+  });
+});
+
 const outcome = (minConfidence: number, correct: number, wrong: number): Outcome => ({
   minConfidence,
   minMargin: 0.15,
@@ -11,6 +19,7 @@ const outcome = (minConfidence: number, correct: number, wrong: number): Outcome
   correct,
   wrong,
   notSure: 1 - correct - wrong,
+  correctOrSuggested: correct,
 });
 
 const row = (text: string, group: string, motion = MOTIONS.wave!): Row => {
