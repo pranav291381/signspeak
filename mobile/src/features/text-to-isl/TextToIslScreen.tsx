@@ -1,9 +1,9 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { AppText, Button, Card, Notice, Screen, TextField } from '@/components';
+import { AppText, Button, Card, Notice, PressableScale, Screen, TextField } from '@/components';
 import { MAX_QUERY_LENGTH } from '@/content/matcher';
 import { SignSequencePlayer } from '@/diagram/SignSequencePlayer';
 import { useHistory } from '@/history/HistoryProvider';
@@ -98,7 +98,7 @@ export function TextToIslScreen() {
               </AppText>
               <View style={[styles.chips, { gap: spacing.xs }]}>
                 {examples.map((example) => (
-                  <Pressable
+                  <PressableScale
                     key={example}
                     accessibilityRole="button"
                     accessibilityLabel={t('textToIsl.tryExample', { text: example })}
@@ -111,7 +111,7 @@ export function TextToIslScreen() {
                     <AppText variant="label" style={{ color: colors.onPrimaryContainer }}>
                       {example}
                     </AppText>
-                  </Pressable>
+                  </PressableScale>
                 ))}
               </View>
             </View>

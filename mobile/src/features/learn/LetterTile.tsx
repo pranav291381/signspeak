@@ -1,8 +1,8 @@
 import { memo, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { AppText, Icon } from '@/components';
+import { AppText, Icon, PressableScale } from '@/components';
 import { SignDiagram } from '@/diagram/SignDiagram';
 import { sampleFrames } from '@/personal/store';
 import type { PersonalSign } from '@/personal/types';
@@ -30,7 +30,7 @@ export const LetterTile = memo(function LetterTile({ letter, sign, onPress }: Pr
   }, [sign]);
 
   return (
-    <Pressable
+    <PressableScale
       testID={`letter-${letter}`}
       accessibilityRole="button"
       accessibilityLabel={
@@ -58,7 +58,7 @@ export const LetterTile = memo(function LetterTile({ letter, sign, onPress }: Pr
       <AppText variant="heading" style={styles.letter}>
         {upper}
       </AppText>
-    </Pressable>
+    </PressableScale>
   );
 });
 

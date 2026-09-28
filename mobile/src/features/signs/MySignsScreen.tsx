@@ -1,9 +1,9 @@
 import { useRouter } from 'expo-router';
 import { memo, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { AppText, Button, Card, confirmAction, Icon, ListRow, Notice, Pill, Screen, StateView } from '@/components';
+import { AppText, Button, Card, confirmAction, Icon, ListRow, Notice, Pill, PressableScale, Screen, StateView } from '@/components';
 import { SignDiagram } from '@/diagram/SignDiagram';
 import { signText } from '@/personal/labels';
 import { usePersonalSigns } from '@/personal/PersonalSignsProvider';
@@ -94,7 +94,7 @@ const SignRow = memo(function SignRow({ sign, first, onPress }: { sign: Personal
   }, [sign]);
 
   return (
-    <Pressable
+    <PressableScale
       testID={`sign-row-${sign.id}`}
       accessibilityRole="button"
       accessibilityLabel={`${name}. ${t('signs.takes', { count: takes })}. ${ready ? t('signs.ready') : t('signs.needsMore', { count: MIN_SAMPLES_FOR_RECOGNITION - takes })}`}
@@ -124,7 +124,7 @@ const SignRow = memo(function SignRow({ sign, first, onPress }: { sign: Personal
         label={ready ? t('signs.ready') : t('signs.needsMore', { count: MIN_SAMPLES_FOR_RECOGNITION - takes })}
       />
       <Icon name="chevron-right" size={22} color={colors.textSecondary} />
-    </Pressable>
+    </PressableScale>
   );
 });
 

@@ -51,7 +51,14 @@ export type EngineToHost =
   /** One processed camera frame: feature spec v1 values, or null when nobody is in view. */
   | { type: 'frame'; t: number; v: number[] | null; hands: number }
   /** Detection rate, time per detection, and whether MediaPipe runs on the GPU or CPU. */
-  | { type: 'stats'; fps: number; inferenceMs: number; delegate?: 'GPU' | 'CPU' }
+  | {
+      type: 'stats';
+      fps: number;
+      inferenceMs: number;
+      delegate?: 'GPU' | 'CPU';
+      /** Why this delegate, e.g. the GPU's name, why it failed, or what was measured. */
+      note?: string;
+    }
   /** The sign model's logits for a `predict` request, or why there are none. */
   | { type: 'prediction'; id: number; logits: number[] | null; error?: PredictionError };
 

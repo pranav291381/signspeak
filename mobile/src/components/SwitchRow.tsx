@@ -1,8 +1,9 @@
-import { Pressable, StyleSheet, Switch, View } from 'react-native';
+import { StyleSheet, Switch, View } from 'react-native';
 
 import { MIN_TOUCH_TARGET, useTheme } from '@/theme';
 
 import { AppText } from './AppText';
+import { PressableScale } from './PressableScale';
 
 interface Props {
   label: string;
@@ -16,7 +17,9 @@ interface Props {
 export function SwitchRow({ label, hint, value, onValueChange, testID }: Props) {
   const { colors, spacing } = useTheme();
   return (
-    <Pressable
+    <PressableScale
+      pressedScale={0.985}
+      pressedOpacity={0.95}
       testID={testID}
       accessibilityRole="switch"
       accessibilityLabel={label}
@@ -42,7 +45,7 @@ export function SwitchRow({ label, hint, value, onValueChange, testID }: Props) 
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
       />
-    </Pressable>
+    </PressableScale>
   );
 }
 

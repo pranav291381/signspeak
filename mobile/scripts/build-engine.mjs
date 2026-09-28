@@ -2,7 +2,8 @@
 /**
  * Bundles engine/engine.ts (+ @mediapipe/tasks-vision) into one self-contained
  * HTML page and writes it to src/engine/engineHtml.generated.ts, which the app
- * loads into a WebView (phones) or an iframe (web).
+ * loads into a WebView (phones) or an iframe (web). The sign model's web worker
+ * (engine/modelWorker.ts) is bundled first and embedded as a string.
  *
  *   node scripts/build-engine.mjs          # regenerate
  *   node scripts/build-engine.mjs --check  # fail if the committed file is stale (CI)
@@ -15,18 +16,23 @@ import { fileURLToPath } from 'node:url';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const outFile = join(root, 'src/engine/engineHtml.generated.ts');
 
-const result = await build({
-  entryPoints: [join(root, 'engine/engine.ts')],
+const common = {
   bundle: true,
   format: 'iife',
   platform: 'browser',
   target: ['es2020'],
   minify: true,
   write: false,
+  logLevel: 'warning',
+};
+const worker = await build({ ...common, entryPoints: [join(root, 'engine/modelWorker.ts')], legalComments: 'none' });
+const result = await build({
+  ...common,
+  entryPoints: [join(root, 'engine/engine.ts')],
   legalComments: 'eof',
+  define: { __MODEL_WORKER__: JSON.stringify(worker.outputFiles[0].text) },
   // Escape "</script" inside strings so the bundle can be inlined in HTML.
   supported: { 'inline-script': false },
-  logLevel: 'warning',
 });
 const js = result.outputFiles[0].text;
 

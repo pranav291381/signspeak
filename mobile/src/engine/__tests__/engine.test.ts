@@ -116,7 +116,9 @@ describe('engine speed and drawing helpers', () => {
     expect(isSoftwareRenderer('ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero)), SwiftShader driver)')).toBe(true);
     expect(isSoftwareRenderer('llvmpipe (LLVM 15.0.7, 256 bits)')).toBe(true);
     expect(isSoftwareRenderer('ANGLE (Microsoft, Microsoft Basic Render Driver Direct3D11)')).toBe(true);
-    expect(isSoftwareRenderer(null)).toBe(true);
+    // Unknown renderer (some phone WebViews hide it): try the GPU and measure.
+    expect(isSoftwareRenderer(null)).toBe(false);
+    expect(isSoftwareRenderer('')).toBe(false);
     expect(isSoftwareRenderer('ANGLE (Intel, Intel(R) UHD Graphics 620 Direct3D11 vs_5_0 ps_5_0)')).toBe(false);
     expect(delegateOrder(true)).toEqual(['CPU']);
     expect(delegateOrder(false)).toEqual(['GPU', 'CPU']);
@@ -145,6 +147,7 @@ describe('engine speed and drawing helpers', () => {
     for (let i = 0; i < DelegateTuner.SAMPLE; i++) back = tuner.record(300) ?? back;
     expect(back).toBe('GPU');
     expect(tuner.settled).toBe(true);
+    expect(tuner.summary()).toBe('GPU 80 ms, CPU 300 ms');
   });
 
   it('mirrors cameras that face the user, including laptop webcams that do not say', () => {

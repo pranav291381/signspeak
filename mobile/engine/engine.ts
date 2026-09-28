@@ -34,7 +34,10 @@ import {
   type HandsResultLike,
   type Pt,
 } from './core';
-import { EngineSignModel } from './model';
+import { EngineSignModel, type ModelMessage } from './model';
+
+/** The sign model's web worker, bundled by scripts/build-engine.mjs. */
+declare const __MODEL_WORKER__: string;
 
 declare global {
   interface Window {
@@ -211,17 +214,48 @@ function webglRenderer(): string | null {
   }
 }
 
-/** First delegate that loads, in likely-fastest order. */
-async function createFirstWorking(assets: EngineAssets, order: readonly Delegate[]): Promise<Landmarkers> {
+/** First delegate that loads, in likely-fastest order; `failures` collects why others did not. */
+async function createFirstWorking(assets: EngineAssets, order: readonly Delegate[], failures: string[]): Promise<Landmarkers> {
   let lastError: unknown = null;
   for (const delegate of order) {
     try {
       return await createLandmarkers(assets, delegate);
     } catch (error) {
       lastError = error;
+      failures.push(`${delegate} failed: ${error instanceof Error ? error.message : String(error)}`.slice(0, 200));
     }
   }
   throw new EngineError('model_load_failed', String(lastError));
+}
+
+/**
+ * Runs the sign model in a web worker, so tracking on this page's main thread
+ * is not held up by it (on phones a forward pass takes tens of milliseconds).
+ * Falls back to this thread if the WebView cannot start the worker.
+ */
+function startSignModel(reply: (message: EngineToHost) => void): { handle: (message: ModelMessage) => void; where: () => string } {
+  let local: EngineSignModel | null = null;
+  const onThisThread = (message: ModelMessage) => {
+    local ??= new EngineSignModel();
+    const answer = local.handle(message);
+    if (answer) reply(answer);
+  };
+  let worker: Worker | null = null;
+  try {
+    worker = new Worker(URL.createObjectURL(new Blob([__MODEL_WORKER__], { type: 'text/javascript' })));
+    worker.onmessage = (event: MessageEvent<EngineToHost>) => reply(event.data);
+    // A broken worker: carry on here. The app sends the pack again when told `no_model`.
+    worker.onerror = () => {
+      worker?.terminate();
+      worker = null;
+    };
+  } catch {
+    worker = null;
+  }
+  return {
+    handle: (message) => (worker ? worker.postMessage(message) : onThisThread(message)),
+    where: () => (worker ? 'sign model in a worker' : 'sign model on the page thread'),
+  };
 }
 
 // ---- Camera -----------------------------------------------------------------
@@ -414,6 +448,8 @@ async function main(): Promise<void> {
   let detections = 0;
   let pose: { x: number; y: number; z: number }[] | undefined;
   let meter = new FrameMeter();
+  /** Why the current delegate (sent with the stats, logged by the app). */
+  let delegateNote = '';
 
   const fail = (error: unknown) => {
     const code = error instanceof EngineError ? error.code : 'model_load_failed';
@@ -441,14 +477,13 @@ async function main(): Promise<void> {
     }
   };
 
-  const signModel = new EngineSignModel();
+  const signModel = startSignModel(send);
   window.__islEngine = {
     receive(raw: unknown) {
       const message: HostToEngine | null = decodeHostMessage(raw);
       if (!message) return;
       if (message.type === 'setModel' || message.type === 'predict') {
-        const reply = signModel.handle(message);
-        if (reply) send(reply);
+        signModel.handle(message);
       } else if (message.type === 'setActive') {
         active = message.active;
         void syncCamera();
@@ -478,9 +513,18 @@ async function main(): Promise<void> {
   send({ type: 'status', status: 'loading' });
   try {
     assets = await loadAssets(config);
-    const order = delegateOrder(isSoftwareRenderer(webglRenderer()));
-    landmarkers = await createFirstWorking(assets, order);
+    const renderer = webglRenderer();
+    const order = delegateOrder(isSoftwareRenderer(renderer));
+    const failures: string[] = [];
+    landmarkers = await createFirstWorking(assets, order, failures);
     tuner = new DelegateTuner(landmarkers.delegate, order.slice(order.indexOf(landmarkers.delegate)));
+    delegateNote = [
+      `renderer: ${renderer ?? 'unknown'}`,
+      isSoftwareRenderer(renderer) ? 'software rendering, GPU skipped' : '',
+      ...failures,
+    ]
+      .filter(Boolean)
+      .join('; ');
   } catch (error) {
     return fail(error);
   }
@@ -529,6 +573,7 @@ async function main(): Promise<void> {
         fps: Math.round(meter.fps * 10) / 10,
         inferenceMs: Math.round(meter.inferenceMs),
         delegate: landmarkers.delegate,
+        note: [delegateNote, tuner?.settled ? `measured: ${tuner.summary()}` : '', signModel.where()].filter(Boolean).join('; '),
       });
     }
     const next = tuner?.record(inferenceMs);
