@@ -16,6 +16,7 @@ import {
   type RadioOption,
 } from '@/components';
 import { selectableLanguages, type LanguageCode } from '@/i18n';
+import { useMotionLibrary } from '@/motion/MotionLibraryProvider';
 import { usePersonalSigns } from '@/personal/PersonalSignsProvider';
 import { useSettings } from '@/settings/SettingsProvider';
 import { useSignVocabulary } from '@/signpack/SignVocabularyProvider';
@@ -28,6 +29,8 @@ export function SettingsScreen() {
   const { signs, removeAll } = usePersonalSigns();
   const vocabulary = useSignVocabulary();
   const vocabularyPacks = vocabulary.status === 'ready' ? vocabulary.vocabulary.packs : [];
+  const motion = useMotionLibrary();
+  const motionPacks = motion.status === 'ready' ? motion.library.packs : [];
 
   const languageOptions: RadioOption<LanguageCode>[] = selectableLanguages().map((lang) => {
     const draft = lang.status === 'draft';
@@ -200,6 +203,22 @@ export function SettingsScreen() {
             />
           ))
         )}
+        {motionPacks.length > 0 ? (
+          <>
+            <AppText variant="bodyStrong">{t('settings.about.motions')}</AppText>
+            {motionPacks.map((pack) => (
+              <ListRow
+                key={pack.id}
+                testID={`about-motions-${pack.id}`}
+                icon="human-greeting-variant"
+                label={pack.name}
+                description={`${pack.source.name}. ${pack.source.permission}`}
+                value={t('settings.about.vocabularySigns', { count: pack.signCount })}
+                onPress={() => void Linking.openURL(pack.source.url)}
+              />
+            ))}
+          </>
+        ) : null}
       </Section>
     </Screen>
   );

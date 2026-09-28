@@ -1,6 +1,6 @@
 # Sign packs
 
-A **sign pack** is the vocabulary Sign → Text recognizes: one or more reference recordings per sign, reduced to hand and body landmark numbers (no images, no video). Packs are made from sign videos **you have the right to use**: recordings made for the app by consenting signers, or videos whose owners have given permission. The app includes one pack: `include`, a trained model for the 262 signs of the INCLUDE dataset (see [The included pack](#the-included-pack)). The ISL dictionary at indiansignlanguage.org (videos on the YouTube channel "Indian Sign Language RKMVU-CBE") was considered, but its owners have not given permission, so it is not used. YouTube's terms do not allow downloading videos from YouTube.
+A **sign pack** is the vocabulary Sign → Text recognizes: one or more reference recordings per sign, reduced to hand and body landmark numbers (no images, no video). Packs are made from sign videos **you have the right to use**: recordings made for the app by consenting signers, or videos whose owners have given permission. The app includes one pack: `include`, a trained model for the 262 signs of the INCLUDE dataset (see [The included pack](#the-included-pack)). Text → ISL uses a pack of the same format with one cleaned recording of each INCLUDE sign (see [Motion pack for Text → ISL](#motion-pack-for-text--isl)). The ISL dictionary at indiansignlanguage.org (videos on the YouTube channel "Indian Sign Language RKMVU-CBE") was considered, but its owners have not given permission, so it is not used. YouTube's terms do not allow downloading videos from YouTube.
 
 ```
 sign videos         ──►  npm run build:signpack  ──►  deaf-club-2026.signpack  ──►  npm run install:signpack  ──►  the app
@@ -126,6 +126,27 @@ How it was made: all 4,276 INCLUDE videos were analysed with `npm run export:lan
 
 Every sign and its result: [`include-signs.md`](include-signs.md). Limits: recording sessions may share signers, so this overstates accuracy for new signers; calibration is not verified (ECE 0.19), so the app shows no confidence level with the result. It has not been tried by users yet.
 
+## Motion pack for Text → ISL
+
+`mobile/assets/motions/include-motion.signpack` (2.2 MB) is what Text → ISL plays: for each of the 262 INCLUDE signs, one recording reduced to hand and body landmarks (no video, no face). It is a sign pack in the format below, but it is not installed as recognition vocabulary: it is listed in `mobile/src/motion/bundled.ts` and read only by Text → ISL.
+
+Build it from the same landmarks file as the model:
+
+```bash
+# in mobile/
+npm run build:motions -- --data landmarks.jsonl --out assets/motions/include-motion.signpack \
+  --id include-motion --name "INCLUDE signs" \
+  --source-name "INCLUDE dataset, AI4Bharat / IIT Madras (Sridhar, Ganesan, Kumar, Khapra 2020)" \
+  --source-url "https://zenodo.org/records/4010759" \
+  --permission "CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Signed by Deaf students of St. Louis School for the Deaf, Chennai. Changed: one recording per sign reduced to hand and body landmarks, short hand-tracking gaps filled along the tracked wrist, smoothed and trimmed."
+```
+
+It writes the pack and `<out>.report.json` (for each sign, the recording chosen, how many there were, and how much of the sign the hand tracker saw) and names the signs where hands were lost for over 30% of the sign, to check by eye. The report is not committed.
+
+- **Which recording.** Among a sign's recordings, those in which the hand tracker lost the hands least during the sign itself (the rise from rest blurs and does not count); of those, the most typical: the smallest median distance (the app's DTW) to the sign's other recordings. So an unusual take or a badly tracked one is not shown.
+- **Cleaning for display** (`mobile/src/motion/clean.ts`). The hand tracker loses hands in fast movement while the pose tracker still sees the wrist. A hand lost for up to 10 frames (0.67 s) is placed where its wrist was seen, with its shape blended between the frames before and after; up to 6 frames past where it was last seen it follows the wrist. Nothing is added where neither tracker saw it. A short temporal filter removes jitter (3 frames for hands, 5 for the body). Rest is trimmed to 4 frames before and after the signing. On INCLUDE the chosen recordings had the hands in view for 90% of the sign on average before filling; 15 signs had them for 47–70%.
+- **Limits.** One signer's version of each sign; signs differ between regions and signers. Facial expressions and mouthing are not in the landmarks. Tracking errors that last longer than a gap, or a hand misread, stay visible: now and then a finger or an arm may be out of place. The pack has not been reviewed by ISL educators; the app says where the signs come from and what is not shown.
+
 ## Format
 
 `islconnect-sign-pack`, version 1 (`mobile/src/signpack/types.ts`, checked by `parse.ts`):
@@ -167,5 +188,5 @@ Size: about 7 KB per sign for a 1.5 s recording. A vocabulary of a few thousand 
 ## Privacy and provenance
 
 - The builder downloads videos only to the computer that runs it (`.signpack-cache/`, git-ignored). Videos are never uploaded anywhere and never committed. CI rejects video files in the repository.
-- A pack contains landmark numbers derived from the source's videos, the name of the source, its URL and the permission statement. The app names the source on the Sign → Text screen.
+- A pack contains landmark numbers derived from the source's videos, the name of the source, its URL and the permission statement. The app names the source on the Sign → Text and Text → ISL screens and in Settings → About.
 - Test packs made from anything other than real ISL signs (for example `mobile/src/test-utils/packs.ts`, or the stand-in videos used to test the builder) must never be installed in a release build.

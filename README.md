@@ -5,7 +5,8 @@ A mobile app to help people communicate using **Indian Sign Language (ISL)**, bu
 > **Honest status.**
 > - **Sign → Text knows the 262 signs of the [INCLUDE dataset](https://zenodo.org/records/4010759)** (everyday ISL words: greetings, people, colours, days, places, jobs and more; CC BY 4.0, signed by Deaf students), with a model trained on INCLUDE's 4,276 videos. **It recognizes some signs well and many not yet.** Played live into the app, videos from recording sessions the model never saw gave the right sign 32% of the time, a wrong sign 4%, and "not sure" 64%: 84 signs were right on at least two thirds of their test videos, 36 sometimes, 140 not yet. The full list is in [`docs/include-signs.md`](docs/include-signs.md). The app is tuned to say "not sure" rather than show a wrong sign. It has not been tested with users yet; people who sign differently from INCLUDE's signers will see more "not sure".
 > - More vocabulary can be added as sign packs, built from sign videos by a converter that runs the app's own hand tracking, from videos we have the right to use (public licences such as INCLUDE's, recordings by consenting signers, or videos whose owners give permission).
-> - Text → ISL, Learn and teaching your own signs are **parked** (the code is kept). The app ships no invented ISL content.
+> - **Text → ISL shows the same 262 signs**: type English words or a sentence and watch each word signed, one after another, as a moving hand-and-body figure traced from a real INCLUDE recording, with a still diagram of each sign. Words not among the 262 are listed as missing, never guessed. It shows signs word by word in the order typed; it does not translate into ISL grammar, and facial expressions are not shown.
+> - Learn and teaching your own signs are **parked** (the code is kept). The app ships no invented ISL content.
 > - The Hindi interface is a draft awaiting native-speaker review.
 >
 > SignSpeak is **not** a replacement for qualified ISL interpreters.
@@ -18,7 +19,7 @@ A mobile app to help people communicate using **Indian Sign Language (ISL)**, bu
 | **Sign → Text** | Camera, text and speech. Live on-device hand and body tracking, both hands drawn as a skeleton over the video (smooth at the screen's refresh rate; a small label shows the tracking rate). Tells you at once whether hands are in view. Recognizes the signs of the installed vocabulary, joins fingerspelled letters into words, speaks the result, never guesses. Says how many signs it knows and where they come from. Pause, switch camera, clear, report a wrong result |
 | **Sign packs** | `npm run build:signpack` turns sign videos (a manifest of word + video) into a vocabulary pack with the app's own tracking; `npm run install:signpack` adds it to the app. See [`docs/sign-packs.md`](docs/sign-packs.md) |
 | **Teach a sign / My signs** | **Parked** (owner's decision): no entry point, code kept. Signs taught earlier can be deleted in Settings |
-| **Text → ISL** | **In progress** (parked while Sign → Text is finished). The code is kept in `features/text-to-isl` |
+| **Text → ISL** | Type English words or a sentence; each word with a sign plays as one smooth movement, sign after sign (a figure with coloured fingers, traced from an INCLUDE recording of Deaf signers), with the sign's name above it. Words as chips to jump between; play/pause, previous/next, speed (0.5×, 0.75×, 1×), mirror image, repeat. A still diagram of every sign (start faded, end solid, arrows for how the hands move); tap one to play it there. Plurals and verb forms find their sign ("teachers" → Teacher), suggestions complete a word as you type, and all 262 signs can be browsed by group. Words with no sign are listed, not guessed. With "reduce motion" on, nothing moves until Play is pressed |
 | **Learn** | **In progress** (parked). The alphabet map and tips are kept in `features/learn` |
 | **Settings** | Appearance, app and output languages (separate), speech, camera, history (off by default), haptics, demo mode, report a problem, about (limitations) |
 | **Privacy** | Video never leaves the phone and is never saved. Sign packs hold only landmark numbers; the source videos stay on the computer that builds the pack |
@@ -42,7 +43,8 @@ npm ci          # also downloads the hand-tracking files for the web build
 
 1. **Sign → Text.** Point the camera at the signer: head, shoulders and hands in view, in good light. Recognized signs appear as text; press Speak to hear them.
 2. Start with your hands down, sign one of the INCLUDE signs (the ones marked "works" in [`docs/include-signs.md`](docs/include-signs.md) are the best to try), then lower your hands. The word appears when the sign is finished. If it says "not sure", try again with your whole upper body and both hands in view.
-3. To build and install a pack yourself (on a PC with Chrome or Edge): see [`docs/sign-packs.md`](docs/sign-packs.md).
+3. **Text → ISL.** Type English words or a sentence ("Good morning, how are you?") and press Show signs. Tap a word to jump to it, or a still diagram below to play that sign on its own. Words without a sign are shown with a dashed outline.
+4. To build and install a pack yourself (on a PC with Chrome or Edge): see [`docs/sign-packs.md`](docs/sign-packs.md).
 
 ## How recognition works
 
@@ -57,7 +59,7 @@ Tested with synthetic landmark sequences (speed, position, noise, left-handed si
 - Recognizes INCLUDE's 262 signs as INCLUDE's signers (Deaf students of one school in Chennai) sign them, and fewer than half of them reliably; regional variants and other signing styles may not be recognized. It has **not** been tested with users, and "100%" accuracy cannot be promised by any recognizer. Better accuracy needs more signers per sign (testers' recordings, other datasets).
 - Signs that differ only in facial expression or mouthing cannot be told apart (face landmarks are not used yet).
 - Hands, head and shoulders must be in view (the tracker normalizes by shoulder width). Fast fingerspelling is too quick: spell slowly, about one letter per second.
-- Text → ISL (parked) is sign by sign in the order typed, not translation: ISL grammar is not modelled.
+- Text → ISL is sign by sign in the order typed, not translation: ISL grammar and word order are not modelled, and facial expressions and mouthing, which carry meaning in ISL, are not shown. It covers only the 262 INCLUDE signs, each as one signer made it (signs can differ between regions), traced from video: now and then a finger may be out of place.
 - Not yet tested on physical phones in this environment: camera access inside the WebView on specific Android/iOS versions, frame rate on low-end phones, matching speed with a large vocabulary (phones run JavaScript without a JIT), battery, TalkBack/VoiceOver.
 
 ## Repository layout

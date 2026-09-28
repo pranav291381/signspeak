@@ -1,10 +1,9 @@
-import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { act, render, screen } from '@testing-library/react-native';
 
 import { initI18n } from '@/i18n';
 import { frameFor, MOTIONS, perform } from '@/test-utils/landmarks';
 
 import { SignDiagram } from '../SignDiagram';
-import { SignSequencePlayer, type SequenceItem } from '../SignSequencePlayer';
 import { diagramViewBox, keyFrameIndex, skeletonFrame } from '../skeleton';
 
 jest.mock('@/accessibility/useReduceMotion', () => ({ useReduceMotion: () => false }));
@@ -58,36 +57,5 @@ describe('SignDiagram', () => {
     act(() => jest.advanceTimersByTime((wave.length + 1) * (1000 / 15)));
     expect(onCycle).toHaveBeenCalledTimes(1);
     jest.useRealTimers();
-  });
-});
-
-describe('SignSequencePlayer', () => {
-  const items: SequenceItem[] = [
-    { key: '0', caption: 'Hello', frames: wave, kind: 'sign' },
-    { key: '1', caption: 'K', frames: null, kind: 'letter', word: 'Ka' },
-    { key: '2', caption: 'A', frames: wave, kind: 'letter', word: 'Ka' },
-  ];
-
-  it('plays items in order, pausing on missing recordings, and stops at the end', async () => {
-    jest.useFakeTimers();
-    render(<SignSequencePlayer items={items} />);
-    expect(screen.getByTestId('sequence-caption')).toHaveTextContent('Hello');
-    act(() => jest.advanceTimersByTime((wave.length + 1) * (1000 / 15)));
-    expect(screen.getByTestId('sequence-caption')).toHaveTextContent('K');
-    expect(screen.getByTestId('sequence-missing')).toBeOnTheScreen();
-    act(() => jest.advanceTimersByTime(1500));
-    expect(screen.getByTestId('sequence-caption')).toHaveTextContent('A');
-    act(() => jest.advanceTimersByTime((wave.length + 1) * (1000 / 15)));
-    expect(screen.getByRole('button', { name: 'Play again' })).toBeOnTheScreen();
-    jest.useRealTimers();
-  });
-
-  it('jumps to an item and offers to record a missing one', async () => {
-    const onRecordMissing = jest.fn();
-    render(<SignSequencePlayer items={items} onRecordMissing={onRecordMissing} />);
-    fireEvent.press(screen.getByRole('button', { name: 'Pause' }));
-    fireEvent.press(screen.getByRole('button', { name: 'Show K' }));
-    fireEvent.press(screen.getByRole('button', { name: 'Record it' }));
-    expect(onRecordMissing).toHaveBeenCalledWith(items[1]);
   });
 });

@@ -1,108 +1,188 @@
-import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react-native';
 
 import { HISTORY_STORAGE_KEY } from '@/history/history';
 import { SETTINGS_STORAGE_KEY } from '@/settings/settings';
 import { createMemoryStore } from '@/storage/keyValueStore';
+import { testMotionPack } from '@/test-utils/motion';
 import { renderWithProviders } from '@/test-utils/render';
 import { seedSigns, taughtSign } from '@/test-utils/signs';
 
-import { planSigns } from '../plan';
 import { TextToIslScreen } from '../TextToIslScreen';
 
 const mockPush = jest.fn();
 jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush }) }));
-jest.mock('@/accessibility/useReduceMotion', () => ({ useReduceMotion: () => false }));
+let mockReduceMotion = false;
+jest.mock('@/accessibility/useReduceMotion', () => ({ useReduceMotion: () => mockReduceMotion }));
+// Playback itself is tested in diagram/__tests__/motion.test.tsx; here the movement stays put.
+jest.mock('@/diagram/useAnimationFrames', () => ({ useAnimationFrames: () => undefined }));
 
-const hello = taughtSign({ kind: 'library', signId: 'hello' });
-const letters = ['r', 'a', 'v', 'i'].map((letter) => taughtSign({ kind: 'letter', letter }, 'hold_fist', 1));
-const chai = taughtSign({ kind: 'custom', text: 'Chai', language: 'en' }, 'knock');
-const all = [hello, ...letters, chai];
-const byId = (signs: typeof all) => (id: string) => signs.find((s) => s.id === id);
+const pack = testMotionPack([
+  { text: 'Hello', category: 'Greetings' },
+  { text: 'How are you', category: 'Greetings', motion: 'knock' },
+  { text: 'Good Morning', category: 'Greetings', motion: 'point_arc' },
+  { text: 'Thank you', category: 'Greetings', motion: 'two_hands' },
+  { text: 'Teacher', category: 'Jobs' },
+  { text: 'Team', category: 'Society', motion: 'knock' },
+  { text: 'You', category: 'Pronouns' },
+  { text: 'You (plural)', category: 'Pronouns', motion: 'two_hands' },
+]);
 
 async function show(text: string) {
-  fireEvent.changeText(await screen.findByLabelText('Words to sign'), text);
+  fireEvent.changeText(await screen.findByLabelText('Words or a sentence in English'), text);
   fireEvent.press(screen.getByRole('button', { name: 'Show signs' }));
 }
 
-beforeEach(() => mockPush.mockReset());
-
-describe('planSigns', () => {
-  it('matches whole phrases first, then words, then fingerspells', () => {
-    const plan = planSigns('Hello! How are you, Ravi?', all, byId(all), 'en')!;
-    expect(plan.items.map((i) => [i.caption, i.kind])).toEqual([
-      ['Hello', 'sign'],
-      ['How are you?', 'sign'],
-      ['R', 'letter'],
-      ['A', 'letter'],
-      ['V', 'letter'],
-      ['I', 'letter'],
-    ]);
-    expect(plan.items.find((i) => i.caption === 'R')?.word).toBe('ravi');
-    // "How are you" has not been recorded.
-    expect(plan.missing).toBe(1);
-  });
-
-  it('uses signs the user taught, Hindi phrases, and digits', () => {
-    const plan = planSigns('chai नमस्ते 25', all, byId(all), 'hi')!;
-    expect(plan.items.map((i) => i.caption)).toEqual(['Chai', 'नमस्ते', '2', '5']);
-    expect(plan.items[0]!.frames).not.toBeNull();
-    expect(plan.items[1]!.frames).not.toBeNull();
-    expect(plan.items[2]!.target).toEqual({ kind: 'library', signId: 'number_2' });
-  });
-
-  it('marks words it cannot sign or spell as missing instead of guessing', () => {
-    const plan = planSigns('किताब', all, byId(all), 'hi')!;
-    expect(plan.items).toEqual([expect.objectContaining({ caption: 'किताब', frames: null, target: null })]);
-    expect(planSigns('  ?! ', all, byId(all), 'en')).toBeNull();
-  });
+beforeEach(() => {
+  mockPush.mockReset();
+  mockReduceMotion = false;
 });
 
 describe('TextToIslScreen', () => {
-  it('explains where diagrams come from before anything is typed', async () => {
-    renderWithProviders(<TextToIslScreen />);
-    expect(await screen.findByText(/Each diagram is a sign recorded on this phone/)).toBeOnTheScreen();
-    fireEvent.press(screen.getByRole('button', { name: 'Record the alphabet' }));
-    expect(mockPush).toHaveBeenCalledWith({ pathname: '/signs/teach', params: { kind: 'alphabet' } });
+  it('offers examples that can be shown, every sign by group, and says where the signs come from', async () => {
+    renderWithProviders(<TextToIslScreen />, { motionPacks: [pack] });
+    expect(await screen.findByRole('button', { name: 'Show Hello, how are you?' })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Show Good morning' })).toBeOnTheScreen();
+    // "Happy new year" has no recorded signs in this pack, so it is not offered.
+    expect(screen.queryByRole('button', { name: 'Show Happy new year' })).toBeNull();
+    expect(screen.getByText('All 8 signs')).toBeOnTheScreen();
+    expect(screen.getByTestId('text-to-isl-source')).toHaveTextContent(/Deaf students of St\. Louis School for the Deaf/);
+
+    fireEvent.press(screen.getByRole('button', { name: 'Greetings, 4 signs' }));
+    fireEvent.press(within(screen.getByTestId('dictionary-signs')).getByRole('button', { name: 'Show Good Morning' }));
+    expect(await screen.findByTestId('sentence-player')).toBeOnTheScreen();
+    expect(screen.getByTestId('sentence-caption')).toHaveTextContent('Good Morning');
+    expect(screen.getByLabelText('Words or a sentence in English').props.value).toBe('Good Morning');
   });
 
   it('asks for text when the input is empty', async () => {
-    renderWithProviders(<TextToIslScreen />);
+    renderWithProviders(<TextToIslScreen />, { motionPacks: [pack] });
+    await screen.findByText('All 8 signs');
     await show('   ');
     expect(screen.getByTestId('text-to-isl-empty')).toBeOnTheScreen();
   });
 
-  it('plays recorded signs and fingerspelling as diagrams, with an honest grammar note', async () => {
-    const store = createMemoryStore();
-    await seedSigns(store, all);
-    renderWithProviders(<TextToIslScreen />, { store });
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Show Chai' })).toBeOnTheScreen());
+  it('plays a sentence as signs, with a still diagram of each and an honest note on grammar', async () => {
+    renderWithProviders(<TextToIslScreen />, { motionPacks: [pack] });
+    await screen.findByText('All 8 signs');
+    await show('Hello, how are you, teachers?');
 
-    await show('hello ravi');
-    expect(screen.getByTestId('sequence-diagram')).toBeOnTheScreen();
-    expect(screen.getByTestId('sequence-caption')).toHaveTextContent('Hello');
+    expect(screen.getByTestId('sentence-caption')).toHaveTextContent('Hello');
+    expect(screen.getByRole('image', { name: 'Moving hand and body diagram of the signs for: Hello, How are you, Teacher' })).toBeOnTheScreen();
+    for (const name of ['Hello', 'How are you', 'Teacher']) {
+      expect(screen.getByRole('button', { name: `Show ${name}` })).toBeOnTheScreen(); // chip
+      expect(screen.getByRole('button', { name: `Play ${name}` })).toBeOnTheScreen(); // card
+    }
+    expect(screen.getByRole('image', { name: 'Hand diagram of the sign for Teacher' })).toBeOnTheScreen();
     expect(screen.queryByTestId('text-to-isl-missing')).toBeNull();
     expect(screen.getByText(/ISL has its own grammar and word order/)).toBeOnTheScreen();
-    for (const letter of ['R', 'A', 'V', 'I']) {
-      expect(screen.getByRole('button', { name: `Show ${letter}` })).toBeOnTheScreen();
-    }
+
+    // Jump to a sign; the caption says which typed word it stands for.
+    fireEvent.press(screen.getByTestId('sentence-chip-2'));
+    expect(screen.getByTestId('sentence-caption')).toHaveTextContent('Teacher');
+    expect(screen.getByText('for “teachers”')).toBeOnTheScreen();
   });
 
-  it('shows what has not been recorded and opens the recorder for it', async () => {
-    renderWithProviders(<TextToIslScreen />);
-    await show('thank you');
-    expect(screen.getByTestId('text-to-isl-missing')).toHaveTextContent(/1 sign or letter has not been recorded/);
-    expect(screen.getByTestId('sequence-missing')).toBeOnTheScreen();
-    fireEvent.press(screen.getByRole('button', { name: 'Record it' }));
-    expect(mockPush).toHaveBeenCalledWith({ pathname: '/signs/teach', params: { kind: 'library', id: 'thank_you' } });
+  it('plays a sign in its card, holding the sentence still meanwhile', async () => {
+    renderWithProviders(<TextToIslScreen />, { motionPacks: [pack] });
+    await screen.findByText('All 8 signs');
+    await show('hello teacher');
+    fireEvent.press(screen.getByRole('button', { name: 'Play Teacher' }));
+    expect(screen.getByRole('button', { name: 'Stop Teacher' })).toBeSelected();
+    expect(screen.getByRole('image', { name: 'Moving hand and body diagram of the signs for: Teacher' })).toBeOnTheScreen();
+    fireEvent.press(screen.getByRole('button', { name: 'Play Hello' }));
+    expect(screen.queryByRole('button', { name: 'Stop Teacher' })).toBeNull();
+    fireEvent.press(screen.getByRole('button', { name: 'Stop Hello' }));
+    expect(screen.getByRole('button', { name: 'Play Hello' })).toBeOnTheScreen();
+  });
+
+  it('with "reduce motion" shows a still diagram until Play is pressed', async () => {
+    mockReduceMotion = true;
+    renderWithProviders(<TextToIslScreen />, { motionPacks: [pack] });
+    await screen.findByText('All 8 signs');
+    await show('hello teacher');
+    expect(screen.getByTestId('sentence-still')).toBeOnTheScreen();
+    expect(screen.queryByTestId('sentence-motion')).toBeNull();
+    fireEvent.press(screen.getByTestId('sentence-play'));
+    expect(screen.getByTestId('sentence-motion')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Pause' })).toBeOnTheScreen();
+  });
+
+  it('has controls for playing, speed, mirroring and repeating', async () => {
+    renderWithProviders(<TextToIslScreen />, { motionPacks: [pack] });
+    await screen.findByText('All 8 signs');
+    await show('hello teacher');
+    fireEvent.press(screen.getByRole('button', { name: 'Pause' }));
+    expect(screen.getByRole('button', { name: 'Play' })).toBeOnTheScreen();
+    fireEvent.press(screen.getByRole('radio', { name: '0.5×' }));
+    expect(screen.getByRole('radio', { name: '0.5×' })).toBeSelected();
+    fireEvent.press(screen.getByRole('button', { name: 'Mirror image' }));
+    expect(screen.getByText('Mirrored')).toBeOnTheScreen();
+    fireEvent.press(screen.getByRole('button', { name: 'Repeat' }));
+    expect(screen.getByTestId('sentence-loop')).toBeSelected();
+    fireEvent.press(screen.getByRole('button', { name: 'Next sign' }));
+    expect(screen.getByTestId('sentence-caption')).toHaveTextContent('Teacher');
+  });
+
+  it('lists words without a sign instead of guessing', async () => {
+    renderWithProviders(<TextToIslScreen />, { motionPacks: [pack] });
+    await screen.findByText('All 8 signs');
+    await show('hello is ravi, is');
+    expect(screen.getByTestId('text-to-isl-missing')).toHaveTextContent(/2 words have no sign yet/);
+    expect(screen.getByTestId('text-to-isl-missing')).toHaveTextContent(/“is”, “ravi”\./);
+    fireEvent.press(screen.getAllByRole('button', { name: 'No sign for “is” yet' })[0]!);
+    expect(screen.getByTestId('sentence-missing')).toHaveTextContent(/not among the recorded signs/);
+    // Teaching your own signs is parked: nothing here leads to the recorder.
+    expect(screen.queryByRole('button', { name: /Record/ })).toBeNull();
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it('completes words with signs that exist', async () => {
+    renderWithProviders(<TextToIslScreen />, { motionPacks: [pack] });
+    await screen.findByText('All 8 signs');
+    fireEvent.changeText(screen.getByLabelText('Words or a sentence in English'), 'hello tea');
+    const suggestions = screen.getByTestId('text-to-isl-suggestions');
+    expect(within(suggestions).getAllByRole('button').map((b) => b.props.accessibilityLabel)).toEqual(['Use Team', 'Use Teacher']);
+    fireEvent.press(within(suggestions).getByRole('button', { name: 'Use Teacher' }));
+    expect(screen.getByLabelText('Words or a sentence in English').props.value).toBe('hello Teacher ');
+    expect(screen.getByTestId('sentence-player')).toBeOnTheScreen();
+  });
+
+  it('offers the other recorded version of a word', async () => {
+    renderWithProviders(<TextToIslScreen />, { motionPacks: [pack] });
+    await screen.findByText('All 8 signs');
+    await show('you');
+    expect(screen.getByTestId('sentence-caption')).toHaveTextContent('You');
+    fireEvent.press(screen.getByRole('button', { name: 'Other version (1 of 2)' }));
+    expect(screen.getByTestId('sentence-caption')).toHaveTextContent('You (plural)');
+    expect(screen.getByRole('button', { name: 'Other version (2 of 2)' })).toBeOnTheScreen();
+  });
+
+  it('shows signs recorded on this phone, and still works when the recorded signs cannot be loaded', async () => {
+    const store = createMemoryStore();
+    await seedSigns(store, [taughtSign({ kind: 'custom', text: 'Chai', language: 'en' }, 'knock')]);
+    renderWithProviders(<TextToIslScreen />, { store, loadMotions: () => Promise.resolve([]) });
+    expect(await screen.findByTestId('text-to-isl-unavailable')).toBeOnTheScreen();
+    await waitFor(async () => {
+      await show('chai');
+      expect(screen.getByTestId('sentence-caption')).toHaveTextContent('Chai');
+    });
+    expect(screen.getByText('Your recording')).toBeOnTheScreen();
+  });
+
+  it('waits for the recorded signs before showing anything', async () => {
+    renderWithProviders(<TextToIslScreen />, { loadMotions: () => new Promise(() => undefined) });
+    expect(await screen.findByText('Loading the signs…')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Show signs' })).toBeDisabled();
   });
 
   it('saves what was looked up when history is on', async () => {
     const store = createMemoryStore({
       [SETTINGS_STORAGE_KEY]: JSON.stringify({ appLanguage: 'en', historyEnabled: true }),
     });
-    renderWithProviders(<TextToIslScreen />, { store });
-    await show('water');
+    renderWithProviders(<TextToIslScreen />, { store, motionPacks: [pack] });
+    await screen.findByText('All 8 signs');
+    await show('hello teacher');
     await act(async () => undefined);
-    await waitFor(() => expect(store.data.get(HISTORY_STORAGE_KEY)).toContain('water'));
+    await waitFor(() => expect(store.data.get(HISTORY_STORAGE_KEY)).toContain('test-motion:teacher'));
   });
 });

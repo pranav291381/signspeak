@@ -64,8 +64,8 @@ describe('app navigation', () => {
 
     expect(await screen.findByTestId('home-screen')).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: /^Sign to text\./ })).toBeOnTheScreen();
-    // Text → ISL and Learn are parked while Sign → Text is finished.
-    expect(screen.queryByTestId('home-text-to-isl')).toBeNull();
+    expect(screen.getByRole('button', { name: /^Text to I S L\./ })).toBeOnTheScreen();
+    // Learn is parked for now.
     expect(screen.queryByTestId('home-learn')).toBeNull();
     expect(screen.getByText(/not a replacement for a qualified ISL interpreter/)).toBeOnTheScreen();
     // Teaching your own signs is paused: Sign → Text uses the dictionary vocabulary.
@@ -75,6 +75,7 @@ describe('app navigation', () => {
 
   it.each([
     ['home-sign-to-text', '/sign-to-text'],
+    ['home-text-to-isl', '/text-to-isl'],
     ['home-history', '/history'],
   ])('%s opens %s', async (testID, pathname) => {
     const router = renderRouter(APP_DIR, { initialUrl: '/' });
@@ -84,10 +85,14 @@ describe('app navigation', () => {
     await act(async () => undefined);
   });
 
-  it.each([
-    ['/text-to-isl', 'text-to-isl-in-progress'],
-    ['/learn', 'learn-in-progress'],
-  ])('%s says it is in progress and leads back to Sign → Text', async (url, testID) => {
+  it('/text-to-isl turns typed words into signs', async () => {
+    renderRouter(APP_DIR, { initialUrl: '/text-to-isl' });
+    expect(await screen.findByTestId('text-to-isl-screen')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Words or a sentence in English')).toBeOnTheScreen();
+    await act(async () => undefined);
+  });
+
+  it.each([['/learn', 'learn-in-progress']])('%s says it is in progress and leads back to Sign → Text', async (url, testID) => {
     const router = renderRouter(APP_DIR, { initialUrl: url });
     expect(await screen.findByTestId(testID)).toBeOnTheScreen();
     expect(screen.getByText('In progress')).toBeOnTheScreen();

@@ -5,6 +5,7 @@ import { i18n } from '@/i18n';
 import { SETTINGS_STORAGE_KEY } from '@/settings/settings';
 import { createMemoryStore } from '@/storage/keyValueStore';
 import { renderWithProviders } from '@/test-utils/render';
+import { testMotionPack } from '@/test-utils/motion';
 import { testPack } from '@/test-utils/packs';
 import { seedSigns, taughtSign } from '@/test-utils/signs';
 
@@ -100,6 +101,17 @@ describe('SettingsScreen', () => {
     expect(row).toHaveTextContent(/Test pack/);
     expect(row).toHaveTextContent(/Test dictionary\. Test data/);
     expect(row).toHaveTextContent(/1 sign/);
+    fireEvent.press(row);
+    expect(openURL).toHaveBeenCalledWith('https://example.org/');
+  });
+
+  it('credits the recordings Text → ISL shows, with their source and licence', async () => {
+    const openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
+    renderWithProviders(<SettingsScreen />, { motionPacks: [testMotionPack([{ text: 'Hello' }, { text: 'Teacher' }])] });
+    const row = await screen.findByTestId('about-motions-test-motion');
+    expect(screen.getByText('Signs shown in Text → ISL')).toBeOnTheScreen();
+    expect(row).toHaveTextContent(/Test signers\. Made for tests\./);
+    expect(row).toHaveTextContent(/2 signs/);
     fireEvent.press(row);
     expect(openURL).toHaveBeenCalledWith('https://example.org/');
   });

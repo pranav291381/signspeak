@@ -1,6 +1,6 @@
 # INCLUDE signs in Sign → Text
 
-Sign → Text recognizes the 262 signs of the [INCLUDE dataset](https://zenodo.org/records/4010759) (AI4Bharat / IIT Madras, CC BY 4.0) with a trained model (`mobile/assets/signpacks/include.signpack`). This page lists every sign and how it did on recordings the model never saw.
+Sign → Text recognizes the 262 signs of the [INCLUDE dataset](https://zenodo.org/records/4010759) (AI4Bharat / IIT Madras, CC BY 4.0) with a trained model (`mobile/assets/signpacks/include.signpack`). This page lists every sign and how it did on recordings the model never saw. Text → ISL can show every one of them, as motion traced from one INCLUDE recording per sign (`mobile/assets/motions/include-motion.signpack`, see [`sign-packs.md`](sign-packs.md#motion-pack-for-text--isl)); the results below are about recognition only.
 
 ## How it was tested
 

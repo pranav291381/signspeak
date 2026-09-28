@@ -8,6 +8,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { useReduceMotion } from '@/accessibility/useReduceMotion';
 import { HistoryProvider } from '@/history/HistoryProvider';
+import { MotionLibraryProvider } from '@/motion/MotionLibraryProvider';
 import { PersonalSignsProvider } from '@/personal/PersonalSignsProvider';
 import { AppThemeProvider } from '@/settings/AppThemeProvider';
 import { SettingsProvider } from '@/settings/SettingsProvider';
@@ -87,7 +88,9 @@ export default function RootLayout() {
             <HistoryProvider>
               <PersonalSignsProvider>
                 <SignVocabularyProvider>
-                  <AppStack />
+                  <MotionLibraryProvider>
+                    <AppStack />
+                  </MotionLibraryProvider>
                 </SignVocabularyProvider>
               </PersonalSignsProvider>
             </HistoryProvider>
