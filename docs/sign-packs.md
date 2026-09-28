@@ -1,6 +1,6 @@
 # Sign packs
 
-A **sign pack** is the vocabulary Sign → Text recognizes: one or more reference recordings per sign, reduced to hand and body landmark numbers (no images, no video). Packs are made from sign videos **you have the right to use**: recordings made for the app by consenting signers, or videos whose owners have given permission. The app includes one pack: `include-greet`, a trained model for 9 greetings from the INCLUDE dataset (see [The included pack](#the-included-pack)). The ISL dictionary at indiansignlanguage.org (videos on the YouTube channel "Indian Sign Language RKMVU-CBE") was considered, but its owners have not given permission, so it is not used. YouTube's terms do not allow downloading videos from YouTube.
+A **sign pack** is the vocabulary Sign → Text recognizes: one or more reference recordings per sign, reduced to hand and body landmark numbers (no images, no video). Packs are made from sign videos **you have the right to use**: recordings made for the app by consenting signers, or videos whose owners have given permission. The app includes one pack: `include`, a trained model for the 262 signs of the INCLUDE dataset (see [The included pack](#the-included-pack)). The ISL dictionary at indiansignlanguage.org (videos on the YouTube channel "Indian Sign Language RKMVU-CBE") was considered, but its owners have not given permission, so it is not used. YouTube's terms do not allow downloading videos from YouTube.
 
 ```
 sign videos         ──►  npm run build:signpack  ──►  deaf-club-2026.signpack  ──►  npm run install:signpack  ──►  the app
@@ -114,16 +114,17 @@ Give each video in `videos.json` a `group` (who signed it, or the recording sess
 
 ## The included pack
 
-`mobile/assets/signpacks/include-greet.signpack` (1.7 MB) is a model trained on the **Greetings** of [INCLUDE](https://zenodo.org/records/4010759) (AI4Bharat / IIT Madras, ACM Multimedia 2020; CC BY 4.0; signed by Deaf students of St. Louis School for the Deaf, Chennai): Alright, Good afternoon, Good evening, Good Morning, Good night, Hello, How are you, Pleased, Thank you. It holds only model weights, labels and the source's name, licence and changes; no video and no landmark recordings.
+`mobile/assets/signpacks/include.signpack` (1.9 MB) is a model for all 262 signs of [INCLUDE](https://zenodo.org/records/4010759) (AI4Bharat / IIT Madras, ACM Multimedia 2020; CC BY 4.0; signed by Deaf students of St. Louis School for the Deaf, Chennai). It holds only model weights, labels and the source's name, licence and changes; no video and no landmark recordings.
 
-How it was made: the 182 Greetings videos were analysed with `npm run export:landmarks` (1280 px wide), grouped by recording session. For each sign the last session was held out for testing and the one before for validation. `train_from_landmarks.py` trained on the rest.
+How it was made: all 4,276 INCLUDE videos were analysed with `npm run export:landmarks` (1280 px wide), grouped by recording session (three takes each). Sign names were tidied for display only ("Ex. Monsoon" → "Monsoon", "big large" → "Big / large", capital first letter). For each sign the last session was held out for testing and the one before for validation; `train_from_landmarks.py --positives 10` trained on the rest, `tune:model` chose when to show a sign on the validation videos, and the shipped model was retrained on every recording (`--train-all`).
 
 | Test (held-out sessions) | Result |
 | --- | --- |
-| Windows, model alone | 95% right sign, 100% in the top 5; 83% of rest windows "none of these" |
-| Live, `npm run eval:signpack` (29 videos played into the app's session) | 26 right, 0 wrong, 3 "not sure" |
+| Windows, model alone | 63% right sign, 86% in the top 5; 77% of rest windows "none of these" |
+| Live, `npm run eval:signpack` (730 videos played into the app's session, tuned settings) | 32% right, 4% wrong, 64% "not sure" |
+| Signs | 84 right on at least two thirds of their test videos, 36 sometimes, 140 not yet, 2 not tested |
 
-Limits: recording sessions may share signers, so this overstates accuracy for new signers; signs outside the 9 were not in the test, so false alarms on them are unmeasured; calibration is not verified (ECE 0.08), so the app shows no confidence level with the result. It is an early test until users try it.
+Every sign and its result: [`include-signs.md`](include-signs.md). Limits: recording sessions may share signers, so this overstates accuracy for new signers; calibration is not verified (ECE 0.19), so the app shows no confidence level with the result. It has not been tried by users yet.
 
 ## Format
 

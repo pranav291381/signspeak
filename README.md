@@ -3,7 +3,7 @@
 A mobile app to help people communicate using **Indian Sign Language (ISL)**, built with and for Deaf ISL users, their families, and the hearing people they meet every day.
 
 > **Honest status.**
-> - **Sign → Text recognizes 9 ISL greetings for now**: Alright, Good afternoon, Good evening, Good morning, Good night, Hello, How are you, Pleased, Thank you. This is an **early test**: a small model trained on the public [INCLUDE dataset](https://zenodo.org/records/4010759) (CC BY 4.0, signed by Deaf students). Played live into the app, 29 recordings from recording sessions the model never saw gave the right sign 26 times, a wrong sign 0 times and "not sure" 3 times. INCLUDE has few signers, so other people may see more "not sure"; whether it stays quiet for signs outside the 9 has not been measured. Testing with real users is still needed. The app says "not sure" rather than guessing.
+> - **Sign → Text knows the 262 signs of the [INCLUDE dataset](https://zenodo.org/records/4010759)** (everyday ISL words: greetings, people, colours, days, places, jobs and more; CC BY 4.0, signed by Deaf students), with a model trained on INCLUDE's 4,276 videos. **It recognizes some signs well and many not yet.** Played live into the app, videos from recording sessions the model never saw gave the right sign 32% of the time, a wrong sign 4%, and "not sure" 64%: 84 signs were right on at least two thirds of their test videos, 36 sometimes, 140 not yet. The full list is in [`docs/include-signs.md`](docs/include-signs.md). The app is tuned to say "not sure" rather than show a wrong sign. It has not been tested with users yet; people who sign differently from INCLUDE's signers will see more "not sure".
 > - More vocabulary can be added as sign packs, built from sign videos by a converter that runs the app's own hand tracking, from videos we have the right to use (public licences such as INCLUDE's, recordings by consenting signers, or videos whose owners give permission).
 > - Text → ISL, Learn and teaching your own signs are **parked** (the code is kept). The app ships no invented ISL content.
 > - The Hindi interface is a draft awaiting native-speaker review.
@@ -41,7 +41,7 @@ npm ci          # also downloads the hand-tracking files for the web build
 ### How to use it
 
 1. **Sign → Text.** Point the camera at the signer: head, shoulders and hands in view, in good light. Recognized signs appear as text; press Speak to hear them.
-2. Start with your hands down, sign one of the 9 greetings above, then lower your hands. The word appears when the sign is finished.
+2. Start with your hands down, sign one of the INCLUDE signs (the ones marked "works" in [`docs/include-signs.md`](docs/include-signs.md) are the best to try), then lower your hands. The word appears when the sign is finished. If it says "not sure", try again with your whole upper body and both hands in view.
 3. To build and install a pack yourself (on a PC with Chrome or Edge): see [`docs/sign-packs.md`](docs/sign-packs.md).
 
 ## How recognition works
@@ -54,7 +54,7 @@ Tested with synthetic landmark sequences (speed, position, noise, left-handed si
 
 ## Limitations
 
-- Recognizes only 9 greetings for now, as INCLUDE's signers (Deaf students of one school in Chennai) sign them; regional variants and other signing styles may not be recognized. It has **not** been tested with users, and "100%" accuracy cannot be promised by any recognizer.
+- Recognizes INCLUDE's 262 signs as INCLUDE's signers (Deaf students of one school in Chennai) sign them, and fewer than half of them reliably; regional variants and other signing styles may not be recognized. It has **not** been tested with users, and "100%" accuracy cannot be promised by any recognizer. Better accuracy needs more signers per sign (testers' recordings, other datasets).
 - Signs that differ only in facial expression or mouthing cannot be told apart (face landmarks are not used yet).
 - Hands, head and shoulders must be in view (the tracker normalizes by shoulder width). Fast fingerspelling is too quick: spell slowly, about one letter per second.
 - Text → ISL (parked) is sign by sign in the order typed, not translation: ISL grammar is not modelled.
@@ -116,6 +116,7 @@ See [`ml/README.md`](ml/README.md).
 | [model-evaluation.md](docs/model-evaluation.md) | Metrics, calibration, release criteria, model cards |
 | [pilot.md](docs/pilot.md) | NGO pilot preparation, feedback collection, accessibility prompts |
 | [sign-packs.md](docs/sign-packs.md) | Building, installing and calibrating sign vocabularies from sign videos |
+| [include-signs.md](docs/include-signs.md) | Every INCLUDE sign in the app and how it did on held-out recordings |
 | [contributing.md](docs/contributing.md) | Conventions, PR and accessibility checklists, adding languages and content |
 
 ## Contributing
@@ -132,7 +133,7 @@ Read [`docs/contributing.md`](docs/contributing.md). In short: do not invent ISL
 
 ## Credits
 
-Sign → Text's greetings model is trained on the **INCLUDE** dataset: A. Sridhar, R. G. Ganesan, P. Kumar, M. Khapra, "INCLUDE: A Large Scale Dataset for Indian Sign Language Recognition", ACM Multimedia 2020. AI4Bharat / IIT Madras, [zenodo.org/records/4010759](https://zenodo.org/records/4010759), licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Signed by Deaf students of St. Louis School for the Deaf, Chennai. Changes: the videos were reduced to hand and body landmarks, which were used to train the model; no video is included.
+Sign → Text's model is trained on the **INCLUDE** dataset: A. Sridhar, R. G. Ganesan, P. Kumar, M. Khapra, "INCLUDE: A Large Scale Dataset for Indian Sign Language Recognition", ACM Multimedia 2020. AI4Bharat / IIT Madras, [zenodo.org/records/4010759](https://zenodo.org/records/4010759), licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Signed by Deaf students of St. Louis School for the Deaf, Chennai. Changes: the videos were reduced to hand and body landmarks, which were used to train the model; no video is included.
 
 ## License
 
