@@ -1,10 +1,10 @@
 # Sign library content
 
-`data/signs.json` lists the sign *concepts* the app knows by name: their IDs, meanings and the phrases that find them, in English and Hindi. It is used by the teach chooser (common words), by Sign → Text (a taught sign linked to a concept is shown in the output language) and by Text → ISL (phrases → concepts).
+`data/signs.json` lists the sign *concepts* the app knows by name: their IDs, meanings and the phrases that find them, in English and Hindi. It is used by the teach chooser (common words), by Sign → Text (a taught sign linked to a concept is shown in the output language) and by Text → ISL (phrases → concepts taught on the phone).
 
 **Current state:** 58 *candidate concepts*. None has verified ISL content: every entry has `media: null` and `verification.status: "unverified"`. `library.test.ts` asserts this, so adding verified content is a deliberate change.
 
-What a sign looks like is never stored here. Diagrams come only from recordings made on the phone (`src/personal/`), so nothing in the app invents a handshape.
+What a sign looks like is never stored here. Diagrams come only from recordings: the INCLUDE recordings of Deaf signers that Text → ISL plays (`src/motion/`, `docs/sign-packs.md`), and signs recorded on the phone (`src/personal/`). Nothing in the app invents a handshape.
 
 ## Rules
 

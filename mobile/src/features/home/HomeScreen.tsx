@@ -20,6 +20,14 @@ export function HomeScreen() {
         description={t('home.signToText.description')}
         onPress={() => router.navigate('/sign-to-text')}
       />
+      <NavCard
+        testID="home-text-to-isl"
+        icon="message-text-outline"
+        title={t('home.textToIsl.title')}
+        accessibilityLabel={t('home.textToIsl.a11yLabel')}
+        description={t('home.textToIsl.description')}
+        onPress={() => router.navigate('/text-to-isl')}
+      />
       <Card padded={false} style={{ paddingHorizontal: spacing.md, paddingVertical: spacing.xs }}>
         <ListRow
           testID="home-history"

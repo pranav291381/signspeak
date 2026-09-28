@@ -275,18 +275,27 @@ The vocabulary of Sign → Text comes from **sign packs**: reference recordings 
 ## 7. Text → ISL
 
 ```
-text ─▶ normalize (Unicode NFC, case, punctuation, whitespace)
-     ─▶ planSigns(): longest phrases first (≤ 5 words), matched against
-          signs the user taught (custom words) and the library concepts' phrases (all languages)
-     ─▶ unmatched Latin word → fingerspelled letter by letter (A–Z)
-        unmatched number     → digit by digit (library number concepts)
-        anything else        → shown as "not recorded" (never guessed)
-     ─▶ SignSequencePlayer: each item's first recorded take as an animated hand diagram
+text ─▶ words (motion/words.ts): Unicode NFC, lower case, contractions spelled out ("I'm" → i am),
+        possessive 's dropped, other punctuation splits words
+     ─▶ planSigns() (features/text-to-isl/plan.ts): longest phrases first (≤ 5 words), then single
+        words, then other English forms of a word ("teachers" → teacher, "painting" → paint);
+        each phrase looks up
+          1. the motion pack's signs by name and alternatives ("Big / large" → big, large)
+          2. signs taught earlier on this phone (custom words, library concepts in any language)
+     ─▶ unmatched word: spelled with letters recorded on this phone when all are recorded,
+        otherwise listed as missing (never guessed)
+     ─▶ SentencePlayer: the signs as one movement (diagram/timeline.ts, MotionPlayer)
+        SignCards: a still diagram of each sign (diagram/still.ts, SignStill)
 ```
 
-Implemented in `mobile/src/features/text-to-isl/plan.ts` and `mobile/src/diagram/`. Diagrams come only from recordings made on the phone; an item without a recording is shown as such, with a button to record it.
+- **Motion pack** (`assets/motions/include-motion.signpack`, sign pack format, 2.2 MB): one recording per INCLUDE sign, chosen and cleaned by `npm run build:motions` (`scripts/lib/motion-pack.ts`). For each sign it takes the recordings in which the hand tracker lost the hands least during the sign, and among those the most typical (smallest median DTW distance to the sign's other recordings). The chosen recording is cleaned for display (`motion/clean.ts`): a hand lost for up to 10 frames is placed where the pose tracker still saw its wrist, with its shape blended between the frames before and after; nothing is added where neither tracker saw it; a light temporal filter removes jitter; the rest before and after is trimmed to 4 frames. Read lazily by `MotionLibraryProvider` the first time Text → ISL opens, never by Sign → Text.
+- **Where the sign is** (`motion/segment.ts`): from the first to the last raised frame, and within that the *core*, without the arm rising from rest and dropping back (the wrists moving faster than 0.12 shoulder widths a frame; never more than 35% trimmed at each end).
+- **Timeline** (`diagram/timeline.ts`): the first sign starts from rest and the last returns to rest; in between, signs are joined core to core with a 0.4 s eased glide, as signers link signs in a row. Missing words are skipped. `MotionPlayer` draws in-between positions on every display frame (`useAnimationFrames`: the clock is `Date.now()`, so speed does not depend on the frame rate; at most ~60 updates a second) and keeps one view for the whole sentence (`signingViewBox`: the area the raised hands use, plus head and shoulders).
+- **Drawing** (`diagram/SkeletonFigure.tsx`): head, neck, torso (shoulders to hips) and arms for context; each hand with its palm, five coloured fingers (the same colours on both hands), joints and fingertips. A hand that appears or disappears between frames fades. Mirroring flips the drawing only.
+- **Still diagram** (`diagram/still.ts`): the core's first frame faded, its last frame solid, and each hand's path (middle knuckle) dashed with an arrowhead; a hand that stays in place gets no path.
+- **Measured** (web build, headless Chromium): the drawing updates about 59 times a second; with the CPU slowed 4× about 30. About 3.5 ms of JavaScript per frame at full speed.
 
-**Limit (stated in the UI):** this is sign by sign in the order typed, not translation. ISL has its own grammar (word order, spatial reference, non-manual markers). A future `TextToIslPipeline` could add an ISL grammar stage designed and reviewed by ISL linguists; the player does not need to change for that.
+**Limits (stated in the UI):** this is sign by sign in the order typed, not translation. ISL has its own grammar (word order, spatial reference, non-manual markers), and facial expressions and mouthing are not shown. Each sign is one signer's version traced from video, so a finger may be out of place now and then, and regional variants are not covered. A future `TextToIslPipeline` could add an ISL grammar stage designed and reviewed by ISL linguists; the player would not need to change.
 
 ## 8. Learn ISL
 
@@ -294,7 +303,7 @@ Implemented in `mobile/src/features/text-to-isl/plan.ts` and `mobile/src/diagram
 - **Tips** (`features/learn/tips.ts`, text in the locale files): general guidance for communicating in sign language (getting attention, eye contact, lighting, facial expression, fingerspelling, ISL as its own language, regional variation, checking understanding, signing space, interpreters, learning from Deaf people). Labelled as pending review by ISL educators.
 - The earlier lessons, quizzes and progress were removed at the owner's request.
 
-The sign library (`content/data/signs.json`) remains the list of candidate concepts (IDs, meanings and phrases in English and Hindi) used by the teach chooser and Text → ISL. None has verified content.
+The sign library (`content/data/signs.json`) remains the list of candidate concepts (IDs, meanings and phrases in English and Hindi) used by the teach chooser, and by Text → ISL to find library concepts taught on the phone. None has verified content of its own.
 
 ## 9. Localization
 
@@ -374,12 +383,13 @@ The first model is a small temporal classifier (1D temporal convolutions + GRU, 
 | D9 | No license file added | Licensing is the owner's decision | **Open, needs owner decision** |
 | D10 | Content lives in the app bundle as typed JSON with verification metadata | Works offline. Can later be delivered by the backend as versioned packs | Accepted |
 | D11 | Recognition of **personal signs** (taught on the phone) until a trained model exists | Chosen by the owner ("personal signs mode"). Works today, honestly scoped to what was taught | Accepted (owner) |
-| D12 | Diagrams (Text → ISL, alphabet) are drawn from recordings made on the phone, never from invented handshapes | The project must not invent ISL content; no verified references were available | Accepted |
+| D12 | Diagrams are drawn only from recordings (made on the phone, or published ones, see D21), never from invented handshapes | The project must not invent ISL content | Accepted |
 | D13 | Bottom tabs + first-launch welcome (language, appearance), Inter font, light/dark/system theme | Owner request for a modern, low-clutter UI with a first-run menu | Accepted (owner) |
 | D14 | `react-native-svg` for diagrams, `@expo-google-fonts/inter` for type | Standard, in Expo Go; no native build needed | Accepted |
 | D15 | Sign → Text vocabulary as sign packs built offline from sign videos with the app's own tracking | One pipeline for any source the project may use. The ISL dictionary at indiansignlanguage.org (YouTube channel "Indian Sign Language RKMVU-CBE") was the first candidate, but **its owners have not given permission**, and YouTube's terms do not allow downloading, so it is not used | Accepted. First source: INCLUDE (CC BY 4.0), see D20 |
 | D16 | Teaching your own signs is paused; Sign → Text is camera, text and speech only | Owner request ("isl-text should be clean camera and text and speech"). Code, routes and tests of personal signs are kept; earlier taught signs can still be deleted in Settings | Accepted (owner) |
 | D17 | `playwright-core` (dev dependency) drives the user's installed Chrome/Edge for the pack builder | Runs the exact browser code of the app on dictionary videos; no browser download, nothing added to the app | Accepted |
 | D18 | `expo-file-system` to read bundled packs on phones | Part of Expo (in Expo Go); `fetch` of `file://` is not reliable on Android | Accepted |
-| D19 | Packs bundled as app assets for now | Works offline, no hosting. Revisit when the real pack's size is known: a large pack may need to be downloaded on first use | **Open, owner decision when the pack exists** (the 262-sign model is 1.9 MB) |
+| D19 | Packs bundled as app assets for now | Works offline, no hosting. Revisit when the real pack's size is known: a large pack may need to be downloaded on first use | **Open, owner decision when the pack exists** (the 262-sign model is 1.9 MB, the motion pack for Text → ISL 2.2 MB) |
 | D20 | Train the first model on INCLUDE (Zenodo 4010759, CC BY 4.0), starting with its 9 greetings | A public ISL dataset recorded by Deaf signers, with a licence that allows reuse with attribution. Videos are processed only on the machine that trains; only model weights are committed. Credit (authors, licence, changes) is in the pack, shown in the app (Sign → Text, Settings → About) and in the README | Accepted (owner chose INCLUDE); all 262 signs included |
+| D21 | Text → ISL shows INCLUDE's signs as motion traced from one recording per sign (hand and body landmarks, cleaned for display), committed as `assets/motions/include-motion.signpack` | The owner asked for typed words to be shown as sign diagrams or motion. INCLUDE's CC BY 4.0 licence allows sharing adapted material with credit; the pack holds landmark numbers only (no video, no face), and its source, licence and changes are in the pack, the app (Text → ISL, Settings → About) and the README. Not yet reviewed by ISL educators: the app says where the signs come from and what is not shown | Accepted (owner request) |

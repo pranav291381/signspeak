@@ -40,10 +40,14 @@ A welcome flow asks for the app language and the appearance (light, dark or foll
 7. Recognition covers the installed **sign vocabulary**: sign packs made from sign videos the project has the right to use, or a trained model (`docs/sign-packs.md`). Included now: the 262 signs of the INCLUDE dataset (84 reliable on held-out recordings, see `docs/include-signs.md`). The screen says how many signs it knows and names the source. With no pack installed it says "Sign vocabulary not installed yet"; Demo mode remains available, clearly labelled.
 
 ### 4.2 Text → ISL
-1. The user types (or pastes) words in their language.
-2. **Show signs** splits the text into known phrases and words (longest first) and plays each recorded sign as an animated hand diagram with its caption; words without a sign are fingerspelled letter by letter.
-3. Anything not recorded yet is shown as "not recorded yet" with a button to record it. Nothing is guessed or invented.
-4. The UI states that this is sign by sign in the order typed, not ISL translation (ISL has its own grammar).
+1. The user types (or pastes) English words or a sentence. While typing, suggestions complete a word with signs that exist ("tea" → Teacher, Team).
+2. **Show signs** splits the text into known phrases and words (longest first; plurals and verb forms find their sign, and the caption says which word a sign stands for). The signs play one after another as a single smooth movement: a figure with coloured fingers traced from a recording of the sign by Deaf signers (INCLUDE, 262 signs), the sign's name above it.
+3. Controls: play/pause, previous/next, the words as chips to jump between, speed (0.5×, 0.75×, 1×), mirror image, repeat. A progress bar shows where the sentence is.
+4. Below, a still diagram of each sign (where the hands start, faded; where they end, solid; arrows for how they move). Tapping one plays that sign there, over and over. A word with two recorded versions (e.g. "you", singular and plural) can be switched.
+5. Words without a sign are shown with a dashed outline and listed: "no sign yet". Nothing is guessed or invented. (Letters recorded earlier on this phone can still spell a word.)
+6. All 262 signs can be browsed by group; tapping one shows it.
+7. The UI states that this is sign by sign in the order typed, not ISL translation (ISL has its own grammar), that facial expressions are not shown, and where the signs come from (with their licence).
+8. With the system's "reduce motion" setting on, nothing moves until Play is pressed; the first sign is shown as a still diagram.
 
 ### 4.3 Learn ISL
 - **Alphabet map:** all 26 letters as hand diagrams from recordings made on the phone, with a guided flow to record the alphabet. Letters not yet recorded are shown as empty tiles. The screen asks for a fluent signer or ISL teacher to record or check the letters, because no verified alphabet is bundled.

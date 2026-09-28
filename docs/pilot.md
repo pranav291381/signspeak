@@ -8,7 +8,8 @@ Status: **preparation document.** Adapt it with the partner NGO, Deaf community 
 | --- | --- | --- |
 | App navigation, accessibility, languages (English, Hindi draft) | Yes | Collect usability and accessibility feedback |
 | Sign → Text with taught signs | Yes, for a small vocabulary | A fluent signer teaches each sign on the device (three takes). Recognizes only those signs; test with the people who taught them and with others, and record how often it is right, "not sure" or wrong |
-| Text → ISL, alphabet | After recording | Diagrams exist only for signs and letters recorded on the device; have an ISL educator check them before learners rely on them |
+| Text → ISL | Yes, for the 262 INCLUDE signs | Signs are traced from INCLUDE recordings (one signer's version each; no facial expressions). Have an ISL educator check the signs participants will rely on, and note regional differences. Words outside the 262 are listed as missing |
+| Alphabet | After recording | Letter diagrams exist only for letters recorded on the device; have an ISL educator check them before learners rely on them |
 | Tips | Yes | Pending educator review |
 | General sign recognition | No | Needs a consented dataset and a model that passes `docs/model-evaluation.md` §4 |
 
