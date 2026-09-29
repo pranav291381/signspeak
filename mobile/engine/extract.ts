@@ -18,6 +18,7 @@ import { ModelSignRecognizer } from '../src/model/ModelSignRecognizer';
 import { modelSession, referenceSession } from '../src/recognition/engine';
 import { prepareSample, SAMPLE_FPS } from '../src/personal/sample';
 import { handsRaised, handsVisible } from '../src/recognition/features';
+import { FRAME_DIM } from '../src/recognition/featureSpec';
 import type { FrameSource, LandmarkFrame, SignRecognizer } from '../src/recognition/types';
 import { packReferences } from '../src/signpack/parse';
 import type { SignPack } from '../src/signpack/types';
@@ -135,7 +136,7 @@ async function seek(video: HTMLVideoElement, time: number): Promise<void> {
   await seeked;
 }
 
-async function extract(videoUrl: string, options: { raw?: boolean } = {}): Promise<ExtractResult> {
+async function extract(videoUrl: string, options: { raw?: boolean; depth?: boolean } = {}): Promise<ExtractResult> {
   if (!hands || !pose) throw new Error('not initialised');
   const video = document.createElement('video');
   video.muted = true;
@@ -177,13 +178,15 @@ async function extract(videoUrl: string, options: { raw?: boolean } = {}): Promi
     height: video.videoHeight,
   };
   if (options.raw) {
+    // With depth: every value of the feature contract (x, y, z); otherwise x and y only.
+    const dim = options.depth ? FRAME_DIM : XY_FRAME_DIM;
     Object.assign(base, {
       recording: {
         frames: recorded.length,
-        dim: XY_FRAME_DIM,
+        dim,
         data: encodeFrames(
-          recorded.map((f) => (f.values ? toXY(f.values) : new Float32Array(XY_FRAME_DIM))),
-          XY_FRAME_DIM,
+          recorded.map((f) => (f.values ? (options.depth ? f.values : toXY(f.values)) : new Float32Array(dim))),
+          dim,
         ),
         missing: recorded.flatMap((f, i) => (f.values ? [] : [i])),
       },
