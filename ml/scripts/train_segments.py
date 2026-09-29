@@ -40,9 +40,38 @@ SEGMENT_PACK_VERSION = 2
 SEGMENT_FRAMES = 32
 MARGIN = 2  # as SignSegmenter's margin (mobile/src/recognition/segmenter.ts)
 POSE, LEFT, RIGHT = slice(0, 9), slice(9, 30), slice(30, 51)  # of the 51 points
-FEATURES = ("xy", "xy+hands+vel")
-ARCHITECTURES = {"gru": "temporal-conv-bigru-v1", "tf": "segment-transformer-v1"}
-LEARNING_RATES = {"gru": 2e-3, "tf": 1e-3}
+FEATURES = ("xy", "xy+hands+vel", "xy+angles", "xy+hands+vel+angles")
+# tfl: the transformer, larger (width 192, 4 layers)
+ARCHITECTURES = {
+    "gru": "temporal-conv-bigru-v1",
+    "tf": "segment-transformer-v1",
+    "tfl": "segment-transformer-v1",
+}
+LEARNING_RATES = {"gru": 2e-3, "tf": 1e-3, "tfl": 1e-3}
+MIXUP = 0.4  # Beta(α, α) of mixup, for members trained with it (":mix")
+# MediaPipe hand bones, as (from, to) point indices within a hand
+BONES = (
+    (0, 1),
+    (1, 2),
+    (2, 3),
+    (3, 4),
+    (0, 5),
+    (5, 6),
+    (6, 7),
+    (7, 8),
+    (0, 9),
+    (9, 10),
+    (10, 11),
+    (11, 12),
+    (0, 13),
+    (13, 14),
+    (14, 15),
+    (15, 16),
+    (0, 17),
+    (17, 18),
+    (18, 19),
+    (19, 20),
+)
 
 
 # ---- The sign, as the app sees it -------------------------------------------------------------
@@ -87,13 +116,17 @@ def member_input(frames: np.ndarray, features: str) -> np.ndarray:
     xy: the 51 points' x/y and the 3 presence flags (105).
     xy+hands+vel: also each hand's shape (points relative to its wrist, in units of
     wrist-to-middle-knuckle length; 84) and how every point moved since the
-    previous frame (102). The presence flags stay last: the network reads the
-    third-to-last value as "a person is in view".
+    previous frame (102).
+    +angles: also each hand's bones (20) as directions relative to the palm
+    (wrist to middle knuckle), cosine and sine (80): the handshape, whatever
+    the hand's size or turn.
+    The presence flags stay last: the network reads the third-to-last value as
+    "a person is in view".
     """
     xy, presence = points(frames)
     count = len(xy)
     parts = [xy.reshape(count, -1)]
-    if features == "xy+hands+vel":
+    if features.startswith("xy+hands+vel"):
         for hand, flag in ((LEFT, 1), (RIGHT, 2)):
             h = xy[:, hand]
             size = np.linalg.norm(h[:, 9] - h[:, 0], axis=-1)[:, None, None]
@@ -101,8 +134,24 @@ def member_input(frames: np.ndarray, features: str) -> np.ndarray:
             parts.append(local.reshape(count, -1))
         flat = xy.reshape(count, -1)
         parts.append(np.diff(flat, axis=0, prepend=flat[:1]))
+    if features.endswith("+angles"):
+        parts.append(hand_angles(xy, presence))
     parts.append(presence)
     return np.concatenate(parts, -1).astype(np.float32)
+
+
+def hand_angles(xy: np.ndarray, presence: np.ndarray) -> np.ndarray:
+    """Per hand, each bone's direction relative to the palm: cosines, then sines (T, 80)."""
+    out = []
+    for hand, flag in ((LEFT, 1), (RIGHT, 2)):
+        h = xy[:, hand].astype(np.float64)
+        palm = h[:, 9] - h[:, 0]
+        base = np.arctan2(palm[:, 1], palm[:, 0])
+        d = np.stack([h[:, b] - h[:, a] for a, b in BONES], 1)
+        angle = np.arctan2(d[..., 1], d[..., 0]) - base[:, None]
+        shown = (presence[:, flag] > 0.5)[:, None]
+        out.append(np.concatenate([np.cos(angle) * shown, np.sin(angle) * shown], 1))
+    return np.concatenate(out, 1).astype(np.float32)
 
 
 def network_input(frames: np.ndarray, features: str) -> np.ndarray:
@@ -156,14 +205,22 @@ def augment(frames: np.ndarray, rng: np.random.Generator) -> np.ndarray:
 
 
 def new_network(arch: str, classes: int, dim: int) -> nn.Module:
-    if arch == "tf":
-        config = TransformerConfig(num_classes=classes, input_dim=dim, frames=SEGMENT_FRAMES)
+    if arch in ("tf", "tfl"):
+        size = {"width": 192, "layers": 4} if arch == "tfl" else {}
+        config = TransformerConfig(num_classes=classes, input_dim=dim, frames=SEGMENT_FRAMES, **size)
         return SegmentTransformer(config)
     return TemporalSignClassifier(ModelConfig(num_classes=classes, input_dim=dim))
 
 
 def train_member(
-    train: list[tuple[int, np.ndarray]], classes: int, arch: str, features: str, seed: int, epochs: int, log
+    train: list[tuple[int, np.ndarray]],
+    classes: int,
+    arch: str,
+    features: str,
+    seed: int,
+    epochs: int,
+    log,
+    mixup: bool = False,
 ) -> nn.Module:
     torch.manual_seed(seed)
     rng = np.random.default_rng(seed)
@@ -184,7 +241,14 @@ def train_member(
             x = torch.tensor(np.stack([network_input(augment(f, rng), features) for _, f in chosen]))
             y = torch.tensor([label for label, _ in chosen])
             opt.zero_grad()
-            loss = loss_fn(model(x), y)
+            if mixup:
+                # a blend of two signs, scored as both in proportion
+                lam = float(rng.beta(MIXUP, MIXUP))
+                other = torch.as_tensor(rng.permutation(len(y)))
+                out = model(lam * x + (1 - lam) * x[other])
+                loss = lam * loss_fn(out, y) + (1 - lam) * loss_fn(out, y[other])
+            else:
+                loss = loss_fn(model(x), y)
             loss.backward()
             nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             opt.step()
@@ -226,8 +290,16 @@ def main() -> None:
     parser.add_argument(
         "--members",
         default="gru:xy:0,gru:xy+hands+vel:0,tf:xy:0",
-        help="networks to train and average, as arch:features:seed "
-        "(arch: gru or tf; features: xy or xy+hands+vel)",
+        help="networks to train and average, as arch:features:seed[:mix] "
+        f"(arch: {', '.join(ARCHITECTURES)}; features: {', '.join(FEATURES)}; mix: trained with mixup)",
+    )
+    parser.add_argument(
+        "--extra",
+        type=Path,
+        action="append",
+        default=[],
+        help="more recordings (same format) used for training only, whatever the split, "
+        "e.g. another signer's; signs not in --data are skipped",
     )
     parser.add_argument(
         "--train-val",
@@ -252,10 +324,12 @@ def main() -> None:
         parser.error("--train-val needs --temperature (from a run without --train-val)")
     members = []
     for spec in args.members.split(","):
-        arch, features, seed = spec.split(":")
-        if arch not in ARCHITECTURES or features not in FEATURES:
-            parser.error(f"unknown member {spec!r} (arch: gru or tf; features: {', '.join(FEATURES)})")
-        members.append((arch, features, int(seed)))
+        arch, features, seed, *flags = spec.split(":")
+        if arch not in ARCHITECTURES or features not in FEATURES or set(flags) - {"mix"}:
+            parser.error(
+                f"unknown member {spec!r} (arch: {', '.join(ARCHITECTURES)}; features: {', '.join(FEATURES)})"
+            )
+        members.append((arch, features, int(seed), "mix" in flags))
 
     records = [
         json.loads(line) for line in args.data.read_text(encoding="utf-8").splitlines() if line.strip()
@@ -276,12 +350,33 @@ def main() -> None:
         if args.train_val and part == "val":
             part = "train"
         parts[part].append((index[record["label"]], frames))
-    print({part: len(items) for part, items in parts.items()}, flush=True)
+    extra = 0
+    for path in args.extra:
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            record = json.loads(line)
+            label = f"{args.id}:{slug(record['text'])}"
+            if label in index:
+                parts["train"].append((index[label], segment(decode(record["recording"]))))
+                extra += 1
+    print(
+        {part: len(items) for part, items in parts.items()},
+        f"(extra: {extra})" if args.extra else "",
+        flush=True,
+    )
 
     trained = []
-    for arch, features, seed in members:
+    for arch, features, seed, mixup in members:
         model = train_member(
-            parts["train"], len(labels), arch, features, seed, args.epochs, lambda m: print(m, flush=True)
+            parts["train"],
+            len(labels),
+            arch,
+            features,
+            seed,
+            args.epochs,
+            lambda m: print(m, flush=True),
+            mixup=mixup,
         )
         trained.append((arch, features, model))
 
@@ -343,7 +438,7 @@ def main() -> None:
 def member_entry(arch: str, features: str, model: nn.Module) -> dict:
     """One network of the pack, as the app reads it (mobile/src/model/modelPack.ts)."""
     c = model.config
-    if arch == "tf":
+    if arch in ("tf", "tfl"):
         config = {
             "inputDim": c.input_dim,
             "frames": c.frames,
