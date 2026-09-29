@@ -126,7 +126,8 @@
       "dark": "Dark"
     },
     "signs": {
-      "hint": "Teaching your own signs is paused for now. Signs you taught earlier are still stored on this phone."
+      "hint": "Teach the app the way you sign. Your recordings are stored only on this phone, as hand and arm positions.",
+      "manage": "Teach and manage your signs"
     }
   },
   "a11y": {
@@ -173,6 +174,13 @@
       "choose": "Choose {{text}}",
       "notRight": "Not right?",
       "instead": "Choose {{text}} instead"
+    },
+    "teach": {
+      "yourWay": "Teach it your way",
+      "a11y": "Teach {{text}} the way you sign it",
+      "link": "Teach the app your signs",
+      "manage_one": "Your signs ({{count}} taught)",
+      "manage_other": "Your signs ({{count}} taught)"
     },
     "result": {
       "label": "Last recognised",
@@ -504,6 +512,9 @@
       "matches": "Matching words",
       "common": "Common words",
       "noMatches": "No common word matches. Teach it as a new word above.",
+      "vocabulary": "Signs the app knows",
+      "vocabularyHint": "Teach one the way you sign it, and the app will also recognize your version. Search among all {{count}}.",
+      "noVocabularyMatches": "The app does not know this sign. Teach it as a new word above.",
       "alphabet": "Record the alphabet",
       "alphabetHint": "Letter by letter, for fingerspelling names.",
       "whoShouldRecord": "Recordings made here are not checked by ISL educators. For signs others will learn from, ask a fluent signer to record them."

@@ -167,9 +167,16 @@ export function SettingsScreen() {
         </LabelledControl>
       </Section>
 
-      {signs.length > 0 ? (
-        // Teaching signs is paused; signs taught earlier can still be deleted.
-        <Section title={t('settings.sections.signs')} description={t('settings.signs.hint')} variant="list">
+      <Section title={t('settings.sections.signs')} description={t('settings.signs.hint')} variant="list">
+        <ListRow
+          testID="settings-my-signs"
+          icon="school-outline"
+          tile="saffron"
+          label={t('settings.signs.manage')}
+          value={signs.length > 0 ? String(signs.length) : undefined}
+          onPress={() => router.push('/signs')}
+        />
+        {signs.length > 0 ? (
           <ListRow
             testID="settings-delete-signs"
             icon="delete-outline"
@@ -187,8 +194,8 @@ export function SettingsScreen() {
               })
             }
           />
-        </Section>
-      ) : null}
+        ) : null}
+      </Section>
 
       <Section title={t('settings.sections.privacy')} variant="list">
         <SwitchRow

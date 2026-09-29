@@ -45,10 +45,12 @@ interface Props {
   /** When not sure: the likeliest signs, to pick the one that was made. */
   suggestions?: { label: string; text: string }[];
   onChoose?: (label: string) => void;
+  /** Opens teaching for a sign the app did not get on its own (it was chosen from the suggestions). */
+  onTeach?: (label: string) => void;
 }
 
 /** Live status, the most recent trustworthy result, and everything recognized so far. */
-export function RecognitionPanel({ snapshot, paused, latest, transcript, suggestions = [], onChoose }: Props) {
+export function RecognitionPanel({ snapshot, paused, latest, transcript, suggestions = [], onChoose, onTeach }: Props) {
   const { t } = useTranslation();
   const { colors, radii, spacing } = useTheme();
   const key = statusKey(snapshot, paused);
@@ -124,9 +126,25 @@ export function RecognitionPanel({ snapshot, paused, latest, transcript, suggest
               </AppText>
             </FadeIn>
             {latest.recognition.chosen ? (
-              <AppText variant="caption" color="textSecondary" testID="recognition-chosen">
-                {t('signToText.result.chosen')}
-              </AppText>
+              <View style={[styles.status, styles.words, { gap: spacing.xs }]}>
+                <AppText variant="caption" color="textSecondary" testID="recognition-chosen">
+                  {t('signToText.result.chosen')}
+                </AppText>
+                {onTeach ? (
+                  <PressableScale
+                    testID="recognition-teach"
+                    accessibilityRole="button"
+                    accessibilityLabel={t('signToText.teach.a11y', { text: latest.text })}
+                    onPress={() => onTeach(latest.recognition.label)}
+                    style={[styles.teach, { gap: spacing.xs }]}
+                  >
+                    <Icon name="school-outline" size={16} color={colors.primary} />
+                    <AppText variant="label" style={{ color: colors.primary }}>
+                      {t('signToText.teach.yourWay')}
+                    </AppText>
+                  </PressableScale>
+                ) : null}
+              </View>
             ) : latest.recognition.band ? (
               <AppText variant="caption" color="textSecondary">
                 {t(`signToText.result.${latest.recognition.band}`)}
@@ -212,4 +230,5 @@ const styles = StyleSheet.create({
   word: { paddingHorizontal: 14, paddingVertical: 7 },
   suggestion: { paddingHorizontal: 18, minHeight: 48, justifyContent: 'center' },
   alternative: { paddingHorizontal: 14, minHeight: 44, justifyContent: 'center', borderWidth: 1 },
+  teach: { flexDirection: 'row', alignItems: 'center', minHeight: 44, paddingHorizontal: 4 },
 });

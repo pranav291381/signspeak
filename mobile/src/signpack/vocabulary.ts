@@ -31,6 +31,8 @@ export interface Vocabulary {
   /** A trained model, used for recognition instead of the sign packs' recordings. */
   model: ModelPack | null;
   describe(label: string): VocabularySign | undefined;
+  /** The trained model's signs, which a person can teach the way they sign them (by name). */
+  teachable: readonly (VocabularySign & { label: string })[];
 }
 
 export function buildVocabulary(packs: readonly SignPack[], models: readonly ModelPack[] = []): Vocabulary {
@@ -69,5 +71,9 @@ export function buildVocabulary(packs: readonly SignPack[], models: readonly Mod
     references,
     model,
     describe: (label) => signs.get(label),
+    teachable: [...signs]
+      .filter(([, sign]) => model !== null && sign.packId === model.id)
+      .map(([label, sign]) => ({ label, ...sign }))
+      .sort((a, b) => a.text.localeCompare(b.text)),
   };
 }

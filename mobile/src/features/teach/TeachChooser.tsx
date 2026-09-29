@@ -10,6 +10,7 @@ import type { SignEntry } from '@/content/types';
 import { usePersonalSigns } from '@/personal/PersonalSignsProvider';
 import { MAX_CUSTOM_TEXT, signIdFor } from '@/personal/store';
 import { useSettings } from '@/settings/SettingsProvider';
+import { useSignVocabulary } from '@/signpack/SignVocabularyProvider';
 import { useTheme } from '@/theme';
 
 const MAX_SUGGESTIONS = 8;
@@ -19,25 +20,36 @@ function matches(sign: SignEntry, query: string): boolean {
   return texts.some((text) => normalizeText(text).includes(query));
 }
 
-/** Pick what to teach: a common word from the library, any word or phrase, or the alphabet. */
+/**
+ * Pick what to teach: a sign the installed model knows (taught the way this
+ * person signs it), or without a model a common word from the library; any
+ * word or phrase; or the alphabet.
+ */
 export function TeachChooser() {
   const { t } = useTranslation();
   const router = useRouter();
   const { spacing } = useTheme();
   const { settings } = useSettings();
   const { get } = usePersonalSigns();
+  const vocabularyState = useSignVocabulary();
   const [text, setText] = useState('');
   const query = normalizeText(text);
   const language = settings.appLanguage;
 
+  const teachable = vocabularyState.status === 'ready' ? vocabularyState.vocabulary.teachable : [];
   const library = getLibrary().signs;
-  const suggestions = (query ? library.filter((s) => matches(s, query)) : library).slice(0, query ? MAX_SUGGESTIONS : 12);
-  const exact = library.some((s) => normalizeText(s.meaning[language] ?? s.meaning.en) === query);
+  const exact =
+    teachable.some((s) => normalizeText(s.text) === query) || library.some((s) => normalizeText(s.meaning[language] ?? s.meaning.en) === query);
 
   const takesLabel = (id: string) => {
     const count = get(id)?.samples.length ?? 0;
     return count > 0 ? t('teach.chooser.takes', { count }) : undefined;
   };
+
+  // Signs already taught come first, so adding a take is quick.
+  const known = teachable.filter((s) => !query || normalizeText(s.text).includes(query));
+  const vocabularyRows = [...known.filter((s) => get(s.label)), ...known.filter((s) => !get(s.label))].slice(0, query ? MAX_SUGGESTIONS : 12);
+  const suggestions = (query ? library.filter((s) => matches(s, query)) : library).slice(0, query ? MAX_SUGGESTIONS : 12);
 
   return (
     <View style={{ gap: spacing.lg }} testID="teach-chooser">
@@ -66,6 +78,33 @@ export function TeachChooser() {
         </Card>
       ) : null}
 
+      {teachable.length > 0 ? (
+        <View style={{ gap: spacing.sm }} testID="teach-vocabulary">
+          <AppText variant="overline" color="textSecondary">
+            {t('teach.chooser.vocabulary')}
+          </AppText>
+          <AppText variant="caption" color="textSecondary">
+            {t('teach.chooser.vocabularyHint', { count: teachable.length })}
+          </AppText>
+          {vocabularyRows.length > 0 ? (
+            <Card padded={false} style={{ paddingHorizontal: spacing.md, paddingVertical: spacing.xs, gap: 0 }}>
+              {vocabularyRows.map((sign) => (
+                <ListRow
+                  key={sign.label}
+                  testID={`teach-vocabulary-${sign.label}`}
+                  label={sign.text}
+                  value={takesLabel(sign.label)}
+                  onPress={() => router.replace({ pathname: '/signs/teach', params: { kind: 'vocabulary', label: sign.label } })}
+                />
+              ))}
+            </Card>
+          ) : (
+            <AppText variant="caption" color="textSecondary">
+              {t('teach.chooser.noVocabularyMatches')}
+            </AppText>
+          )}
+        </View>
+      ) : (
       <View style={{ gap: spacing.sm }}>
         <AppText variant="overline" color="textSecondary">
           {query ? t('teach.chooser.matches') : t('teach.chooser.common')}
@@ -88,6 +127,7 @@ export function TeachChooser() {
           </AppText>
         )}
       </View>
+      )}
 
       <Card padded={false} style={{ paddingHorizontal: spacing.md, paddingVertical: spacing.xs }}>
         <ListRow

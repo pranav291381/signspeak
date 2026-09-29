@@ -16,9 +16,19 @@ export const SIGN_KEY_PREFIX = 'islconnect.signs.v1.item.';
 
 export const MAX_CUSTOM_TEXT = 60;
 
+/** A model label a vocabulary sign may be taught under: `<pack>:<sign>`, not one of the personal prefixes. */
+const VOCABULARY_LABEL = /^(?!library:|letter:|custom:)[a-z0-9][a-z0-9-]*:[a-z0-9][a-z0-9-]*$/;
+
+export function isVocabularyLabel(label: string): boolean {
+  return VOCABULARY_LABEL.test(label);
+}
+
 /** Stable ID: teaching the same thing again adds recordings to the same sign. */
 export function signIdFor(target: SignTarget): string {
   switch (target.kind) {
+    case 'vocabulary':
+      // The model's own label, so the person's recordings and the model speak of the same sign.
+      return target.label;
     case 'library':
       return `library:${target.signId}`;
     case 'letter':
@@ -54,6 +64,16 @@ export function withSample(
 function sanitizeTarget(raw: unknown): SignTarget | null {
   if (!raw || typeof raw !== 'object') return null;
   const t = raw as Record<string, unknown>;
+  if (
+    t.kind === 'vocabulary' &&
+    typeof t.label === 'string' &&
+    isVocabularyLabel(t.label) &&
+    typeof t.text === 'string' &&
+    t.text.trim() &&
+    isLanguageCode(t.language)
+  ) {
+    return { kind: 'vocabulary', label: t.label, text: t.text.trim().slice(0, MAX_CUSTOM_TEXT), language: t.language };
+  }
   if (t.kind === 'library' && typeof t.signId === 'string' && /^[a-z0-9_]+$/.test(t.signId)) {
     return { kind: 'library', signId: t.signId };
   }

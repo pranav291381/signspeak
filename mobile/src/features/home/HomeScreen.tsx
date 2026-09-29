@@ -6,6 +6,8 @@ import Svg, { Path } from 'react-native-svg';
 import { AppText, FadeIn, Icon, IconTile, Notice, PressableScale, Screen, type IconName } from '@/components';
 import { useHistory } from '@/history/HistoryProvider';
 import type { HistoryEntry } from '@/history/history';
+import { usePersonalSigns } from '@/personal/PersonalSignsProvider';
+import { ALPHABET } from '@/personal/types';
 import { useTheme } from '@/theme';
 
 const LOGO = require('../../../assets/logo.png');
@@ -47,6 +49,9 @@ export function HomeScreen() {
           description={t('home.history.description')}
           onPress={() => router.push('/history')}
         />
+      </FadeIn>
+      <FadeIn delay={150} distance={14}>
+        <YourSigns onPress={() => router.push('/signs')} />
       </FadeIn>
       {recent.length > 0 ? (
         <FadeIn delay={180} distance={14}>
@@ -207,6 +212,45 @@ function Tile({ title, description, icon, tone, onPress, accessibilityLabel, tes
   );
 }
 
+/** Signs taught on this phone: teaching the app the way you sign makes it recognize you better. */
+function YourSigns({ onPress }: { onPress: () => void }) {
+  const { t } = useTranslation();
+  const { colors, elevation, radii, spacing } = useTheme();
+  const { signs, recognizable } = usePersonalSigns();
+  const letters = signs.filter((s) => s.target.kind === 'letter').length;
+  const description =
+    signs.length > 0
+      ? t('home.signs.summary', { words: signs.length - letters, letters, total: ALPHABET.length, ready: recognizable.length })
+      : t('home.signs.empty');
+  return (
+    <PressableScale
+      testID="home-signs"
+      accessibilityRole="button"
+      accessibilityLabel={`${t('home.signs.title')}. ${description}`}
+      onPress={onPress}
+      pressedScale={0.985}
+      style={[
+        elevation.card,
+        styles.row,
+        styles.center,
+        styles.signsRow,
+        { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radii.lg, padding: spacing.md, gap: spacing.md },
+      ]}
+    >
+      <IconTile icon="school-outline" tile="saffron" size={40} />
+      <View style={styles.flex}>
+        <AppText variant="bodyStrong" accessibilityRole="none">
+          {t('home.signs.title')}
+        </AppText>
+        <AppText variant="caption" color="textSecondary">
+          {description}
+        </AppText>
+      </View>
+      <Icon name="chevron-right" size={20} color={colors.textSecondary} />
+    </PressableScale>
+  );
+}
+
 /** The last few things signed or looked up, one tap from seeing them again. */
 function Recent({ entries, onOpen }: { entries: HistoryEntry[]; onOpen: (entry: HistoryEntry) => void }) {
   const { t, i18n } = useTranslation();
@@ -274,4 +318,5 @@ const styles = StyleSheet.create({
   tileArrow: { position: 'absolute', top: 16, right: 16 },
   hairline: { height: StyleSheet.hairlineWidth * 2, marginLeft: 46 },
   recentRow: { minHeight: 60, paddingVertical: 8 },
+  signsRow: { borderWidth: 1, minHeight: 64 },
 });

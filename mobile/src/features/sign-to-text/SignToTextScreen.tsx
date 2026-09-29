@@ -10,6 +10,8 @@ import { getSign, isEmergencySign, signMeaning } from '@/content/library';
 import { EngineFrameSource } from '@/engine/EngineFrameSource';
 import { useHistory } from '@/history/HistoryProvider';
 import { LANGUAGES, type LanguageCode } from '@/i18n/languages';
+import { targetText } from '@/personal/labels';
+import { usePersonalSigns } from '@/personal/PersonalSignsProvider';
 import type { SessionFactory } from '@/recognition/engine';
 import { handsVisible } from '@/recognition/features';
 import type { Recognition } from '@/recognition/types';
@@ -46,6 +48,7 @@ export function SignToTextScreen({ sessionFactory }: Props) {
   const { spacing } = useTheme();
   const { settings, updateSettings } = useSettings();
   const vocabularyState = useSignVocabulary();
+  const { recognizable: taughtSigns, get: getTaught } = usePersonalSigns();
   const focused = useIsFocused();
   const appActive = useAppActive();
 
@@ -60,16 +63,20 @@ export function SignToTextScreen({ sessionFactory }: Props) {
   const { outputLanguage, hapticsEnabled, autoSpeak, demoMode } = settings;
   const vocabulary = vocabularyState.status === 'ready' ? vocabularyState.vocabulary : null;
 
-  /** Text for a recognized label: a sign of the vocabulary, or a library sign (demo mode). */
+  /** Text for a recognized label: a sign of the vocabulary, one taught on this phone, or a library sign (demo mode). */
   const describe = useCallback(
     (label: string): Described | null => {
       const sign = vocabulary?.describe(label);
       if (sign) return { text: sign.text, language: sign.language, letter: sign.letter, emergency: false };
+      const taught = getTaught(label);
+      if (taught) return { ...targetText(taught.target, outputLanguage), letter: taught.target.kind === 'letter', emergency: isEmergencySign(label) };
       const entry = getSign(label);
       return entry ? { ...signMeaning(entry, outputLanguage), letter: false, emergency: isEmergencySign(label) } : null;
     },
-    [vocabulary, outputLanguage],
+    [vocabulary, getTaught, outputLanguage],
   );
+  const teachable = useMemo(() => new Set(vocabulary?.teachable.map((s) => s.label) ?? []), [vocabulary]);
+  const teach = useCallback((label: string) => router.push({ pathname: '/signs/teach', params: { kind: 'vocabulary', label } }), [router]);
   const isDisplayable = useCallback((label: string) => describe(label) !== null, [describe]);
 
   const speech = useSpeech();
@@ -93,6 +100,7 @@ export function SignToTextScreen({ sessionFactory }: Props) {
 
   const { snapshot, results, clear, restart, choose } = useRecognition({
     demoMode,
+    signs: taughtSigns,
     vocabulary: vocabulary?.references ?? NO_REFERENCES,
     model: vocabulary?.model ?? null,
     source,
@@ -235,6 +243,7 @@ export function SignToTextScreen({ sessionFactory }: Props) {
             transcript={transcript}
             suggestions={suggestions}
             onChoose={choose}
+            onTeach={latest && !demoMode && teachable.has(latest.recognition.label) ? teach : undefined}
           />
           <View style={[styles.row, { gap: spacing.sm }]}>
             <View style={styles.flex}>
@@ -280,6 +289,17 @@ export function SignToTextScreen({ sessionFactory }: Props) {
           })}
           {shownLanguage ? ` ${t('signToText.vocabulary.language', { language: LANGUAGES[shownLanguage].nativeName })}` : ''}
         </AppText>
+      ) : null}
+
+      {!demoMode && (teachable.size > 0 || taughtSigns.length > 0) ? (
+        <Button
+          testID="teach-your-signs"
+          variant="ghost"
+          size="sm"
+          icon="school-outline"
+          label={taughtSigns.length > 0 ? t('signToText.teach.manage', { count: taughtSigns.length }) : t('signToText.teach.link')}
+          onPress={() => router.push('/signs')}
+        />
       ) : null}
 
       {snapshot?.simulated ? (
