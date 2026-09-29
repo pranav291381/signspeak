@@ -2,11 +2,14 @@ import type { LanguageCode } from '@/i18n/languages';
 
 /**
  * What a personal sign stands for.
+ * - `vocabulary`: a sign the installed model knows (`label`, e.g. `include:teacher`),
+ *   taught the way this person signs it; `text` is its name when taught.
  * - `library`: a concept from the sign library (its meaning is translated for output).
  * - `custom`: any word or phrase typed by the user.
  * - `letter`: a letter of the fingerspelling alphabet (A–Z).
  */
 export type SignTarget =
+  | { kind: 'vocabulary'; label: string; text: string; language: LanguageCode }
   | { kind: 'library'; signId: string }
   | { kind: 'custom'; text: string; language: LanguageCode }
   | { kind: 'letter'; letter: string };
@@ -29,7 +32,10 @@ export interface SignSample {
  * Text → ISL and the alphabet. Stored only on this phone.
  */
 export interface PersonalSign {
-  /** Stable: `library:<id>`, `letter:<a-z>` or `custom:<normalized text>`. Also the recognition label. */
+  /**
+   * Stable: the model's label for a vocabulary sign, `library:<id>`, `letter:<a-z>`
+   * or `custom:<normalized text>`. Also the recognition label.
+   */
   id: string;
   target: SignTarget;
   samples: SignSample[];

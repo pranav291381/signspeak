@@ -79,6 +79,17 @@ INCLUDE (262 signs, 4,276 videos, CC BY 4.0). For each sign the last recording s
 
 **A signer the model never saw.** The [ISL Bible dictionary](https://huggingface.co/datasets/bridgeconn/sign-dictionary-isl) of Bridge Connectivity Solutions (CC BY-SA 4.0) has one or two videos per word by one signer, recorded outside INCLUDE; 156 of the 262 signs have a video with the same English word (197 videos). Analysed with `npm run export:landmarks` and played through the app's session (`tune:model --evaluate --split all`), the shipped model gets 15.2% right on the first try, 15.2% wrong, 69.5% "not sure", right sign on screen 36.0%; alone, 25.4% right and 37.6% in the top 3. Adding that signer's videos of half the signs to training did not help with the other half (one network: 14.4% → 12.5% right, 22.1% → 24.0% top 3): the model needs each sign from many signers. Some words may be regional variants or a different sense of the English word, so part of the gap is vocabulary, not recognition. The dataset is used for testing only; nothing from it is in the app.
 
+**After teaching the app your signs** (docs/architecture.md §6.6). Simulated with INCLUDE's recordings, played through the app's `PersonalizedRecognizer`. The weights were chosen on validation sessions with run A and measured once on the test sessions.
+
+| Scenario | Right on the first try | Wrong |
+| --- | --- | --- |
+| Same session, all signs taught with two takes, the third signed (run B, 658 takes) | 78.3% (model alone 65.2%) | 3.8% (4.7%) |
+| Taught in one session, signed in the next (run A, 614 videos) | 60.3% (60.1%) | 4.6% (5.4%) |
+| Same, only half the signs taught: the taught ones | 60.1% (64.1%) | 7.0% (5.5%) |
+| Same, only half the signs taught: the others | 59.2% (56.9%) | 4.1% (5.3%) |
+
+It helps the person who taught, signing as they taught; if the teaching recordings differ from the signing (another person, or another day), it does not. INCLUDE does not say who signed each session, and the same person on another day has not been measured. Letting a clear movement match outweigh the model, the rule first tried, made things far worse with many signs taught (first try 60% → 3%).
+
 Slow phones use MediaPipe's lite hand model. On one test video per sign (260), analysed with each: full 68.1% right on the first try, 4.2% wrong, right sign on screen 93.5%; lite 63.5%, 5.0%, 92.3%.
 
 \* Measured when the app still hid suggestions below 3% probability; run B with that rule: 90.1%. The rule was dropped after it cost 1.4 points on validation.

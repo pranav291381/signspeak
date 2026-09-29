@@ -68,15 +68,15 @@ describe('app navigation', () => {
     // Learn is parked for now.
     expect(screen.queryByTestId('home-learn')).toBeNull();
     expect(screen.getByText(/not a replacement for a qualified ISL interpreter/)).toBeOnTheScreen();
-    // Teaching your own signs is paused: Sign → Text uses the dictionary vocabulary.
-    expect(screen.queryByTestId('home-teach')).toBeNull();
-    expect(screen.queryByTestId('home-my-signs')).toBeNull();
+    // Teaching the app your signs.
+    expect(screen.getByRole('button', { name: /^Your signs\. Recognition learns from you/ })).toBeOnTheScreen();
   });
 
   it.each([
     ['home-sign-to-text', '/sign-to-text'],
     ['home-text-to-isl', '/text-to-isl'],
     ['home-history', '/history'],
+    ['home-signs', '/signs'],
   ])('%s opens %s', async (testID, pathname) => {
     const router = renderRouter(APP_DIR, { initialUrl: '/' });
     fireEvent.press(await screen.findByTestId(testID));

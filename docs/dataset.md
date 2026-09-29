@@ -122,7 +122,19 @@ Aim for variation along every axis, and record it in metadata so evaluation can 
 3. A new dataset version is published without them. Splits are regenerated as a new version.
 4. Models trained on earlier versions are retrained at the next release, and the model card records which dataset version it used.
 
-## 12. Dataset versioning
+## 12. Public data sources checked
+
+Recognizing people the model has never seen needs each sign from many signers. These are the Indian Sign Language sources checked so far and what they can be used for (September 2026). Nothing is used beyond what its licence or its owner allows.
+
+| Source | What it has | Licence / access | Used for |
+| --- | --- | --- | --- |
+| [INCLUDE](https://zenodo.org/records/4010759) (AI4Bharat / IIT Madras) | 262 signs, 4,276 videos, Deaf students of one school in Chennai | CC BY 4.0 | Training and testing the included model |
+| [ISL Bible (ISLV) Dictionary](https://huggingface.co/datasets/bridgeconn/sign-dictionary-isl) (Bridge Connectivity Solutions) | 3,077 words, about one video each, one signer; 156 of INCLUDE's signs | CC BY-SA 4.0 | Testing only, as a signer the model never saw. Training on it would likely make the model pack CC BY-SA too (owner decision) |
+| RKMVERI isolated ISL dataset ([arXiv 2407.14224](https://arxiv.org/abs/2407.14224)) | 2,002 words, 20 Deaf signers (10 women, 10 men), 40,033 videos | Research use only; not downloadable yet | Permission for use in the app requested by the owner (pending) |
+| [CISLR](https://aclanthology.org/2022.emnlp-main.707/) (IIT Kanpur) | 4,765 words, 7,050 videos, 71 signers | Dataset AFL-3.0, gated; videos scraped from YouTube (ISLRTC and an ISL dictionary channel) | Not used: the video owners' permission would be needed |
+| ISLRTC dictionary (Government of India) | 10,000+ signs | Copyright of ISLRTC | Not used: needs ISLRTC's permission |
+
+## 13. Dataset versioning
 
 - Use semantic versions (`1.0.0`). Adding samples is a minor bump. Removing samples (for example after a withdrawal) or changing labels is a major bump.
 - Each version has a `DATASET_CARD.md` with sample counts per sign and per split, number of signers, diversity summary, known gaps, licence and changelog.

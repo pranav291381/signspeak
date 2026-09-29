@@ -11,7 +11,8 @@ import { seedSigns, taughtSign } from '@/test-utils/signs';
 
 import { SettingsScreen } from '../SettingsScreen';
 
-jest.mock('expo-router', () => ({ useRouter: () => ({ push: jest.fn() }) }));
+const mockPush = jest.fn();
+jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush }) }));
 
 async function storedSettings(store: ReturnType<typeof createMemoryStore>) {
   await waitFor(() => expect(store.data.get(SETTINGS_STORAGE_KEY)).toBeDefined());
@@ -121,11 +122,11 @@ describe('SettingsScreen', () => {
     expect(await screen.findByTestId('about-no-vocabulary')).toHaveTextContent('No sign vocabulary is installed in this version.');
   });
 
-  it('has no sign-teaching section when nothing was taught', async () => {
+  it('always offers to teach signs, and to delete them only once something was taught', async () => {
     renderWithProviders(<SettingsScreen />);
-    await screen.findByText(/not a replacement for a qualified ISL interpreter/);
+    fireEvent.press(await screen.findByRole('button', { name: 'Teach and manage your signs' }));
+    expect(mockPush).toHaveBeenCalledWith('/signs');
     expect(screen.queryByTestId('settings-delete-signs')).toBeNull();
-    expect(screen.queryByRole('button', { name: /^My signs/ })).toBeNull();
   });
 
   it('still lets the user delete signs taught earlier', async () => {

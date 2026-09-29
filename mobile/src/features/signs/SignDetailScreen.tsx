@@ -64,11 +64,13 @@ function SignDetail({ sign }: { sign: PersonalSign }) {
   const teachAgain = () => {
     const target = sign.target;
     const params =
-      target.kind === 'library'
-        ? { kind: 'library', id: target.signId }
-        : target.kind === 'letter'
-          ? { kind: 'letter', letter: target.letter }
-          : { kind: 'custom', text: target.text };
+      target.kind === 'vocabulary'
+        ? { kind: 'vocabulary', label: target.label }
+        : target.kind === 'library'
+          ? { kind: 'library', id: target.signId }
+          : target.kind === 'letter'
+            ? { kind: 'letter', letter: target.letter }
+            : { kind: 'custom', text: target.text };
     router.push({ pathname: '/signs/teach', params });
   };
 

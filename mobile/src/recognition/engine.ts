@@ -1,7 +1,8 @@
 import { getSign, isEmergencySign } from '@/content/library';
 import type { ModelPack } from '@/model/modelPack';
 import { ModelSignRecognizer } from '@/model/ModelSignRecognizer';
-import type { ReferenceSign } from '@/personal/matcher';
+import { personalReferences, type ReferenceSign } from '@/personal/matcher';
+import { PersonalizedRecognizer } from '@/personal/PersonalizedRecognizer';
 import { PersonalSignRecognizer } from '@/personal/PersonalSignRecognizer';
 import { ReferenceSignRecognizer } from '@/personal/ReferenceSignRecognizer';
 import type { PersonalSign } from '@/personal/types';
@@ -20,7 +21,7 @@ export interface EngineOptions {
   signs?: readonly PersonalSign[];
   /** Signs of the installed sign packs (the dictionary vocabulary). Used instead of `signs`. */
   vocabulary?: readonly ReferenceSign[];
-  /** An installed trained model. Used instead of `vocabulary` and `signs`. */
+  /** An installed trained model. Used instead of `vocabulary`, and together with `signs`. */
   model?: ModelPack | null;
   /** Live landmark frames from the camera engine. */
   source?: FrameSource | null;
@@ -95,10 +96,10 @@ export function modelSessionConfig(info: RecognizerInfo): Partial<SessionConfig>
 /**
  * Chooses the recognizer:
  * - demo mode: simulated results, clearly labelled as such;
- * - otherwise an installed trained model, the installed sign vocabulary
- *   (sign packs), or the signs taught on this phone, fed by live camera landmarks;
+ * - otherwise an installed trained model (with the signs taught on this phone,
+ *   if any), the installed sign vocabulary (sign packs), or the signs taught on
+ *   this phone alone, fed by live camera landmarks;
  * - with neither, a session that reports `model_unavailable`.
- * A trained on-device model would be added here (docs/architecture.md §6.2).
  */
 export const createRecognitionSession: SessionFactory = ({ demoMode, signs = [], vocabulary = [], model = null, source = null }) => {
   if (demoMode) {
@@ -110,7 +111,9 @@ export const createRecognitionSession: SessionFactory = ({ demoMode, signs = [],
     });
   }
   if (model && source) {
-    return modelSession(new ModelSignRecognizer(model, source.model), source);
+    const recognizer = new ModelSignRecognizer(model, source.model);
+    const taught = personalReferences(signs);
+    return modelSession(taught.length > 0 ? new PersonalizedRecognizer(recognizer, taught) : recognizer, source);
   }
   if (vocabulary.length > 0 && source) {
     const recognizer = new ReferenceSignRecognizer(vocabulary, { id: 'sign-pack-dtw', version: '1', emptyMessage: 'No usable signs in the sign packs' });

@@ -6,6 +6,8 @@ import type { PersonalSign, SignTarget } from './types';
 /** Text a personal sign stands for, in `language` where the library has a translation. */
 export function targetText(target: SignTarget, language: LanguageCode): { text: string; language: LanguageCode } {
   switch (target.kind) {
+    case 'vocabulary':
+      return { text: target.text, language: target.language };
     case 'library': {
       const entry = getSign(target.signId);
       return entry ? signMeaning(entry, language) : { text: target.signId.replace(/_/g, ' '), language: 'en' };
