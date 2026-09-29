@@ -278,6 +278,7 @@ Recognition that works without a trained model: the user (ideally a fluent signe
   | | Right on the first try | Wrong |
   | --- | --- | --- |
   | Same session, every sign taught with two takes (run B) | 78.3% (model alone 65.2%) | 3.8% (4.7%) |
+  | Same, with confirmed signs shown from 0.3 (below) | 82.1% | 4.0% |
   | Taught in one session, signed in the next (run A) | 60.3% (60.1%) | 4.6% (5.4%) |
   | Same, but only the taught half of the signs | 60.1% (64.1%) | 7.0% (5.5%) |
 
