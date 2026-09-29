@@ -67,9 +67,10 @@ A welcome flow asks for the app language and the appearance (light, dark or foll
 - Report a problem / feedback
 - About: limitations, privacy summary, "not a replacement for interpreters"
 
-### 4.6 Teach a sign / My signs (paused)
-Parked by the owner's decision while Sign → Text uses the dictionary vocabulary: there is no entry point in the app, but the code, routes and tests are kept, and signs taught earlier can still be deleted in Settings. When testers are available, recordings of their signing will be used to calibrate the dictionary vocabulary.
-- Teach a common word from the library, any typed word or phrase, a single letter, or the whole alphabet.
+### 4.6 Teach a sign / Your signs
+Back by the owner's decision (D24): the model recognizes people outside INCLUDE poorly, so each person can teach it the way they sign. Entry points: Home ("Your signs"), Settings ("Teach and manage your signs"), Sign → Text ("Teach the app your signs", and "Teach it your way" under a sign picked from the suggestions).
+- Teach any sign the installed model knows (listed by name, with search), any typed word or phrase, a single letter, or the whole alphabet; without a model, a common word from the library.
+- Taught signs of the model move its answer for this person (docs/architecture.md §6.6); taught words and letters are recognized from the recordings.
 - Each take: countdown, a few seconds of recording (landmarks only), animated replay, and checks (no one in view, no hands, too short, unlike earlier takes). Words need three takes, letters two.
 - My signs lists every sign with its takes and readiness; takes, signs, or everything can be deleted.
 

@@ -155,6 +155,22 @@ describe('SignToTextScreen vocabulary', () => {
     expect(screen.queryByTestId('vocabulary-missing')).toBeNull();
   });
 
+  it('recognizes signs taught on this phone, names them, and links to them', async () => {
+    const store = makeStore({});
+    await seedSigns(store, [taughtSign({ kind: 'custom', text: 'Chai', language: 'en' }, 'two_hands', 2)]);
+    const { factory, source, recognizer } = testSession();
+    const spy = jest.fn(factory);
+    recognizer.scores = { 'custom:chai': 0.95 };
+    renderWithProviders(<SignToTextScreen sessionFactory={spy} />, { store, packs: [pack] });
+    await screen.findByTestId('vocabulary-info');
+    await waitFor(() => expect(spy).toHaveBeenLastCalledWith(expect.objectContaining({ signs: [expect.objectContaining({ id: 'custom:chai' })] })));
+    cameraRunning();
+    await pushFrames(source, 2);
+    expect(screen.getByTestId('recognition-text')).toHaveTextContent('Chai');
+    fireEvent.press(screen.getByRole('button', { name: 'Your signs (1 taught)' }));
+    expect(mockPush).toHaveBeenCalledWith('/signs');
+  });
+
   it('shows how many signs it knows and where they come from', async () => {
     await renderScreen();
     expect(screen.getByTestId('vocabulary-info')).toHaveTextContent('Recognizes 5 signs from Test dictionary.');

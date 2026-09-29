@@ -1,5 +1,7 @@
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 
+import fixture from '../../../../../shared/fixtures/segment_parity_v2.json';
+import { parseModelPack } from '@/model/modelPack';
 import { loadSigns } from '@/personal/store';
 import { createMemoryStore } from '@/storage/keyValueStore';
 import { fakeCamera } from '@/test-utils/fakeLandmarkCamera';
@@ -7,7 +9,7 @@ import { MOTIONS, perform } from '@/test-utils/landmarks';
 import { renderWithProviders } from '@/test-utils/render';
 import { seedSigns, taughtSign } from '@/test-utils/signs';
 
-import { parseTargets, takesWanted } from '../targets';
+import { parseTargets, recordingMs, takesWanted } from '../targets';
 import { TeachScreen } from '../TeachScreen';
 
 let mockParams: Record<string, string> = {};
@@ -56,9 +58,44 @@ describe('parseTargets', () => {
     expect(takesWanted({ kind: 'letter', letter: 'a' })).toBe(2);
     expect(takesWanted({ kind: 'library', signId: 'hello' })).toBe(3);
   });
+
+  it('accepts a sign of the installed model, named as the model names it', () => {
+    const vocabulary = (label: string) => (label === 'include:teacher' ? { text: 'Teacher', language: 'en' as const } : undefined);
+    expect(parseTargets({ kind: 'vocabulary', label: 'include:teacher' }, 'hi', none, vocabulary)).toEqual([
+      { kind: 'vocabulary', label: 'include:teacher', text: 'Teacher', language: 'en' },
+    ]);
+    expect(parseTargets({ kind: 'vocabulary', label: 'include:unknown' }, 'en', none, vocabulary)).toBeNull();
+    expect(parseTargets({ kind: 'vocabulary', label: 'custom:teacher' }, 'en', none, () => ({ text: 'x', language: 'en' }))).toBeNull();
+    expect(parseTargets({ kind: 'vocabulary', label: 'include:teacher' }, 'en', none)).toBeNull();
+    // As long as a stored take can be: some signs are two signs in one.
+    expect(recordingMs({ kind: 'vocabulary', label: 'include:teacher', text: 'Teacher', language: 'en' })).toBe(4000);
+  });
 });
 
 describe('TeachChooser', () => {
+  const withModel = { loadPacks: () => Promise.resolve({ packs: [], models: [parseModelPack(JSON.parse(JSON.stringify(fixture.pack)))], failed: [] }) };
+
+  it('lists the model’s signs to teach your way, taught ones first, searchable', async () => {
+    const store = createMemoryStore();
+    await seedSigns(store, [taughtSign({ kind: 'vocabulary', label: 'test:2', text: 'Sign 2', language: 'en' })]);
+    renderWithProviders(<TeachScreen />, { ...withModel, store });
+    expect(await screen.findByText('Signs the app knows')).toBeOnTheScreen();
+    expect(screen.getByText(/Search among all 4/)).toBeOnTheScreen();
+    expect(screen.getAllByTestId(/^teach-vocabulary-/).map((row) => row.props.testID)).toEqual([
+      'teach-vocabulary-test:2',
+      'teach-vocabulary-test:0',
+      'teach-vocabulary-test:1',
+      'teach-vocabulary-test:3',
+    ]);
+    // No library words when the model's own signs can be taught.
+    expect(screen.queryByTestId('teach-library-thank_you')).toBeNull();
+
+    fireEvent.changeText(screen.getByLabelText('What does the sign mean?'), 'sign 3');
+    expect(screen.getAllByTestId(/^teach-vocabulary-/)).toHaveLength(1);
+    fireEvent.press(screen.getByTestId('teach-vocabulary-test:3'));
+    expect(mockReplace).toHaveBeenCalledWith({ pathname: '/signs/teach', params: { kind: 'vocabulary', label: 'test:3' } });
+  });
+
   it('suggests matching library words and offers to teach a new word', async () => {
     renderWithProviders(<TeachScreen />);
     fireEvent.changeText(await screen.findByLabelText('What does the sign mean?'), 'thank');

@@ -79,4 +79,25 @@ describe('RecognitionPanel', () => {
     expect(await screen.findByTestId('recognition-text')).toHaveTextContent('Hello');
     expect(screen.getByText('Chosen from the suggestions')).toBeOnTheScreen();
   });
+
+  it('offers to teach a sign the app did not get on its own, the way it was signed', async () => {
+    const onTeach = jest.fn();
+    const chosen = { recognition: { label: 'test:water', band: null, timestampMs: 1, chosen: true }, text: 'Water', emergency: false };
+    const view = renderWithProviders(
+      <RecognitionPanel snapshot={snapshot({ status: 'recognized' })} paused={false} latest={chosen} transcript={[]} onTeach={onTeach} />,
+    );
+    fireEvent.press(await screen.findByRole('button', { name: 'Teach Water the way you sign it' }));
+    expect(onTeach).toHaveBeenCalledWith('test:water');
+    // A sign the app recognized on its own needs no teaching.
+    view.rerender(
+      <RecognitionPanel
+        snapshot={snapshot({ status: 'recognized' })}
+        paused={false}
+        latest={{ ...chosen, recognition: { ...chosen.recognition, chosen: false } }}
+        transcript={[]}
+        onTeach={onTeach}
+      />,
+    );
+    expect(screen.queryByTestId('recognition-teach')).toBeNull();
+  });
 });
