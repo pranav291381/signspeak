@@ -222,7 +222,9 @@ def train_member(
     epochs: int,
     log,
     mixup: bool = False,
+    checkpoint: Path | None = None,
 ) -> nn.Module:
+    """One member. With `checkpoint`, progress is saved every 10 epochs and an interrupted run resumes."""
     torch.manual_seed(seed)
     rng = np.random.default_rng(seed)
     dim = network_input(train[0][1], features).shape[1]
@@ -233,7 +235,17 @@ def train_member(
     steps = epochs * math.ceil(len(train) / batch)
     sched = torch.optim.lr_scheduler.OneCycleLR(opt, lr, total_steps=steps, pct_start=0.1)
     loss_fn = nn.CrossEntropyLoss(label_smoothing=0.1)
-    for epoch in range(epochs):
+    start = 0
+    if checkpoint and checkpoint.exists():
+        state = torch.load(checkpoint, weights_only=False)
+        model.load_state_dict(state["model"])
+        opt.load_state_dict(state["opt"])
+        sched.load_state_dict(state["sched"])
+        rng.bit_generator.state = state["rng"]
+        torch.set_rng_state(state["torch_rng"])
+        start = state["epoch"]
+        log(f"  {arch} {features} seed {seed}: resuming at epoch {start}")
+    for epoch in range(start, epochs):
         model.train()
         order = rng.permutation(len(train))
         total = 0.0
@@ -257,6 +269,19 @@ def train_member(
             total += float(loss.detach()) * len(y)
         if (epoch + 1) % 10 == 0:
             log(f"  {arch} {features} seed {seed}: epoch {epoch + 1} loss {total / len(train):.3f}")
+            if checkpoint and epoch + 1 < epochs:
+                state = {
+                    "model": model.state_dict(),
+                    "opt": opt.state_dict(),
+                    "sched": sched.state_dict(),
+                    "rng": rng.bit_generator.state,
+                    "torch_rng": torch.get_rng_state(),
+                    "epoch": epoch + 1,
+                }
+                torch.save(state, checkpoint.with_suffix(".tmp"))
+                checkpoint.with_suffix(".tmp").replace(checkpoint)
+    if checkpoint:
+        checkpoint.unlink(missing_ok=True)
     return model.eval()
 
 
@@ -389,6 +414,7 @@ def main() -> None:
                 args.epochs,
                 lambda m: print(m, flush=True),
                 mixup=mixup,
+                checkpoint=path.with_suffix(".partial"),
             )
             torch.save(model.state_dict(), path)
         trained.append((arch, features, model))

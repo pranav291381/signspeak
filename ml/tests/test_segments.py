@@ -126,3 +126,28 @@ def test_member_inputs_keep_the_presence_flags_last():
         x = ts.member_input(frames, features)
         assert x.shape == (5, dim)
         np.testing.assert_array_equal(x[:, -3:], frames[:, 153:156])
+
+
+def test_an_interrupted_member_resumes_from_its_checkpoint_to_the_same_weights(tmp_path):
+    rng = np.random.default_rng(0)
+    train = [
+        (i % 3, frames_with(list(range(5, 12))) + rng.normal(0, 0.01, (20, 156)).astype(np.float32))
+        for i in range(12)
+    ]
+    whole = ts.train_member(train, 3, "gru", "xy", 0, 20, lambda m: None)
+
+    class StopError(Exception):
+        pass
+
+    def stop_at_20(message):
+        if "epoch 20" in message:
+            raise StopError
+
+    checkpoint = tmp_path / "member.partial"
+    with pytest.raises(StopError):
+        ts.train_member(train, 3, "gru", "xy", 0, 20, stop_at_20, checkpoint=checkpoint)
+    assert checkpoint.exists()  # saved at epoch 10
+    resumed = ts.train_member(train, 3, "gru", "xy", 0, 20, lambda m: None, checkpoint=checkpoint)
+    assert not checkpoint.exists()
+    for a, b in zip(whole.state_dict().values(), resumed.state_dict().values(), strict=True):
+        torch.testing.assert_close(a, b)
