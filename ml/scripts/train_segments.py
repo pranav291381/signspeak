@@ -22,6 +22,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import re
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -366,18 +367,30 @@ def main() -> None:
         flush=True,
     )
 
+    # Each finished member is kept in <out>/members, so an interrupted run picks up where it stopped.
+    saved = args.out / "members"
+    saved.mkdir(parents=True, exist_ok=True)
     trained = []
     for arch, features, seed, mixup in members:
-        model = train_member(
-            parts["train"],
-            len(labels),
-            arch,
-            features,
-            seed,
-            args.epochs,
-            lambda m: print(m, flush=True),
-            mixup=mixup,
-        )
+        key = f"{arch}_{features}_{seed}{'_mix' if mixup else ''}_e{args.epochs}_n{len(parts['train'])}"
+        path = saved / f"{re.sub(r'[^a-z0-9_]+', '-', key)}.pt"
+        if path.exists():
+            model = new_network(arch, len(labels), network_input(parts["train"][0][1], features).shape[1])
+            model.load_state_dict(torch.load(path, weights_only=True))
+            model.eval()
+            print(f"  {arch} {features} seed {seed}: loaded from {path.name}", flush=True)
+        else:
+            model = train_member(
+                parts["train"],
+                len(labels),
+                arch,
+                features,
+                seed,
+                args.epochs,
+                lambda m: print(m, flush=True),
+                mixup=mixup,
+            )
+            torch.save(model.state_dict(), path)
         trained.append((arch, features, model))
 
     if args.train_all:
