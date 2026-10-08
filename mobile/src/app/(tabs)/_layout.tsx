@@ -43,10 +43,7 @@ export default function TabsLayout() {
           tabBarButtonTestID: 'tab-text-to-isl',
         }}
       />
-      <Tabs.Screen
-        name="learn"
-        options={{ title: t('tabs.learn'), tabBarAccessibilityLabel: t('home.learn.a11yLabel'), tabBarButtonTestID: 'tab-learn' }}
-      />
+      <Tabs.Screen name="my-signs" options={{ title: t('tabs.mySigns'), tabBarButtonTestID: 'tab-my-signs' }} />
       <Tabs.Screen name="settings" options={{ title: t('tabs.settings'), tabBarButtonTestID: 'tab-settings' }} />
     </Tabs>
   );

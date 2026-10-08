@@ -65,7 +65,6 @@ function AppStack() {
           name="welcome"
           options={{ headerShown: false, gestureEnabled: false, animation: reduceMotion ? 'none' : 'fade' }}
         />
-        <Stack.Screen name="signs/index" options={{ title: t('screens.mySigns') }} />
         <Stack.Screen name="signs/[id]" options={{ title: t('screens.sign') }} />
         <Stack.Screen name="signs/teach" options={{ title: t('screens.teach') }} />
         <Stack.Screen name="history" options={{ title: t('screens.history') }} />

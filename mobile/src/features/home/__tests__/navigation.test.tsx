@@ -65,8 +65,6 @@ describe('app navigation', () => {
     expect(await screen.findByTestId('home-screen')).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: /^Sign to text\./ })).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: /^Text to I S L\./ })).toBeOnTheScreen();
-    // Learn is parked for now.
-    expect(screen.queryByTestId('home-learn')).toBeNull();
     expect(screen.getByText(/not a replacement for a qualified ISL interpreter/)).toBeOnTheScreen();
     // Teaching the app your signs.
     expect(screen.getByRole('button', { name: /^Your signs\. Recognition learns from you/ })).toBeOnTheScreen();
@@ -76,7 +74,7 @@ describe('app navigation', () => {
     ['home-sign-to-text', '/sign-to-text'],
     ['home-text-to-isl', '/text-to-isl'],
     ['home-history', '/history'],
-    ['home-signs', '/signs'],
+    ['home-signs', '/my-signs'],
   ])('%s opens %s', async (testID, pathname) => {
     const router = renderRouter(APP_DIR, { initialUrl: '/' });
     fireEvent.press(await screen.findByTestId(testID));
@@ -122,12 +120,16 @@ describe('app navigation', () => {
     await act(async () => undefined);
   });
 
-  it.each([['/learn', 'learn-in-progress']])('%s says it is in progress and leads back to Sign → Text', async (url, testID) => {
-    const router = renderRouter(APP_DIR, { initialUrl: url });
-    expect(await screen.findByTestId(testID)).toBeOnTheScreen();
-    expect(screen.getByText('In progress')).toBeOnTheScreen();
-    fireEvent.press(screen.getByRole('button', { name: 'Go to Sign → Text' }));
-    await waitFor(() => expect(router.getPathname()).toBe('/sign-to-text'));
+  it('My signs is a tab: teaching opens from it', async () => {
+    const router = renderRouter(APP_DIR, { initialUrl: '/' });
+    await screen.findByTestId('home-screen');
+    fireEvent.press(screen.getByTestId('tab-my-signs'));
+    expect(await screen.findByTestId('my-signs-screen')).toBeOnTheScreen();
+    expect(router.getPathname()).toBe('/my-signs');
+    expect(screen.getByTestId('tab-my-signs')).toBeSelected();
+    expect(screen.queryByTestId('tab-learn')).toBeNull();
+    fireEvent.press(screen.getByTestId('my-signs-teach'));
+    await waitFor(() => expect(router.getPathname()).toBe('/signs/teach'));
     await act(async () => undefined);
   });
 });

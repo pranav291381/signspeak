@@ -35,7 +35,7 @@ jest.mock('expo-camera', () => ({
 const mockPush = jest.fn();
 jest.mock('expo-router', () => ({
   useIsFocused: () => true,
-  useRouter: () => ({ dismissTo: jest.fn(), push: mockPush }),
+  useRouter: () => ({ dismissTo: jest.fn(), push: mockPush, navigate: mockPush }),
 }));
 
 jest.mock('expo-haptics', () => ({
@@ -168,7 +168,7 @@ describe('SignToTextScreen vocabulary', () => {
     await pushFrames(source, 2);
     expect(screen.getByTestId('recognition-text')).toHaveTextContent('Chai');
     fireEvent.press(screen.getByRole('button', { name: 'Your signs (1 taught)' }));
-    expect(mockPush).toHaveBeenCalledWith('/signs');
+    expect(mockPush).toHaveBeenCalledWith('/my-signs');
   });
 
   it('shows how many signs it knows and where they come from', async () => {

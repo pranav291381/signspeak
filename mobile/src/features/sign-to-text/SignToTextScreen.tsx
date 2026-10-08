@@ -298,7 +298,7 @@ export function SignToTextScreen({ sessionFactory }: Props) {
           size="sm"
           icon="school-outline"
           label={taughtSigns.length > 0 ? t('signToText.teach.manage', { count: taughtSigns.length }) : t('signToText.teach.link')}
-          onPress={() => router.push('/signs')}
+          onPress={() => router.navigate('/my-signs')}
         />
       ) : null}
 

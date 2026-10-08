@@ -19,7 +19,7 @@ export const TAB_ICONS: Record<string, [IconName, IconName]> = {
   index: ['home-variant', 'home-variant-outline'],
   'sign-to-text': ['hand-wave', 'hand-wave-outline'],
   'text-to-isl': ['message-text', 'message-text-outline'],
-  learn: ['school', 'school-outline'],
+  'my-signs': ['hand-heart', 'hand-heart-outline'],
   settings: ['cog', 'cog-outline'],
 };
 
