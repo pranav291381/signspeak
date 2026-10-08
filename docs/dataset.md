@@ -129,10 +129,10 @@ Recognizing people the model has never seen needs each sign from many signers. T
 | Source | What it has | Licence / access | Used for |
 | --- | --- | --- | --- |
 | [INCLUDE](https://zenodo.org/records/4010759) (AI4Bharat / IIT Madras) | 262 signs, 4,276 videos, Deaf students of one school in Chennai | CC BY 4.0 | Training and testing the included model |
-| [ISL Bible (ISLV) Dictionary](https://huggingface.co/datasets/bridgeconn/sign-dictionary-isl) (Bridge Connectivity Solutions) | 3,077 words, about one video each, one signer; 156 of INCLUDE's signs | CC BY-SA 4.0 | Testing only, as a signer the model never saw. Training on it would likely make the model pack CC BY-SA too (owner decision) |
+| [ISL Bible (ISLV) Dictionary](https://huggingface.co/datasets/bridgeconn/sign-dictionary-isl) (Bridge Connectivity Solutions) | 3,077 words, about one video each, one signer; 156 of INCLUDE's signs | CC BY-SA 4.0 | Testing only, as a signer the model never saw. Training on it measured as well as ISLRTC (73.3% vs 72.5% first try) but would make the model pack CC BY-SA too, so it is not used (owner decision pending) |
 | RKMVERI isolated ISL dataset ([arXiv 2407.14224](https://arxiv.org/abs/2407.14224)) | 2,002 words, 20 Deaf signers (10 women, 10 men), 40,033 videos | Research use only; not downloadable yet | Permission for use in the app requested by the owner (pending) |
 | [CISLR](https://aclanthology.org/2022.emnlp-main.707/) (IIT Kanpur) | 4,765 words, 7,050 videos, 71 signers | Dataset AFL-3.0, gated; videos scraped from YouTube (ISLRTC and an ISL dictionary channel) | Not used: the video owners' permission would be needed |
-| ISLRTC dictionary (Government of India) | 10,000+ signs | Copyright of ISLRTC | Not used: needs ISLRTC's permission |
+| [ISLRTC Indian Sign Language Dictionary (till January 2024)](https://www.data.gov.in/resource/indian-sign-language-dictionary-till-january-2024) (Government of India) | 10,000+ signs, about one video each; 205 of INCLUDE's signs by English word | [Government Open Data License – India](https://data.gov.in/government-open-data-license-india) (use, adapt, share, also commercially, with attribution) on data.gov.in; a [re-encoded copy](https://huggingface.co/datasets/Vignesh3816/Indian_Sign_Language_Data.gov_Rencoded) on Hugging Face | **Training** the included model (205 videos, one per sign, landmarks only; credited in the pack). Earlier marked "needs permission" before its open licence on data.gov.in was found |
 
 ## 13. Signs exported from the app
 
