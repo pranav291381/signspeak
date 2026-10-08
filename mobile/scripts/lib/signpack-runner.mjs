@@ -195,13 +195,13 @@ export async function createRunner({ root, cacheDir, browser: browserChoice, ffm
     return out;
   }
 
-  async function extractVideo(pageHandle, entry, raw) {
-    const cached = join(resultDir, `${entry.key}${raw ? '.raw' : ''}${handModel === 'lite' ? '.lite' : ''}.json`);
+  async function extractVideo(pageHandle, entry, raw, depth = false) {
+    const cached = join(resultDir, `${entry.key}${raw ? '.raw' : ''}${depth ? '.depth' : ''}${handModel === 'lite' ? '.lite' : ''}.json`);
     if (existsSync(cached)) {
       const result = JSON.parse(readFileSync(cached, 'utf8'));
       if (result.extractorVersion === extractorVersion) return { ...result, cached: true };
     }
-    const run = (id) => pageHandle.evaluate(([url, options]) => window.__extract(url, options), [`${origin}/video/${id}`, { raw }]);
+    const run = (id) => pageHandle.evaluate(([url, options]) => window.__extract(url, options), [`${origin}/video/${id}`, { raw, depth }]);
     let result;
     try {
       const path = await localVideo(entry);
@@ -238,7 +238,7 @@ export async function createRunner({ root, cacheDir, browser: browserChoice, ffm
      * Analyses every entry ({ text, video, key }), `jobs` at a time.
      * With `raw`, results also hold every frame of the video (for evaluation).
      */
-    async extractAll(entries, { raw = false, onResult = () => undefined } = {}) {
+    async extractAll(entries, { raw = false, depth = false, onResult = () => undefined } = {}) {
       const results = new Array(entries.length);
       let next = 0;
       let done = 0;
@@ -246,7 +246,7 @@ export async function createRunner({ root, cacheDir, browser: browserChoice, ffm
         const pageHandle = await openPage();
         while (next < entries.length) {
           const i = next++;
-          results[i] = await extractVideo(pageHandle, entries[i], raw);
+          results[i] = await extractVideo(pageHandle, entries[i], raw, depth);
           done += 1;
           onResult(entries[i], results[i], done);
         }

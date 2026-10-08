@@ -1,0 +1,7 @@
+{
+  "note": "High/critical advisories with no fixed version, in build tooling only (not in the app bundle). Remove each entry once a patched version ships. Approved by the owner, 2026-10-08.",
+  "advisories": {
+    "GHSA-vfj7-8cjw-p6xm": "braces (via micromatch: Metro and Jest file matching). Every version is affected; no fix published.",
+    "GHSA-86w9-cpqp-85rv": "node-forge (via @expo/cli code signing). Every version is affected; no fix published."
+  }
+}

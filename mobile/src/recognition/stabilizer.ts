@@ -18,6 +18,8 @@ export interface StabilizerOptions {
 
 /** Segment mode: signs offered when not sure (see `judge`). */
 export const MAX_SUGGESTIONS = 3;
+/** Segment mode: a sign the person's own recordings confirm (RawPrediction.confirmed) is shown from this score. */
+export const CONFIRMED_MIN_CONFIDENCE = 0.3;
 
 function topLabel(scores: readonly ScoredLabel[]): ScoredLabel | undefined {
   let best: ScoredLabel | undefined;
@@ -175,8 +177,11 @@ export class PredictionStabilizer {
       .slice(0, MAX_SUGGESTIONS)
       .map((s) => s.label);
     if (!first || first.label === UNKNOWN_LABEL) return { status: 'uncertain', reason: 'unknown_sign', suggestions };
-    const minConfidence = this.isEmergency(first.label) ? this.config.emergencyMinConfidence : this.config.minConfidence;
-    if (first.score < minConfidence) return { status: 'uncertain', reason: 'low_confidence', suggestions };
+    const emergency = this.isEmergency(first.label);
+    const minConfidence = emergency ? this.config.emergencyMinConfidence : this.config.minConfidence;
+    // A sign the person taught, clearly matching their own recordings, needs less (never an emergency sign).
+    const confirmed = !emergency && prediction.confirmed === first.label && first.score >= CONFIRMED_MIN_CONFIDENCE;
+    if (first.score < minConfidence && !confirmed) return { status: 'uncertain', reason: 'low_confidence', suggestions };
     if (first.score - (second?.score ?? 0) < this.config.minMargin) return { status: 'uncertain', reason: 'ambiguous', suggestions };
     const band = this.calibrated ? (first.score >= this.config.highConfidenceThreshold ? 'high' : 'medium') : null;
     return {

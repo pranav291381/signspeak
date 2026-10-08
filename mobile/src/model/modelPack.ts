@@ -49,8 +49,13 @@ export interface ModelStabilizerSettings {
 }
 
 /** What a member network reads per frame (see memberInput in signModel.ts). */
-export type MemberFeatures = 'xy' | 'xy+hands+vel';
-const MEMBER_INPUT_DIMS: Record<MemberFeatures, number> = { xy: XY_FRAME_DIM, 'xy+hands+vel': XY_FRAME_DIM + 84 + 102 };
+export type MemberFeatures = 'xy' | 'xy+hands+vel' | 'xy+angles' | 'xy+hands+vel+angles';
+const MEMBER_INPUT_DIMS: Record<MemberFeatures, number> = {
+  xy: XY_FRAME_DIM,
+  'xy+hands+vel': XY_FRAME_DIM + 84 + 102,
+  'xy+angles': XY_FRAME_DIM + 80,
+  'xy+hands+vel+angles': XY_FRAME_DIM + 84 + 102 + 80,
+};
 
 export interface TransformerConfig {
   inputDim: number;
@@ -218,8 +223,9 @@ function parseMember(value: unknown, segment: boolean): ModelMember {
     throw new ModelPackError(`Unknown model architecture ${String(value.architecture)}`);
   }
   const { config, weights } = value;
-  const features = segment ? (value.features ?? 'xy') : 'xy';
-  if (features !== 'xy' && features !== 'xy+hands+vel') throw new ModelPackError('Model configuration is invalid');
+  const rawFeatures = segment ? (value.features ?? 'xy') : 'xy';
+  if (typeof rawFeatures !== 'string' || !Object.hasOwn(MEMBER_INPUT_DIMS, rawFeatures)) throw new ModelPackError('Model configuration is invalid');
+  const features = rawFeatures as MemberFeatures;
   const inputDim = segment ? MEMBER_INPUT_DIMS[features] : FRAME_DIM;
   if (transformer) {
     if (

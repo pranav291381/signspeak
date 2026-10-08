@@ -84,6 +84,8 @@ describe('PersonalizedRecognizer', () => {
     const prediction = await r.predict(signed('wave'));
     expect(top(prediction).label).toBe('include:wave');
     expect(top(prediction).score).toBeGreaterThan(0.8);
+    // The model sees this attempt as it saw the person's takes.
+    expect(prediction.confirmed).toBe('include:wave');
     expect(prediction.scores.reduce((sum, s) => sum + s.score, 0)).toBeCloseTo(1, 5);
   });
 
@@ -91,6 +93,7 @@ describe('PersonalizedRecognizer', () => {
     const { r } = await recognizer();
     const prediction = await r.predict(signed('knock'));
     expect(top(prediction).label).toBe('include:knock');
+    expect(prediction.confirmed).toBeUndefined();
     expect(scoreOf(prediction, 'include:knock')).toBeGreaterThan(0.9);
     expect(scoreOf(prediction, 'include:wave')).toBeLessThan(0.02);
   });

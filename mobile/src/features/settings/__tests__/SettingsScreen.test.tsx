@@ -12,7 +12,7 @@ import { seedSigns, taughtSign } from '@/test-utils/signs';
 import { SettingsScreen } from '../SettingsScreen';
 
 const mockPush = jest.fn();
-jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush }) }));
+jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush, navigate: mockPush }) }));
 
 async function storedSettings(store: ReturnType<typeof createMemoryStore>) {
   await waitFor(() => expect(store.data.get(SETTINGS_STORAGE_KEY)).toBeDefined());
@@ -125,7 +125,7 @@ describe('SettingsScreen', () => {
   it('always offers to teach signs, and to delete them only once something was taught', async () => {
     renderWithProviders(<SettingsScreen />);
     fireEvent.press(await screen.findByRole('button', { name: 'Teach and manage your signs' }));
-    expect(mockPush).toHaveBeenCalledWith('/signs');
+    expect(mockPush).toHaveBeenCalledWith('/my-signs');
     expect(screen.queryByTestId('settings-delete-signs')).toBeNull();
   });
 

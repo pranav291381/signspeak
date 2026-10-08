@@ -51,7 +51,7 @@ export function HomeScreen() {
         />
       </FadeIn>
       <FadeIn delay={150} distance={14}>
-        <YourSigns onPress={() => router.push('/signs')} />
+        <YourSigns onPress={() => router.navigate('/my-signs')} />
       </FadeIn>
       {recent.length > 0 ? (
         <FadeIn delay={180} distance={14}>

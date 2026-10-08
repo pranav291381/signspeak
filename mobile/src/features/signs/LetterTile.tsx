@@ -34,7 +34,7 @@ export const LetterTile = memo(function LetterTile({ letter, sign, onPress }: Pr
       testID={`letter-${letter}`}
       accessibilityRole="button"
       accessibilityLabel={
-        frames ? t('learn.alphabet.recordedA11y', { letter: upper }) : t('learn.alphabet.missingA11y', { letter: upper })
+        frames ? t('signs.alphabet.recordedA11y', { letter: upper }) : t('signs.alphabet.missingA11y', { letter: upper })
       }
       onPress={onPress}
       style={({ pressed }) => [

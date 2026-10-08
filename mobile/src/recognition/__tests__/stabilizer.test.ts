@@ -168,3 +168,19 @@ describe('PredictionStabilizer', () => {
     expect(() => new PredictionStabilizer({ config: { smoothingWindow: 0 } })).toThrow(/smoothingWindow/);
   });
 });
+
+describe('PredictionStabilizer.judge (whole signs)', () => {
+  const judge = (prediction: RawPrediction) =>
+    new PredictionStabilizer({ isEmergency: (l) => EMERGENCY.has(l), config: { minConfidence: 0.8, minMargin: 0 } }).judge(prediction, 0);
+
+  it('shows a sign the person taught at a lower confidence when their own recordings confirm it', () => {
+    const scores = { WATER: 0.45, TEA: 0.35, MILK: 0.2 };
+    expect(judge(pred(scores))).toMatchObject({ status: 'uncertain', reason: 'low_confidence' });
+    expect(judge({ ...pred(scores), confirmed: 'WATER' })).toMatchObject({ status: 'recognized', recognition: { label: 'WATER' } });
+    // Only the likeliest sign, only from 0.3, and never an emergency sign.
+    expect(judge({ ...pred(scores), confirmed: 'TEA' }).status).toBe('uncertain');
+    expect(judge({ ...pred({ WATER: 0.25, TEA: 0.2, MILK: 0.2, RICE: 0.2, SALT: 0.15 }), confirmed: 'WATER' }).status).toBe('uncertain');
+    expect(judge({ ...pred({ HELP: 0.5, TEA: 0.5 }), confirmed: 'HELP' }).status).toBe('uncertain');
+  });
+});
+

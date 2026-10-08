@@ -24,6 +24,13 @@ const VIEW_WEIGHT = 8;
 const VIEW_BASE = 0.7;
 const DISTANCE_WEIGHT = 2;
 const MAX_DISTANCE = 2;
+/**
+ * A taught sign whose takes the model sees this alike (or closer) is confirmed
+ * by the person's own recordings: see RawPrediction.confirmed. Chosen on
+ * validation recordings; same session on the test ones, 78% → 82% right on the
+ * first try, wrong 3.8% → 4.0%.
+ */
+const CONFIRMING_VIEW = 0.85;
 /** Taught words the model does not know: softmax over −SHARPNESS × relative distance, "unknown" at 1 (as ReferenceSignRecognizer). */
 const SHARPNESS = 6;
 
@@ -107,15 +114,22 @@ export class PersonalizedRecognizer implements SignRecognizer {
     const logits = new Map(prediction.scores.map((s) => [s.label, Math.log(Math.max(s.score, 1e-300))]));
     const ranked = [...prediction.scores].sort((a, b) => b.score - a.score).slice(0, TOP_K);
     const queryView = view(prediction.scores.map((s) => s.score));
+    const similarity = new Map<string, number>();
     for (const { label } of ranked) {
       const template = this.templates.get(label);
       if (!template) continue;
       let bonus = DISTANCE_WEIGHT * (1 - Math.min(relativeDistance(template, query), MAX_DISTANCE));
       const takes = this.views.get(label);
-      if (takes && takes.length > 0) bonus += VIEW_WEIGHT * (Math.max(...takes.map((t) => dot(queryView, t))) - VIEW_BASE);
+      if (takes && takes.length > 0) {
+        const alike = Math.max(...takes.map((t) => dot(queryView, t)));
+        similarity.set(label, alike);
+        bonus += VIEW_WEIGHT * (alike - VIEW_BASE);
+      }
       logits.set(label, logits.get(label)! + bonus);
     }
     let scores = softmaxOf(logits);
+    const best = [...scores].reduce((a, b) => (b[1] > a[1] ? b : a));
+    const confirmed = (similarity.get(best[0]) ?? -1) >= CONFIRMING_VIEW ? best[0] : undefined;
 
     // Taught words and letters the model does not know.
     const own = [...this.templates.values()].filter((t) => !this.modelLabels.has(t.signId));
@@ -127,7 +141,13 @@ export class PersonalizedRecognizer implements SignRecognizer {
       scores = new Map([...scores].map(([label, score]) => [label, (1 - weight) * score]));
       for (const [label, score] of personal) if (label !== UNKNOWN_LABEL) scores.set(label, (scores.get(label) ?? 0) + score);
     }
-    return { ...prediction, scores: [...scores].map(([label, score]) => ({ label, score })) };
+    const top = [...scores].reduce((a, b) => (b[1] > a[1] ? b : a))[0];
+    return {
+      ...prediction,
+      scores: [...scores].map(([label, score]) => ({ label, score })),
+      // Only if the confirmed sign is still the likeliest once taught words are counted.
+      ...(confirmed && confirmed === top ? { confirmed } : {}),
+    };
   }
 
   dispose(): void {

@@ -84,6 +84,7 @@ INCLUDE (262 signs, 4,276 videos, CC BY 4.0). For each sign the last recording s
 | Scenario | Right on the first try | Wrong |
 | --- | --- | --- |
 | Same session, all signs taught with two takes, the third signed (run B, 658 takes) | 78.3% (model alone 65.2%) | 3.8% (4.7%) |
+| Same, with signs the person's takes confirm shown from 0.3 | 82.1% | 4.0% |
 | Taught in one session, signed in the next (run A, 614 videos) | 60.3% (60.1%) | 4.6% (5.4%) |
 | Same, only half the signs taught: the taught ones | 60.1% (64.1%) | 7.0% (5.5%) |
 | Same, only half the signs taught: the others | 59.2% (56.9%) | 4.1% (5.3%) |

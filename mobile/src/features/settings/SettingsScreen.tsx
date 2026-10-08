@@ -174,7 +174,7 @@ export function SettingsScreen() {
           tile="saffron"
           label={t('settings.signs.manage')}
           value={signs.length > 0 ? String(signs.length) : undefined}
-          onPress={() => router.push('/signs')}
+          onPress={() => router.navigate('/my-signs')}
         />
         {signs.length > 0 ? (
           <ListRow

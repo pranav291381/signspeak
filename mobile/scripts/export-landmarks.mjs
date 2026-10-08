@@ -34,6 +34,7 @@ const { values: args } = parseArgs({
     ffmpeg: { type: 'string' },
     jobs: { type: 'string', default: '2' },
     'hand-model': { type: 'string', default: 'full' },
+    depth: { type: 'boolean', default: false },
   },
 });
 if (!args.manifest || !args.out) fail('--manifest and --out are required');
@@ -73,6 +74,7 @@ const started = Date.now();
 try {
   await runner.extractAll(entries, {
     raw: true,
+    depth: args.depth,
     onResult: (entry, result, done) => {
       if (result.recording) {
         out.write(`${JSON.stringify({ text: entry.text, group: entry.group, category: entry.category, recording: result.recording })}\n`);

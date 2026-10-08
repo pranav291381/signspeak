@@ -30,8 +30,8 @@ jobs:
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run test:ci
-      - name: Audit shipped dependencies (fail on high or critical)
-        run: npm audit --omit=dev --audit-level=high
+      - name: Audit shipped dependencies (fail on high or critical, except scripts/audit-allowlist.json)
+        run: npm run audit:deps
 
   ml:
     name: ML pipeline (ruff, pytest)

@@ -49,9 +49,13 @@ A welcome flow asks for the app language and the appearance (light, dark or foll
 7. The UI states that this is sign by sign in the order typed, not ISL translation (ISL has its own grammar), that facial expressions are not shown, and where the signs come from (with their licence).
 8. With the system's "reduce motion" setting on, nothing moves until Play is pressed; the first sign is shown as a still diagram.
 
-### 4.3 Learn ISL
-- **Alphabet map:** all 26 letters as hand diagrams from recordings made on the phone, with a guided flow to record the alphabet. Letters not yet recorded are shown as empty tiles. The screen asks for a fluent signer or ISL teacher to record or check the letters, because no verified alphabet is bundled.
-- **Tips** for communicating in sign language (attention, eye contact, light, facial expression, fingerspelling, ISL as its own language, regional variation, checking understanding, signing space, interpreters, learning from Deaf people), labelled as pending review by ISL educators.
+### 4.3 My signs (tab; replaced Learn ISL)
+- A summary of what was taught (signs ready, takes, letters) and a "Teach a sign" button.
+- "Finish these": signs one take short of being recognized, each with a record button.
+- Every other sign with its kind ("App's sign, your way" or "Your own word"), takes and readiness; search from 6 signs; a filter between the app's signs and the person's own words.
+- **Alphabet:** all 26 letters as hand diagrams from recordings made on the phone, with a guided flow to record the missing ones. The screen asks for a fluent signer or ISL teacher to record or check the letters, because no verified alphabet is bundled.
+- **Export my signs:** after a confirmation explaining the contents (hand and body points of each take and what the signs mean, no video), a JSON file goes to the phone's share sheet (a download on the web). The person chooses where it goes; the app sends nothing itself. The project uses such files for training only with the contributor's agreement.
+- Delete all, after confirmation.
 
 ### 4.4 History
 - On-device list of recent recognized text and phrase lookups.
@@ -68,7 +72,7 @@ A welcome flow asks for the app language and the appearance (light, dark or foll
 - About: limitations, privacy summary, "not a replacement for interpreters"
 
 ### 4.6 Teach a sign / Your signs
-Back by the owner's decision (D24): the model recognizes people outside INCLUDE poorly, so each person can teach it the way they sign. Entry points: Home ("Your signs"), Settings ("Teach and manage your signs"), Sign → Text ("Teach the app your signs", and "Teach it your way" under a sign picked from the suggestions).
+Back by the owner's decision (D24): the model recognizes people outside INCLUDE poorly, so each person can teach it the way they sign. Entry points: the My signs tab, Home ("Your signs"), Settings ("Teach and manage your signs"), Sign → Text ("Teach the app your signs", and "Teach it your way" under a sign picked from the suggestions).
 - Teach any sign the installed model knows (listed by name, with search), any typed word or phrase, a single letter, or the whole alphabet; without a model, a common word from the library.
 - Taught signs of the model move its answer for this person (docs/architecture.md §6.6); taught words and letters are recognized from the recordings.
 - Each take: countdown, a few seconds of recording (landmarks only), animated replay, and checks (no one in view, no hands, too short, unlike earlier takes). Words need three takes, letters two.

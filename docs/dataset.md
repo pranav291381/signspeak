@@ -134,7 +134,19 @@ Recognizing people the model has never seen needs each sign from many signers. T
 | [CISLR](https://aclanthology.org/2022.emnlp-main.707/) (IIT Kanpur) | 4,765 words, 7,050 videos, 71 signers | Dataset AFL-3.0, gated; videos scraped from YouTube (ISLRTC and an ISL dictionary channel) | Not used: the video owners' permission would be needed |
 | ISLRTC dictionary (Government of India) | 10,000+ signs | Copyright of ISLRTC | Not used: needs ISLRTC's permission |
 
-## 13. Dataset versioning
+## 13. Signs exported from the app
+
+People can teach the app their own signs (My signs) and export them with **My signs → Export my signs**: a JSON file (`signspeak-my-signs-<date>.json`) with the hand and body points of each take (no video) and the word, letter or model sign each one means. The app never uploads it; the person shares it themselves. These recordings can cover words and signing styles that no public dataset has.
+
+Before such a file is used for training:
+
+1. **Agreement.** The contributor agrees in writing (a message is enough for a pilot) that their signs may be used to train SignSpeak's models, for how long they are kept, and that they can withdraw at any time. Children only with a parent's or guardian's agreement.
+2. **Pseudonym.** Give the contributor an ID (`c01`, `c02`, …) and keep the name ↔ ID list with the data steward only. The export itself holds no name, but custom words the person typed may be personal (a name, a place): review them, and drop any that should not be kept.
+3. **Storage.** Keep export files with the other raw data (§4), never in git.
+4. **Convert:** `python ml/scripts/import_my_signs.py <exports…> --contributor c01 --out my-signs-c01.jsonl` writes the takes of the model's signs as training recordings (`--own` adds own words and letters, for a future vocabulary). Add them with `train_segments.py --extra my-signs-c01.jsonl`; extra recordings are used for training only, never for testing.
+5. **Withdrawal** follows §11: delete the contributor's files and JSONL and retrain at the next release.
+
+## 14. Dataset versioning
 
 - Use semantic versions (`1.0.0`). Adding samples is a minor bump. Removing samples (for example after a withdrawal) or changing labels is a major bump.
 - Each version has a `DATASET_CARD.md` with sample counts per sign and per split, number of signers, diversity summary, known gaps, licence and changelog.

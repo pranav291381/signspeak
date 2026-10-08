@@ -12,6 +12,8 @@ import { MIN_SAMPLES_FOR_RECOGNITION, type PersonalSign } from '@/personal/types
 import { useSettings } from '@/settings/SettingsProvider';
 import { useTheme } from '@/theme';
 
+import { teachParams } from './teachParams';
+
 /** One taught sign: its takes as animated diagrams, and ways to add or remove them. */
 export function SignDetailScreen() {
   const { t } = useTranslation();
@@ -61,18 +63,7 @@ function SignDetail({ sign }: { sign: PersonalSign }) {
     }
   }, [sign, take]);
 
-  const teachAgain = () => {
-    const target = sign.target;
-    const params =
-      target.kind === 'vocabulary'
-        ? { kind: 'vocabulary', label: target.label }
-        : target.kind === 'library'
-          ? { kind: 'library', id: target.signId }
-          : target.kind === 'letter'
-            ? { kind: 'letter', letter: target.letter }
-            : { kind: 'custom', text: target.text };
-    router.push({ pathname: '/signs/teach', params });
-  };
+  const teachAgain = () => router.push({ pathname: '/signs/teach', params: teachParams(sign.target) });
 
   return (
     <Screen testID="sign-detail-screen">

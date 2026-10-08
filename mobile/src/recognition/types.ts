@@ -43,6 +43,11 @@ export interface RawPrediction {
    * so it never leads to "not sure".
    */
   idle?: boolean;
+  /**
+   * A sign the person taught, whose own recordings clearly match this attempt
+   * (PersonalizedRecognizer). The stabilizer shows it at a lower confidence.
+   */
+  confirmed?: string;
 }
 
 export type RecognizerKind = 'unavailable' | 'simulated' | 'on_device' | 'remote';

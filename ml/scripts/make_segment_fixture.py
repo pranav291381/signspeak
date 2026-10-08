@@ -1,8 +1,8 @@
 """Writes shared/fixtures/segment_parity_v2.json: pins the app's whole-sign model code
 (mobile/src/model/signModel.ts) to train_segments.py and PyTorch.
 
-A small segment pack (untrained members: a GRU per input kind and a
-transformer) and a sign made of random landmarks, with the logits PyTorch gives.
+A small segment pack (untrained members: GRUs and transformers over every input
+kind) and a sign made of random landmarks, with the logits PyTorch gives.
 Not a real model and not ISL.
 """
 
@@ -25,17 +25,26 @@ CLASSES = 4
 rng = np.random.default_rng(7)
 torch.manual_seed(7)
 
-# 23 frames: a person in view, the right hand shown in most frames.
+# 23 frames: a person in view, the right hand shown in most frames, the left in some.
 frames = np.zeros((23, 156), dtype=np.float32)
 frames[:, 0:153:3] = rng.normal(0, 0.5, (23, 51))
 frames[:, 1:153:3] = rng.normal(0.3, 0.5, (23, 51))
 frames[:, 153] = 1
 frames[:, 155] = rng.random(23) > 0.2
 frames[frames[:, 155] == 0, 90:153] = 0
+frames[:, 154] = rng.random(23) > 0.5
+frames[frames[:, 154] == 0, 27:90] = 0
 frames = np.round(frames * 1000) / 1000  # as recordings are stored
 
 members, logits = [], []
-for arch, features in (("gru", "xy"), ("gru", "xy+hands+vel"), ("tf", "xy")):
+KINDS = (
+    ("gru", "xy"),
+    ("gru", "xy+hands+vel"),
+    ("tf", "xy"),
+    ("gru", "xy+hands+vel+angles"),
+    ("tf", "xy+angles"),
+)
+for arch, features in KINDS:
     x = network_input(frames, features)
     if arch == "tf":
         config = TransformerConfig(

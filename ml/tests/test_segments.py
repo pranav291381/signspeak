@@ -87,9 +87,42 @@ def test_committed_fixture_is_a_segment_pack():
     fixture = json.loads(FIXTURE.read_text())
     pack = fixture["pack"]
     assert pack["version"] == ts.SEGMENT_PACK_VERSION and pack["mode"] == "segment"
-    assert [m["architecture"] for m in pack["members"]] == [
-        "temporal-conv-bigru-v1",
-        "temporal-conv-bigru-v1",
-        "segment-transformer-v1",
+    assert [(m["architecture"], m["features"]) for m in pack["members"]] == [
+        ("temporal-conv-bigru-v1", "xy"),
+        ("temporal-conv-bigru-v1", "xy+hands+vel"),
+        ("segment-transformer-v1", "xy"),
+        ("temporal-conv-bigru-v1", "xy+hands+vel+angles"),
+        ("segment-transformer-v1", "xy+angles"),
     ]
     assert len(fixture["logits"]) == len(pack["labels"])
+
+
+def test_hand_angles_describe_the_handshape_whatever_its_turn_and_size():
+    rng = np.random.default_rng(3)
+    frames = np.zeros((4, 156), dtype=np.float32)
+    frames[:, 0:153:3] = rng.normal(0, 0.5, (4, 51))
+    frames[:, 1:153:3] = rng.normal(0, 0.5, (4, 51))
+    frames[:, 153:156] = 1
+    xy, presence = ts.points(frames)
+    turned = xy.copy()
+    c, s = np.cos(0.7), np.sin(0.7)
+    for hand in (ts.LEFT, ts.RIGHT):
+        h = xy[:, hand]
+        turned[:, hand] = ((h - h[:, :1]) @ np.array([[c, -s], [s, c]]).T * 1.8) + h[:, :1] + 0.3
+    np.testing.assert_allclose(ts.hand_angles(xy, presence), ts.hand_angles(turned, presence), atol=1e-5)
+    presence[:, 1] = 0  # no left hand: its values are zero
+    assert not ts.hand_angles(xy, presence)[:, :40].any()
+
+
+def test_member_inputs_keep_the_presence_flags_last():
+    frames = np.zeros((5, 156), dtype=np.float32)
+    frames[:, 153:156] = [1, 0, 1]
+    for features, dim in (
+        ("xy", 105),
+        ("xy+hands+vel", 291),
+        ("xy+angles", 185),
+        ("xy+hands+vel+angles", 371),
+    ):
+        x = ts.member_input(frames, features)
+        assert x.shape == (5, dim)
+        np.testing.assert_array_equal(x[:, -3:], frames[:, 153:156])

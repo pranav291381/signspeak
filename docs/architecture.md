@@ -105,7 +105,7 @@ Environment note: `download.pytorch.org` is blocked by this development environm
 │       ├── diagram/        # hand-skeleton diagrams (SVG) and the sequence player
 │       ├── history/        # local history store
 │       ├── feedback/       # feedback schema + report composer
-│       └── features/       # screens: welcome, home, sign-to-text, text-to-isl, learn, teach, signs, history, settings
+│       └── features/       # screens: welcome, home, sign-to-text, text-to-isl, teach, signs, history, settings
 │   └── engine/             # camera engine page (MediaPipe), bundled into one HTML string
 ├── backend/                # FastAPI service (optional; no raw video)
 ├── ml/                     # Python package `signspeak_ml` + dataset layout (data is gitignored)
@@ -135,8 +135,8 @@ Bottom tabs for the five main places, with a root stack for everything opened fr
 ```
 Welcome (first launch only: language → appearance → how it works)
 
-Tabs: Home │ Sign → Text │ Text → ISL │ Learn │ Settings
-Stack on top: My signs ── Sign detail
+Tabs: Home │ Sign → Text │ Text → ISL │ My signs │ Settings
+Stack on top: Sign detail
               Teach a sign (chooser → recorder; also ?kind=library|custom|letter|alphabet)
               History, Report a problem
 ```
@@ -278,8 +278,11 @@ Recognition that works without a trained model: the user (ideally a fluent signe
   | | Right on the first try | Wrong |
   | --- | --- | --- |
   | Same session, every sign taught with two takes (run B) | 78.3% (model alone 65.2%) | 3.8% (4.7%) |
+  | Same, with confirmed signs shown from 0.3 (below) | 82.1% | 4.0% |
   | Taught in one session, signed in the next (run A) | 60.3% (60.1%) | 4.6% (5.4%) |
   | Same, but only the taught half of the signs | 60.1% (64.1%) | 7.0% (5.5%) |
+
+  **Confirmed signs.** When the likeliest sign was taught and the model sees the attempt as it saw the person's takes (similarity ≥ 0.85), the recognizer marks it `confirmed` and the stabilizer shows it from a score of 0.3 instead of the pack's 0.8 (never an emergency sign). Chosen on validation; on the test sessions, same session: 78.3% → 82.1% right on the first try, wrong 3.8% → 4.0%; across sessions: 60.3% → 61.4%, wrong 4.6% → 4.9%.
 
   Teaching helps the person who teaches, signing as they taught. If someone else signs, or the sign is made differently, it does not help, and taught signs are mistaken slightly more often. INCLUDE does not say who signed each session, so the across-session figures may mix people. Same person on a different day has not been measured.
 
@@ -333,11 +336,14 @@ text ─▶ words (motion/words.ts): Unicode NFC, lower case, contractions spell
 
 **Limits (stated in the UI):** this is sign by sign in the order typed, not translation. ISL has its own grammar (word order, spatial reference, non-manual markers), and facial expressions and mouthing are not shown. Each sign is one signer's version traced from video, so a finger may be out of place now and then, and regional variants are not covered. A future `TextToIslPipeline` could add an ISL grammar stage designed and reviewed by ISL linguists; the player would not need to change.
 
-## 8. Learn ISL
+## 8. My signs (replaces Learn ISL)
 
-- **Alphabet map** (`features/learn/LearnScreen.tsx`): A–Z tiles showing each recorded letter as a hand diagram, a progress count, and a guided "record the alphabet" flow (letter by letter, two takes each, skippable). The app ships no alphabet images: the notice asks for a fluent ISL signer or teacher to record or check them.
-- **Tips** (`features/learn/tips.ts`, text in the locale files): general guidance for communicating in sign language (getting attention, eye contact, lighting, facial expression, fingerspelling, ISL as its own language, regional variation, checking understanding, signing space, interpreters, learning from Deaf people). Labelled as pending review by ISL educators.
-- The earlier lessons, quizzes and progress were removed at the owner's request.
+The Learn tab was parked, then replaced by **My signs** at the owner's request (D25): signs people teach cover words and signing styles that no public dataset has, both for their own recognition and, if they choose to share them, for training.
+
+- **Tab** (`features/signs/MySignsScreen.tsx`, route `(tabs)/my-signs`): a summary (signs ready, takes, letters), “Finish these” (signs one take short of being recognized, each with a record button), the other signs with search (from 6 signs) and an “app's signs / your words” filter (when both exist), the alphabet map (A–Z tiles from the user's own recordings, progress, “record the missing letters”; no verified alphabet ships, so the notice asks for a fluent signer to record or check them), **Export my signs**, and delete all. Sign detail and Teach a sign stay on the root stack.
+- **Export my signs** (`personal/exportSigns.ts`, `personal/shareFile.ts` / `.web.ts`): after a confirmation that says what the file holds, writes `signspeak-my-signs-<date>.json` (format `signspeak.my-signs` v1: feature spec version, frame size 156, 15 fps, and every sign as stored: target and takes, Int16 ×1000 base64) to the app cache and opens the system share sheet (`expo-sharing`); on the web the browser downloads it. The app never sends it anywhere itself.
+- **Into training** (`ml/scripts/import_my_signs.py`): turns export files into landmark JSONL for `train_segments.py --extra` (depth dropped, as the training format has none). By default only signs of the model's vocabulary (`include:*`) are written; `--own` adds own words and letters. Each file gets a pseudonymous `--contributor` ID. Only for contributors who agreed (docs/dataset.md).
+- The earlier signing tips (pending educator review) were removed with the Learn tab; the lessons, quizzes and progress had been removed before.
 
 The sign library (`content/data/signs.json`) remains the list of candidate concepts (IDs, meanings and phrases in English and Hindi) used by the teach chooser, and by Text → ISL to find library concepts taught on the phone. None has verified content of its own.
 
@@ -431,4 +437,5 @@ The first model is a small temporal classifier (1D temporal convolutions + GRU, 
 | D21 | Text → ISL shows INCLUDE's signs as motion traced from one recording per sign (hand and body landmarks, cleaned for display), committed as `assets/motions/include-motion.signpack` | The owner asked for typed words to be shown as sign diagrams or motion. INCLUDE's CC BY 4.0 licence allows sharing adapted material with credit; the pack holds landmark numbers only (no video, no face), and its source, licence and changes are in the pack, the app (Text → ISL, Settings → About) and the README. Not yet reviewed by ISL educators: the app says where the signs come from and what is not shown | Accepted (owner request) |
 | D22 | Visual identity from the logo (saffron, ink, warm paper), floating tab bar, no new dependencies (react-native-svg gradients, React Native `Animated`) | Owner request for a professional, fluid redesign. The previous design is kept on the `ui-classic` branch so it can be restored; see `docs/design.md` | Accepted (owner request) |
 | D23 | Sign → Text recognizes whole signs (segment packs: the sign is cut when the hands come down and read at once by an average of three small networks, two GRUs and a transformer); when not sure it offers its three likeliest signs, and under a shown sign the next two, for one tap | Owner goal of a success rate above 90% on people the model never saw. The window model left most signs at "not sure"; no single network passed about 72% on held-out INCLUDE signers, so success also counts the right sign offered for one tap, and the app always says which results were chosen rather than recognized. See §6.5a | Accepted (owner goal) |
-| D24 | Teaching your own signs is back, and works with the model: any of its signs can be taught the way you sign it, and moves the model's answer for you | Owner decision after the model recognized a signer outside INCLUDE only 15% of the time on the first try. Measured: 65% → 78% right on the first try for the person who taught (same session); no gain across sessions. See §6.6 | Accepted (owner decision) |
+| D24 | Teaching your own signs is back, and works with the model: any of its signs can be taught the way you sign it, and moves the model's answer for you | Owner decision after the model recognized a signer outside INCLUDE only 15% of the time on the first try. Measured: 65% → 82% right on the first try for the person who taught (same session); no gain across sessions. See §6.6 | Accepted (owner decision) |
+| D25 | The parked Learn tab is replaced by a My signs tab, with an export of taught signs the person chooses to share | Owner request: "my signs is the best option since there's many different stuff not available online and we can use that data to train further". The export is explicit (confirmation, then the system share sheet); the app uploads nothing. Training on exports needs the contributor's agreement (docs/dataset.md §13). Adds `expo-sharing` (Expo's own module; its share-extension plugin is not enabled). See §8 | Accepted (owner request) |
