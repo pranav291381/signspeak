@@ -533,5 +533,10 @@
       "unavailable": "This device cannot share files.",
       "failed": "The file could not be made. Please try again."
     }
+  },
+  "notFound": {
+    "title": "Page not found",
+    "message": "This page does not exist, or has moved.",
+    "home": "Go to Home"
   }
 }

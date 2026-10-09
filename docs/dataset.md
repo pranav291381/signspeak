@@ -143,7 +143,7 @@ Before such a file is used for training:
 1. **Agreement.** The contributor agrees in writing (a message is enough for a pilot) that their signs may be used to train SignSpeak's models, for how long they are kept, and that they can withdraw at any time. Children only with a parent's or guardian's agreement.
 2. **Pseudonym.** Give the contributor an ID (`c01`, `c02`, …) and keep the name ↔ ID list with the data steward only. The export itself holds no name, but custom words the person typed may be personal (a name, a place): review them, and drop any that should not be kept.
 3. **Storage.** Keep export files with the other raw data (§4), never in git.
-4. **Convert:** `python ml/scripts/import_my_signs.py <exports…> --contributor c01 --out my-signs-c01.jsonl` writes the takes of the model's signs as training recordings (`--own` adds own words and letters, for a future vocabulary). Add them with `train_segments.py --extra my-signs-c01.jsonl`; extra recordings are used for training only, never for testing.
+4. **Convert:** `python ml/scripts/import_my_signs.py <exports…> --contributor c01 --out my-signs-c01.jsonl` writes the takes of the model's signs as training recordings (`--own` adds own words and letters, for a future vocabulary). Several exports of the same person can be given at once: each holds everything taught so far, so takes they share are written once. Takes that cannot be read are skipped and counted. Add them with `train_segments.py --extra my-signs-c01.jsonl`; extra recordings are used for training only, never for testing.
 5. **Withdrawal** follows §11: delete the contributor's files and JSONL and retrain at the next release.
 
 ## 14. Dataset versioning

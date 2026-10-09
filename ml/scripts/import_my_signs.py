@@ -20,8 +20,11 @@ from __future__ import annotations
 
 import argparse
 import base64
+import binascii
+import hashlib
 import json
 import sys
+from collections import Counter
 from pathlib import Path
 
 import numpy as np
@@ -32,6 +35,7 @@ FEATURE_SPEC_VERSION = 1
 FRAME_DIM = 156  # x, y, z of 51 points, then 3 presence flags
 XY_DIM = 105  # x, y of 51 points, then the 3 presence flags (the training format)
 SCALE = 1000.0
+FPS = 15  # SAMPLE_FPS in mobile/src/personal/sample.ts
 
 
 def decode_take(take: dict) -> np.ndarray:
@@ -77,24 +81,56 @@ def describe(target: dict, pack: str, own: bool) -> tuple[str, str] | None:
     return None
 
 
-def import_export(data: dict, contributor: str, pack: str = "include", own: bool = False) -> list[dict]:
-    """Training rows for one export file."""
+def import_export(
+    data: dict,
+    contributor: str,
+    pack: str = "include",
+    own: bool = False,
+    seen: set[str] | None = None,
+    skipped: Counter | None = None,
+) -> list[dict]:
+    """Training rows for one export file.
+
+    Each export holds everything taught on the phone, so later exports repeat
+    earlier takes: a take already in `seen` (by its data) is not written again.
+    Signs and takes that cannot be used are counted in `skipped`, not fatal.
+    """
     if data.get("format") != FORMAT or data.get("version") != VERSION:
         raise ValueError("not a SignSpeak My signs export (format/version)")
-    if data.get("featureSpecVersion") != FEATURE_SPEC_VERSION or data.get("frameDim") != FRAME_DIM:
-        raise ValueError("export uses a different feature spec")
+    if (
+        data.get("featureSpecVersion") != FEATURE_SPEC_VERSION
+        or data.get("frameDim") != FRAME_DIM
+        or data.get("fps") != FPS
+    ):
+        raise ValueError("export uses a different feature spec or frame rate")
+    seen = set() if seen is None else seen
+    skipped = Counter() if skipped is None else skipped
     rows = []
     for sign in data.get("signs", []):
-        described = describe(sign.get("target") or {}, pack, own)
+        target = sign.get("target") or {}
+        described = describe(target, pack, own)
         if not described:
+            skipped[f"signs not written ({target.get('kind', 'unknown')})"] += 1
+            continue
+        if sign.get("featureSpecVersion", FEATURE_SPEC_VERSION) != FEATURE_SPEC_VERSION:
+            skipped["signs with another feature spec"] += 1
             continue
         text, category = described
-        for i, take in enumerate(sign.get("samples", [])):
-            frames = to_xy(decode_take(take))
+        for take in sign.get("samples", []):
+            key = hashlib.sha1(str(take.get("data", "")).encode()).hexdigest()[:16]
+            if key in seen:
+                skipped["takes already imported"] += 1
+                continue
+            try:
+                frames = to_xy(decode_take(take))
+            except (ValueError, KeyError, TypeError, binascii.Error):
+                skipped["unreadable takes"] += 1
+                continue
+            seen.add(key)
             rows.append(
                 {
                     "text": text,
-                    "group": f"personal/{contributor}/{sign.get('id')}/{i}",
+                    "group": f"personal/{contributor}/{sign.get('id')}/{key}",
                     "category": category,
                     "recording": encode(frames),
                 }
@@ -114,13 +150,16 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     rows: list[dict] = []
+    seen: set[str] = set()
+    skipped: Counter = Counter()
     for path in args.exports:
-        rows += import_export(
-            json.loads(path.read_text(encoding="utf-8")), args.contributor, args.pack, args.own
-        )
+        data = json.loads(path.read_text(encoding="utf-8"))
+        rows += import_export(data, args.contributor, args.pack, args.own, seen, skipped)
     args.out.write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
     signs = len({row["text"] for row in rows})
     print(f"{len(rows)} takes of {signs} signs -> {args.out}", file=sys.stderr)
+    for reason, count in sorted(skipped.items()):
+        print(f"  skipped: {count} {reason}", file=sys.stderr)
     return 0
 
 

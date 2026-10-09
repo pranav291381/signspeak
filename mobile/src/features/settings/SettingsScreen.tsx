@@ -170,7 +170,7 @@ export function SettingsScreen() {
       <Section title={t('settings.sections.signs')} description={t('settings.signs.hint')} variant="list">
         <ListRow
           testID="settings-my-signs"
-          icon="school-outline"
+          icon="hand-heart-outline"
           tile="saffron"
           label={t('settings.signs.manage')}
           value={signs.length > 0 ? String(signs.length) : undefined}

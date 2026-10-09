@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 
 import { deviceStore, type KeyValueStore } from '@/storage/keyValueStore';
 
+import { clearSharedFiles } from './shareFile';
 import { deleteAllSigns, deleteSign, loadSigns, saveSign, signIdFor, withSample } from './store';
 import { MIN_SAMPLES_FOR_RECOGNITION, type PersonalSign, type SignTarget } from './types';
 
@@ -103,6 +104,8 @@ export function PersonalSignsProvider({ children, store = deviceStore }: { child
   const removeAll = useCallback(async () => {
     const ids = current.current.map((s) => s.id);
     commit([]);
+    // An exported copy left in the app's cache goes too.
+    clearSharedFiles();
     await deleteAllSigns(store, ids);
   }, [store, commit]);
 

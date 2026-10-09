@@ -59,7 +59,8 @@ def test_vocabulary_takes_become_training_rows_with_the_models_label():
     )
     assert len(rows) == 2
     assert slug(rows[0]["text"]) == "good-morning"
-    assert rows[0]["group"] == "personal/c01/x/0"
+    assert rows[0]["group"].startswith("personal/c01/x/")
+    assert rows[0]["group"] != rows[1]["group"]
     # The trainer reads the row back as the same x/y and presence flags (depth dropped).
     back = decode(rows[0]["recording"])
     expected = original.copy()
@@ -69,9 +70,12 @@ def test_vocabulary_takes_become_training_rows_with_the_models_label():
 
 def test_own_words_and_letters_only_when_asked_and_other_packs_never():
     signs = [
-        sign({"kind": "custom", "text": "Chai", "language": "en"}, [frames()]),
-        sign({"kind": "letter", "letter": "a"}, [frames()]),
-        sign({"kind": "vocabulary", "label": "other:water", "text": "Water", "language": "en"}, [frames()]),
+        sign({"kind": "custom", "text": "Chai", "language": "en"}, [frames(seed=1)]),
+        sign({"kind": "letter", "letter": "a"}, [frames(seed=2)]),
+        sign(
+            {"kind": "vocabulary", "label": "other:water", "text": "Water", "language": "en"},
+            [frames(seed=3)],
+        ),
     ]
     assert ims.import_export(export(signs), contributor="c01") == []
     rows = ims.import_export(export(signs), contributor="c01", own=True)
@@ -109,3 +113,26 @@ def test_command_line_writes_jsonl(tmp_path, capsys):
     rows = [json.loads(line) for line in out.read_text().splitlines()]
     assert [r["text"] for r in rows] == ["teacher"]
     assert "1 takes of 1 signs" in capsys.readouterr().err
+
+
+def test_a_later_export_does_not_repeat_takes_already_imported():
+    teacher = {"kind": "vocabulary", "label": "include:teacher", "text": "Teacher", "language": "en"}
+    first, second = frames(seed=1), frames(seed=2)
+    seen, skipped = set(), ims.Counter()
+    rows = ims.import_export(export([sign(teacher, [first])]), "c01", seen=seen, skipped=skipped)
+    rows += ims.import_export(export([sign(teacher, [first, second])]), "c01", seen=seen, skipped=skipped)
+    assert len(rows) == 2
+    assert skipped["takes already imported"] == 1
+
+
+def test_unreadable_takes_and_other_frame_rates_are_not_imported():
+    teacher = {"kind": "vocabulary", "label": "include:teacher", "text": "Teacher", "language": "en"}
+    broken = {**take(frames()), "dim": 105}
+    skipped = ims.Counter()
+    rows = ims.import_export(export([sign(teacher, [frames()])]), "c01", skipped=skipped)
+    data = export([sign(teacher, [frames(seed=3)])])
+    data["signs"][0]["samples"].append(broken)
+    rows = ims.import_export(data, "c01", skipped=skipped)
+    assert len(rows) == 1 and skipped["unreadable takes"] == 1
+    with pytest.raises(ValueError, match="frame rate"):
+        ims.import_export({**export([]), "fps": 30}, contributor="c01")

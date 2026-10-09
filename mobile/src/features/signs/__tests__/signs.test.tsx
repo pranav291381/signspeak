@@ -19,7 +19,11 @@ jest.mock('expo-router', () => ({
 }));
 jest.mock('@/accessibility/useReduceMotion', () => ({ useReduceMotion: () => true }));
 const mockShare = jest.fn((_name: string, _contents: string, _title: string) => Promise.resolve(true));
-jest.mock('@/personal/shareFile', () => ({ shareJsonFile: (name: string, contents: string, title: string) => mockShare(name, contents, title) }));
+const mockClearShared = jest.fn();
+jest.mock('@/personal/shareFile', () => ({
+  shareJsonFile: (name: string, contents: string, title: string) => mockShare(name, contents, title),
+  clearSharedFiles: () => mockClearShared(),
+}));
 
 /** Confirms every dialog, pressing its confirm (last) button. */
 function confirmDialogs() {
@@ -103,6 +107,16 @@ describe('MySignsScreen', () => {
     alert.mockRestore();
   });
 
+  it('says so when the file cannot be made, and the button works again', async () => {
+    const alert = confirmDialogs();
+    mockShare.mockRejectedValueOnce(new Error('disk full'));
+    renderWithProviders(<MySignsScreen />, { store: await storeWith() });
+    fireEvent.press(await screen.findByRole('button', { name: 'Export my signs' }));
+    expect(await screen.findByText('The file could not be made. Please try again.')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Export my signs' })).toBeEnabled();
+    alert.mockRestore();
+  });
+
   it('says so when the device cannot share files', async () => {
     const alert = confirmDialogs();
     mockShare.mockResolvedValueOnce(false);
@@ -129,6 +143,8 @@ describe('MySignsScreen', () => {
     expect(alert).toHaveBeenCalled();
     expect(await screen.findByText('Teach the app your signs')).toBeOnTheScreen();
     await waitFor(async () => expect(await loadSigns(store)).toEqual([]));
+    // An exported copy left in the cache goes too.
+    expect(mockClearShared).toHaveBeenCalled();
     alert.mockRestore();
   });
 });

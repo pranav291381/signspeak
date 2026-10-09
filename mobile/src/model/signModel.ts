@@ -58,8 +58,9 @@ export function memberInput(frames: readonly Float32Array[], features: MemberFea
   if (features === 'xy') return [...frames];
   const hands = features.startsWith('xy+hands+vel');
   const angles = features.endsWith('+angles');
+  const size = XY_FRAME_DIM + extraSize(features);
   return frames.map((frame, t) => {
-    const out = new Float32Array(XY_FRAME_DIM + extraSize(features));
+    const out = new Float32Array(size);
     out.set(frame.subarray(0, FLAGS));
     let k = FLAGS;
     if (hands) {

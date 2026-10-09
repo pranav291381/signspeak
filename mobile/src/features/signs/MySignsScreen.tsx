@@ -1,6 +1,6 @@
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
-import { memo, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
@@ -70,7 +70,8 @@ export function MySignsScreen() {
   const ownCount = words.filter(isOwnWord).length;
   const bothKinds = ownCount > 0 && ownCount < words.length;
 
-  const needle = normalizeText(query);
+  // The query applies only while the search field is shown (it hides again below SEARCH_FROM signs).
+  const needle = words.length >= SEARCH_FROM ? normalizeText(query) : '';
   const shown = words.filter(
     (s) =>
       (filter === 'all' || !bothKinds || (filter === 'own') === isOwnWord(s)) &&
@@ -80,13 +81,19 @@ export function MySignsScreen() {
   const finished = shown.filter((s) => s.samples.length >= MIN_SAMPLES_FOR_RECOGNITION);
 
   const teach = () => router.push('/signs/teach');
-  const open = (sign: PersonalSign) => router.push({ pathname: '/signs/[id]', params: { id: sign.id } });
-  const record = (sign: PersonalSign) => router.push({ pathname: '/signs/teach', params: teachParams(sign.target) });
-  const openLetter = (letter: string) => {
-    const sign = get(signIdFor({ kind: 'letter', letter }));
-    if (sign) open(sign);
-    else router.push({ pathname: '/signs/teach', params: { kind: 'letter', letter } });
-  };
+  const open = useCallback((sign: PersonalSign) => router.push({ pathname: '/signs/[id]', params: { id: sign.id } }), [router]);
+  const record = useCallback(
+    (sign: PersonalSign) => router.push({ pathname: '/signs/teach', params: teachParams(sign.target) }),
+    [router],
+  );
+  const openLetter = useCallback(
+    (letter: string) => {
+      const sign = get(signIdFor({ kind: 'letter', letter }));
+      if (sign) open(sign);
+      else router.push({ pathname: '/signs/teach', params: { kind: 'letter', letter } });
+    },
+    [get, open, router],
+  );
 
   const exportSigns = () =>
     confirmAction({
@@ -97,8 +104,12 @@ export function MySignsScreen() {
       destructive: false,
       onConfirm: () => {
         setExporting({ status: 'busy' });
-        const file = buildExport(signs, Constants.expoConfig?.version ?? 'unknown');
-        shareJsonFile(exportFileName(), JSON.stringify(file), t('signs.export.dialogTitle'))
+        // Let the busy state show before the file is built; any failure ends in the "failed" notice.
+        new Promise((resolve) => setTimeout(resolve, 0))
+          .then(() => {
+            const file = buildExport(signs, Constants.expoConfig?.version ?? 'unknown');
+            return shareJsonFile(exportFileName(), JSON.stringify(file), t('signs.export.dialogTitle'));
+          })
           .then((shared) => setExporting({ status: shared ? 'idle' : 'unavailable' }))
           .catch(() => setExporting({ status: 'failed' }));
       },
@@ -311,7 +322,7 @@ function SignList({
       </View>
       <Card padded={false} style={{ gap: 0 }}>
         {signs.map((sign, i) => (
-          <SignRow key={sign.id} sign={sign} first={i === 0} onPress={() => onOpen(sign)} onRecord={onRecord ? () => onRecord(sign) : undefined} />
+          <SignRow key={sign.id} sign={sign} first={i === 0} onOpen={onOpen} onRecord={onRecord} />
         ))}
       </Card>
     </View>
@@ -321,13 +332,13 @@ function SignList({
 const SignRow = memo(function SignRow({
   sign,
   first,
-  onPress,
+  onOpen,
   onRecord,
 }: {
   sign: PersonalSign;
   first: boolean;
-  onPress: () => void;
-  onRecord?: () => void;
+  onOpen: (sign: PersonalSign) => void;
+  onRecord?: (sign: PersonalSign) => void;
 }) {
   const { t } = useTranslation();
   const { colors, radii, spacing } = useTheme();
@@ -351,7 +362,7 @@ const SignRow = memo(function SignRow({
         testID={`sign-row-${sign.id}`}
         accessibilityRole="button"
         accessibilityLabel={`${name}. ${kind}. ${t('signs.takes', { count: takes })}. ${status}`}
-        onPress={onPress}
+        onPress={() => onOpen(sign)}
         style={({ pressed }) => [
           styles.row,
           styles.flex,
@@ -378,7 +389,7 @@ const SignRow = memo(function SignRow({
             icon="record-circle-outline"
             label={t('signs.unfinished.record')}
             accessibilityLabel={t('signs.unfinished.recordA11y', { name })}
-            onPress={onRecord}
+            onPress={() => onRecord(sign)}
           />
         </View>
       ) : null}
@@ -409,7 +420,7 @@ function Alphabet({ done, onLetter, onRecordAll }: { done: number; onLetter: (le
       {letters.length > 0 ? (
         <View style={[styles.grid, { gap: spacing.sm }]} testID="alphabet-grid">
           {letters.map((letter) => (
-            <LetterTile key={letter} letter={letter} sign={get(signIdFor({ kind: 'letter', letter }))} onPress={() => onLetter(letter)} />
+            <LetterTile key={letter} letter={letter} sign={get(signIdFor({ kind: 'letter', letter }))} onPress={onLetter} />
           ))}
         </View>
       ) : null}
