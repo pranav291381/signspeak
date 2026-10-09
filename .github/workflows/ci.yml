@@ -29,6 +29,8 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint
+      - name: Camera engine bundle matches its source (the model runs inside it on phones)
+        run: npm run check:engine
       - run: npm run test:ci
       - name: Audit shipped dependencies (fail on high or critical, except scripts/audit-allowlist.json)
         run: npm run audit:deps
