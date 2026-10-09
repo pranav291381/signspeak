@@ -141,7 +141,7 @@ Stack on top: Sign detail
               History, Report a problem
 ```
 
-`(tabs)/_layout.tsx` redirects to `/welcome` until `settings.onboardingComplete` is true.
+`(tabs)/_layout.tsx` redirects to `/welcome` until `settings.onboardingComplete` is true. Old links `/learn` and `/signs` redirect to `/my-signs`; any other unknown link shows `+not-found.tsx` ("Page not found", with a way home) instead of Expo Router's developer page.
 
 ### 5.3 Feature state model
 

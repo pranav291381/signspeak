@@ -36,7 +36,7 @@ export function SignDetailScreen() {
           testID="sign-not-found"
           icon="hand-back-right-off-outline"
           title={t('signs.notFound')}
-          action={{ label: t('signs.back'), icon: 'arrow-left', onPress: () => router.back() }}
+          action={{ label: t('signs.back'), icon: 'arrow-left', onPress: () => (router.canGoBack() ? router.back() : router.replace('/my-signs')) }}
         />
       </Screen>
     );

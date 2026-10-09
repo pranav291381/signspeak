@@ -237,7 +237,7 @@ function YourSigns({ onPress }: { onPress: () => void }) {
         { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radii.lg, padding: spacing.md, gap: spacing.md },
       ]}
     >
-      <IconTile icon="school-outline" tile="saffron" size={40} />
+      <IconTile icon="hand-heart-outline" tile="saffron" size={40} />
       <View style={styles.flex}>
         <AppText variant="bodyStrong" accessibilityRole="none">
           {t('home.signs.title')}

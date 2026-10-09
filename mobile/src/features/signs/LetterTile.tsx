@@ -11,7 +11,7 @@ import { useTheme } from '@/theme';
 interface Props {
   letter: string;
   sign: PersonalSign | undefined;
-  onPress: () => void;
+  onPress: (letter: string) => void;
 }
 
 /** One letter of the alphabet map: its recorded handshape, or an invitation to record it. */
@@ -36,7 +36,7 @@ export const LetterTile = memo(function LetterTile({ letter, sign, onPress }: Pr
       accessibilityLabel={
         frames ? t('signs.alphabet.recordedA11y', { letter: upper }) : t('signs.alphabet.missingA11y', { letter: upper })
       }
-      onPress={onPress}
+      onPress={() => onPress(letter)}
       style={({ pressed }) => [
         styles.tile,
         {

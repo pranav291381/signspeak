@@ -132,4 +132,19 @@ describe('app navigation', () => {
     await waitFor(() => expect(router.getPathname()).toBe('/signs/teach'));
     await act(async () => undefined);
   });
+
+  it('old Learn links open My signs', async () => {
+    const router = renderRouter(APP_DIR, { initialUrl: '/learn' });
+    expect(await screen.findByTestId('my-signs-screen')).toBeOnTheScreen();
+    expect(router.getPathname()).toBe('/my-signs');
+    await act(async () => undefined);
+  });
+
+  it('a link to a page that does not exist says so and leads home', async () => {
+    const router = renderRouter(APP_DIR, { initialUrl: '/no-such-page' });
+    expect(await screen.findByTestId('not-found-screen')).toBeOnTheScreen();
+    fireEvent.press(screen.getByRole('button', { name: 'Go to Home' }));
+    await waitFor(() => expect(router.getPathname()).toBe('/'));
+    await act(async () => undefined);
+  });
 });

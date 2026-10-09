@@ -15,3 +15,6 @@ export async function shareJsonFile(name: string, contents: string, _dialogTitle
   }
   return true;
 }
+
+/** Web: downloads live in the browser's downloads, not in the app. */
+export function clearSharedFiles(): void {}

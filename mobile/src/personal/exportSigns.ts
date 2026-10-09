@@ -41,7 +41,10 @@ export function buildExport(signs: readonly PersonalSign[], appVersion: string, 
   };
 }
 
-/** e.g. signspeak-my-signs-2026-10-08.json */
+export const EXPORT_FILE_PREFIX = 'signspeak-my-signs-';
+
+/** e.g. signspeak-my-signs-2026-10-08.json, dated on the phone's own calendar. */
 export function exportFileName(now = new Date()): string {
-  return `signspeak-my-signs-${now.toISOString().slice(0, 10)}.json`;
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${EXPORT_FILE_PREFIX}${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}.json`;
 }

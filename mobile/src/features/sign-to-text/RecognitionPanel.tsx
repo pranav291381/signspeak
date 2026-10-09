@@ -138,7 +138,7 @@ export function RecognitionPanel({ snapshot, paused, latest, transcript, suggest
                     onPress={() => onTeach(latest.recognition.label)}
                     style={[styles.teach, { gap: spacing.xs }]}
                   >
-                    <Icon name="school-outline" size={16} color={colors.primary} />
+                    <Icon name="hand-heart-outline" size={16} color={colors.primary} />
                     <AppText variant="label" style={{ color: colors.primary }}>
                       {t('signToText.teach.yourWay')}
                     </AppText>
