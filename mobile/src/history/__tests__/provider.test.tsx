@@ -1,4 +1,5 @@
 import { act, screen, waitFor } from '@testing-library/react-native';
+import { useEffect } from 'react';
 import { Text } from 'react-native';
 
 import { createMemoryStore } from '@/storage/keyValueStore';
@@ -6,9 +7,12 @@ import { renderWithProviders } from '@/test-utils/render';
 
 import { useHistory } from '../HistoryProvider';
 
-let history: ReturnType<typeof useHistory>;
+const probe: { history?: ReturnType<typeof useHistory> } = {};
 function Probe() {
-  history = useHistory();
+  const history = useHistory();
+  useEffect(() => {
+    probe.history = history;
+  }, [history]);
   return <Text testID="entries">{history.entries.map((e) => e.text).join(',')}</Text>;
 }
 
@@ -17,15 +21,15 @@ describe('HistoryProvider', () => {
     const store = createMemoryStore();
     await store.setItem('islconnect.settings.v1', JSON.stringify({ appLanguage: 'en', outputLanguage: 'en', historyEnabled: true }));
     renderWithProviders(<Probe />, { store });
-    await waitFor(() => expect(history.enabled).toBe(true));
+    await waitFor(() => expect(probe.history?.enabled).toBe(true));
     const recognized = (text: string) => ({ kind: 'recognition' as const, text, language: 'en' as const, signIds: [text] });
-    act(() => history.add(recognized('Hello')));
-    act(() => history.add(recognized('Afternoon')));
-    act(() => history.add(recognized('Adult'), { replaceLatest: true }));
+    act(() => probe.history!.add(recognized('Hello')));
+    act(() => probe.history!.add(recognized('Afternoon')));
+    act(() => probe.history!.add(recognized('Adult'), { replaceLatest: true }));
     expect(screen.getByTestId('entries')).toHaveTextContent('Adult,Hello');
     // A look-up is never replaced by a correction.
-    act(() => history.add({ kind: 'lookup', text: 'good morning', language: 'en', signIds: [] }));
-    act(() => history.add(recognized('Water'), { replaceLatest: true }));
+    act(() => probe.history!.add({ kind: 'lookup', text: 'good morning', language: 'en', signIds: [] }));
+    act(() => probe.history!.add(recognized('Water'), { replaceLatest: true }));
     expect(screen.getByTestId('entries')).toHaveTextContent('Water,good morning,Adult,Hello');
   });
 });

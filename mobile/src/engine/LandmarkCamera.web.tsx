@@ -53,7 +53,9 @@ export function LandmarkCamera({ facing, active, flashSignal = 0, model, style, 
   // Messages sent while the page was still loading were lost: once it has loaded,
   // send the current state again, then hand the model its connection.
   const latest = useRef({ active, reduceMotion, facing });
-  latest.current = { active, reduceMotion, facing };
+  useEffect(() => {
+    latest.current = { active, reduceMotion, facing };
+  }, [active, reduceMotion, facing]);
   const onLoaded = () => {
     const { active: isActive, reduceMotion: reduce, facing: side } = latest.current;
     send({ type: 'setActive', active: isActive });
