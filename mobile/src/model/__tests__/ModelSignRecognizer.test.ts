@@ -31,6 +31,21 @@ describe('ModelSignRecognizer', () => {
     expect(await recognizer.predict(resting)).toMatchObject({ idle: true, scores: [{ label: UNKNOWN_LABEL, score: 1 }] });
   });
 
+  it('runs the model itself when the camera engine fails, and stops asking it after repeated failures', async () => {
+    const local = new ModelSignRecognizer(pack());
+    await local.load();
+    const signing = perform(MOTIONS.wave!, { durationMs: 2200 });
+    const expected = await local.predict(signing);
+    const remote = { available: true, load: jest.fn(), forward: jest.fn(() => Promise.reject(new Error('timeout'))) };
+    const recognizer = new ModelSignRecognizer(pack(), remote);
+    await recognizer.load();
+    for (let i = 0; i < 3; i++) {
+      const prediction = await recognizer.predict(signing);
+      expect(prediction.scores.map((s) => s.score)).toEqual(expected.scores.map((s) => s.score));
+    }
+    expect(remote.forward).toHaveBeenCalledTimes(2);
+  });
+
   it('must be loaded before predicting', async () => {
     await expect(new ModelSignRecognizer(pack()).predict([])).rejects.toThrow('not loaded');
   });

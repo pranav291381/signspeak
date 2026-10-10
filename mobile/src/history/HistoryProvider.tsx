@@ -8,8 +8,11 @@ import { deleteHistory, loadHistory, newEntryId, prependEntry, saveHistory, type
 interface HistoryContextValue {
   enabled: boolean;
   entries: HistoryEntry[];
-  /** No-op unless the user turned history on. */
-  add(entry: Omit<HistoryEntry, 'id' | 'createdAt'>): void;
+  /**
+   * No-op unless the user turned history on. With `replaceLatest`, the entry
+   * replaces the most recent one when that is a recognition (a correction).
+   */
+  add(entry: Omit<HistoryEntry, 'id' | 'createdAt'>, options?: { replaceLatest?: boolean }): void;
   clear(): void;
 }
 
@@ -41,11 +44,12 @@ export function HistoryProvider({ children, store = deviceStore }: { children: R
   }, [enabled, store]);
 
   const add = useCallback(
-    (entry: Omit<HistoryEntry, 'id' | 'createdAt'>) => {
+    (entry: Omit<HistoryEntry, 'id' | 'createdAt'>, options?: { replaceLatest?: boolean }) => {
       if (!enabled) return;
       const now = Date.now();
       setEntries((current) => {
-        const next = prependEntry(current, { ...entry, id: newEntryId(now), createdAt: now });
+        const base = options?.replaceLatest && current[0]?.kind === 'recognition' ? current.slice(1) : current;
+        const next = prependEntry(base, { ...entry, id: newEntryId(now), createdAt: now });
         saveHistory(store, next).catch(() => undefined);
         return next;
       });

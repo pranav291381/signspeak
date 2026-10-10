@@ -45,6 +45,11 @@ export class SignSegmenter {
     return this.current !== null;
   }
 
+  /** True once the sign being made has enough raised frames not to be a twitch. */
+  get confirmed(): boolean {
+    return this.current !== null && this.raisedCount >= this.config.minRaisedFrames;
+  }
+
   reset(): void {
     this.before = [];
     this.current = null;

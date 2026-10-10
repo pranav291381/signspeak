@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
@@ -46,6 +46,14 @@ export function SentencePlayer({ items, chosen, suspended = false, testID }: Pro
   const [seek, setSeek] = useState<SeekRequest | null>(null);
   const [missing, setMissing] = useState<PlannedItem | null>(null);
   const [atEnd, setAtEnd] = useState(false);
+  // The setting can arrive after the first render: until the person presses Play, it still applies.
+  const pressedPlay = useRef(false);
+  useEffect(() => {
+    if (reduceMotion && !pressedPlay.current) {
+      setStarted(false);
+      setPlaying(false);
+    }
+  }, [reduceMotion]);
 
   const clips = useMemo(() => items.map((item, i) => choiceOf(item, chosen[i] ?? 0)?.clip ?? null), [items, chosen]);
   const playable = items.map((item, i) => (clips[i] ? i : -1)).filter((i) => i >= 0);
@@ -55,6 +63,7 @@ export function SentencePlayer({ items, chosen, suspended = false, testID }: Pro
     setAtEnd(false);
     setSeek({ item: index, nonce: nextSeekNonce() });
     setCurrent(index);
+    pressedPlay.current = true;
     setStarted(true);
     setPlaying(true);
   };
@@ -196,6 +205,7 @@ export function SentencePlayer({ items, chosen, suspended = false, testID }: Pro
           icon={playing && started ? 'pause' : atEnd ? 'replay' : 'play'}
           accessibilityLabel={playing && started ? t('diagram.pause') : atEnd ? t('diagram.replay') : t('diagram.play')}
           onPress={() => {
+            pressedPlay.current = true;
             if (atEnd) show(playable[0]!);
             else if (!started) show(current);
             else setPlaying((p) => !p);

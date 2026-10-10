@@ -7,6 +7,7 @@ import { announce, confirmHaptic } from '@/accessibility/feedback';
 import { useAppActive } from '@/accessibility/useAppActive';
 import { AppText, Button, Card, IconButton, Notice, Pill, Screen } from '@/components';
 import { getSign, isEmergencySign, signMeaning } from '@/content/library';
+import { isEmergencyLabel } from '@/recognition/engine';
 import { EngineFrameSource } from '@/engine/EngineFrameSource';
 import { useHistory } from '@/history/HistoryProvider';
 import { LANGUAGES, type LanguageCode } from '@/i18n/languages';
@@ -69,7 +70,7 @@ export function SignToTextScreen({ sessionFactory }: Props) {
       const sign = vocabulary?.describe(label);
       if (sign) return { text: sign.text, language: sign.language, letter: sign.letter, emergency: false };
       const taught = getTaught(label);
-      if (taught) return { ...targetText(taught.target, outputLanguage), letter: taught.target.kind === 'letter', emergency: isEmergencySign(label) };
+      if (taught) return { ...targetText(taught.target, outputLanguage), letter: taught.target.kind === 'letter', emergency: isEmergencyLabel(label) };
       const entry = getSign(label);
       return entry ? { ...signMeaning(entry, outputLanguage), letter: false, emergency: isEmergencySign(label) } : null;
     },
@@ -92,7 +93,10 @@ export function SignToTextScreen({ sessionFactory }: Props) {
       if (autoSpeak && !described.letter) void speak(described.text, described.language);
       // Simulated demo results are never saved as if they were real.
       if (!demoMode) {
-        addToHistory({ kind: 'recognition', text: described.text, language: described.language, signIds: [recognition.label] });
+        addToHistory(
+          { kind: 'recognition', text: described.text, language: described.language, signIds: [recognition.label] },
+          { replaceLatest: recognition.corrects === true },
+        );
       }
     },
     [describe, hapticsEnabled, autoSpeak, demoMode, speak, addToHistory, t],
