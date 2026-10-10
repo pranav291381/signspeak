@@ -41,6 +41,8 @@ const MIN_PRESENT_FRACTION = 0.5;
 const MIN_HANDS_FRACTION = 0.15;
 /** Consecutive prediction failures before the session reports a model error. */
 const MAX_CONSECUTIVE_ERRORS = 3;
+/** Signs waiting while one is read; beyond this the oldest is dropped (the person signed faster than the phone reads). */
+const MAX_PENDING_SEGMENTS = 3;
 /** Segment mode: frames in a row without a person, or without hands, before saying so (~0.5 s / 1 s). */
 const NO_SIGNER_FRAMES = 8;
 const NO_HANDS_FRAMES = 15;
@@ -59,7 +61,8 @@ export class RecognitionSession {
   private readonly listeners = new Set<SessionListener>();
   private readonly segmenter = new SignSegmenter();
   /** Segment mode: a finished sign waiting while the previous one is still being recognized. */
-  private pendingSegment: { frames: LandmarkFrame[]; timestampMs: number } | null = null;
+  /** Signs finished while an earlier one was being read, in order (a few at most). */
+  private pendingSegments: { frames: LandmarkFrame[]; timestampMs: number }[] = [];
   private framesWithoutSigner = 0;
   private framesWithoutHands = 0;
 
@@ -135,7 +138,7 @@ export class RecognitionSession {
     this.framesSincePrediction = 0;
     this.stabilizer.reset();
     this.segmenter.reset();
-    this.pendingSegment = null;
+    this.pendingSegments = [];
     if (this.snapshot.state === 'running') {
       this.publish({ status: 'analyzing', reason: undefined });
     }
@@ -154,7 +157,7 @@ export class RecognitionSession {
     this.consecutiveErrors = 0;
     this.stabilizer.reset();
     this.segmenter.reset();
-    this.pendingSegment = null;
+    this.pendingSegments = [];
     this.framesWithoutSigner = 0;
     this.framesWithoutHands = 0;
     this.publish({ state: 'running', status: 'analyzing', reason: undefined });
@@ -170,7 +173,7 @@ export class RecognitionSession {
     this.inFlight = false;
     this.window = [];
     this.segmenter.reset();
-    this.pendingSegment = null;
+    this.pendingSegments = [];
   }
 
   private onFrame(frame: LandmarkFrame): void {
@@ -212,16 +215,18 @@ export class RecognitionSession {
   private onSegmentFrame(frame: LandmarkFrame): void {
     this.framesWithoutSigner = frame.values === null ? this.framesWithoutSigner + 1 : 0;
     this.framesWithoutHands = frame.values !== null && !handsVisible(frame.values) ? this.framesWithoutHands + 1 : 0;
-    const wasActive = this.segmenter.active;
+    const wasConfirmed = this.segmenter.confirmed;
     const sign = this.segmenter.push(frame);
     if (sign) {
-      if (this.inFlight) this.pendingSegment = { frames: sign, timestampMs: frame.timestampMs };
-      else void this.predict(sign, frame.timestampMs);
+      if (this.inFlight) {
+        this.pendingSegments.push({ frames: sign, timestampMs: frame.timestampMs });
+        if (this.pendingSegments.length > MAX_PENDING_SEGMENTS) this.pendingSegments.shift();
+      } else void this.predict(sign, frame.timestampMs);
       return;
     }
     if (this.segmenter.active) {
-      // A new sign has begun: the last result gives way to "watching".
-      if (!wasActive) this.apply({ status: 'analyzing' });
+      // A new sign has begun (not a twitch): the last result gives way to "watching".
+      if (!wasConfirmed && this.segmenter.confirmed) this.apply({ status: 'analyzing' });
       return;
     }
     if (this.inFlight) return;
@@ -250,8 +255,7 @@ export class RecognitionSession {
     } finally {
       if (generation === this.generation) {
         this.inFlight = false;
-        const next = this.pendingSegment;
-        this.pendingSegment = null;
+        const next = this.pendingSegments.shift();
         if (next) void this.predict(next.frames, next.timestampMs);
       }
     }

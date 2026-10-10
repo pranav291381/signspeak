@@ -105,6 +105,28 @@ async function setup() {
 }
 
 describe('RecognitionSession in segment mode', () => {
+  it('reads every sign made while an earlier one is still being read, in order', async () => {
+    const { source, recognizer, recognitions } = await setup();
+    const waiting: (() => void)[] = [];
+    let n = 0;
+    recognizer.predict = (window) => {
+      recognizer.windows.push(window.length);
+      const label = n++ % 2 === 0 ? 'hello' : 'water';
+      return new Promise<RawPrediction>((resolve) =>
+        waiting.push(() => resolve({ scores: [{ label, score: 0.9 }, { label: label === 'hello' ? 'water' : 'hello', score: 0.1 }], latencyMs: 1 })),
+      );
+    };
+    // Three signs finish before the phone has read the first.
+    source.push([...rest(3), ...up(8), ...rest(5), ...up(8), ...rest(5), ...up(8), ...rest(5)]);
+    await flush();
+    while (waiting.length) {
+      waiting.shift()!();
+      await flush();
+    }
+    expect(recognizer.windows).toHaveLength(3);
+    expect(recognitions.map((r) => r.label)).toEqual(['hello', 'water', 'hello']);
+  });
+
   it('recognizes each finished sign once, from all of its frames', async () => {
     const { source, recognizer, session, recognitions } = await setup();
     source.push([...rest(4), ...up(12)]);
@@ -131,7 +153,11 @@ describe('RecognitionSession in segment mode', () => {
     expect(session.getSnapshot()).toMatchObject({ status: 'uncertain', reason: 'low_confidence' });
     source.push(rest(10));
     expect(session.getSnapshot().status).toBe('uncertain');
+    // A twitch (a frame or two raised) keeps the result and its suggestions.
     source.push(up(1));
+    expect(session.getSnapshot().status).toBe('uncertain');
+    expect(session.getSnapshot().suggestions).toEqual(['hello', 'water']);
+    source.push(up(3));
     expect(session.getSnapshot().status).toBe('analyzing');
   });
 

@@ -96,6 +96,13 @@ describe('TeachChooser', () => {
     expect(mockReplace).toHaveBeenCalledWith({ pathname: '/signs/teach', params: { kind: 'vocabulary', label: 'test:3' } });
   });
 
+  it('with a model, a common word it does not know can still be taught as your own word', async () => {
+    renderWithProviders(<TeachScreen />, withModel);
+    fireEvent.changeText(await screen.findByLabelText('What does the sign mean?'), 'thank you');
+    fireEvent.press(await screen.findByTestId('teach-custom'));
+    expect(mockReplace).toHaveBeenCalledWith({ pathname: '/signs/teach', params: { kind: 'custom', text: 'thank you' } });
+  });
+
   it('suggests matching library words and offers to teach a new word', async () => {
     renderWithProviders(<TeachScreen />);
     fireEvent.changeText(await screen.findByLabelText('What does the sign mean?'), 'thank');

@@ -38,8 +38,11 @@ export function TeachChooser() {
 
   const teachable = vocabularyState.status === 'ready' ? vocabularyState.vocabulary.teachable : [];
   const library = getLibrary().signs;
+  // An exact match is listed below, so it needs no "teach as your own word" row. The library is
+  // listed only without a model, so with one a library word is taught as the person's own word.
   const exact =
-    teachable.some((s) => normalizeText(s.text) === query) || library.some((s) => normalizeText(s.meaning[language] ?? s.meaning.en) === query);
+    teachable.some((s) => normalizeText(s.text) === query) ||
+    (teachable.length === 0 && library.some((s) => normalizeText(s.meaning[language] ?? s.meaning.en) === query));
 
   const takesLabel = (id: string) => {
     const count = get(id)?.samples.length ?? 0;

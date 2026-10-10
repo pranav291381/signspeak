@@ -63,10 +63,18 @@ export function useRecognition({
   useEffect(() => {
     const session = factory({ demoMode, signs, vocabulary, model, source });
     sessionRef.current = session;
+    // Whether the session's latest recognition was shown (a correction replaces it only then).
+    let lastShown = false;
     const unsubscribe = session.subscribe({
       onSnapshot: setSnapshot,
-      onRecognition: (recognition) => {
-        if (!isDisplayableRef.current(recognition.label)) return;
+      onRecognition: (event) => {
+        if (!isDisplayableRef.current(event.label)) {
+          lastShown = false;
+          return;
+        }
+        const { corrects, ...rest } = event;
+        const recognition: Recognition = corrects && lastShown ? event : rest;
+        lastShown = true;
         // A correction replaces the sign shown just before it.
         setResults((prev) => [...(recognition.corrects ? prev.slice(0, -1) : prev), recognition].slice(-MAX_RESULTS));
         onRecognitionRef.current?.(recognition);

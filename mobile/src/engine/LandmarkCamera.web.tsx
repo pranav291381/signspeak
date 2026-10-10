@@ -50,6 +50,20 @@ export function LandmarkCamera({ facing, active, flashSignal = 0, model, style, 
 
   useEffect(() => () => model?.detach(), [model]);
 
+  // Messages sent while the page was still loading were lost: once it has loaded,
+  // send the current state again, then hand the model its connection.
+  const latest = useRef({ active, reduceMotion, facing });
+  useEffect(() => {
+    latest.current = { active, reduceMotion, facing };
+  }, [active, reduceMotion, facing]);
+  const onLoaded = () => {
+    const { active: isActive, reduceMotion: reduce, facing: side } = latest.current;
+    send({ type: 'setActive', active: isActive });
+    send({ type: 'setReduceMotion', reduceMotion: reduce });
+    send({ type: 'setFacing', facing: side });
+    model?.attach(send);
+  };
+
   return (
     <View style={[styles.container, style]} testID={testID}>
       <iframe
@@ -57,7 +71,7 @@ export function LandmarkCamera({ facing, active, flashSignal = 0, model, style, 
         srcDoc={html}
         allow="camera; autoplay"
         // The page's script has run: it takes messages now.
-        onLoad={() => model?.attach(send)}
+        onLoad={onLoaded}
         aria-hidden
         tabIndex={-1}
         style={{ border: 0, width: '100%', height: '100%', display: 'block' }}

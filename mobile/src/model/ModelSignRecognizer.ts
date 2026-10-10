@@ -28,6 +28,9 @@ export function withoutDepth(values: ArrayLike<number>, dim: number): Float32Arr
   return out;
 }
 
+/** Engine failures in a row after which the model runs only in the app. */
+const MAX_REMOTE_FAILURES = 2;
+
 /**
  * Recognizes the signs of a trained model pack from the last `windowFrames`
  * frames. With a `remote` runner (the camera engine page), the forward pass
@@ -37,6 +40,7 @@ export class ModelSignRecognizer implements SignRecognizer {
   readonly info: RecognizerInfo;
   private model: SignModel | null = null;
   private loaded = false;
+  private remoteFailures = 0;
   private readonly labels: string[];
 
   constructor(
@@ -73,7 +77,7 @@ export class ModelSignRecognizer implements SignRecognizer {
       // Hands down or out of view: nothing is being signed.
       return { scores: [{ label: UNKNOWN_LABEL, score: 1 }], latencyMs: now() - started, idle: true };
     }
-    const logits = this.remote?.available ? await this.remote.forward(frames) : this.local().forward(frames);
+    const logits = await this.forward(frames);
     const probabilities = softmax(logits, this.pack.temperature);
     return {
       scores: this.labels.map((label, i) => ({ label, score: probabilities[i]! })),
@@ -84,6 +88,24 @@ export class ModelSignRecognizer implements SignRecognizer {
   dispose(): void {
     this.model = null;
     this.loaded = false;
+  }
+
+  /**
+   * The camera engine runs the model when it can; if it fails (a slow or
+   * restarted page), the model runs here instead, and after a few failures in
+   * a row the engine is no longer asked.
+   */
+  private async forward(frames: Float32Array[]): Promise<Float64Array> {
+    if (this.remote?.available && this.remoteFailures < MAX_REMOTE_FAILURES) {
+      try {
+        const logits = await this.remote.forward(frames);
+        this.remoteFailures = 0;
+        return logits;
+      } catch {
+        this.remoteFailures += 1;
+      }
+    }
+    return this.local().forward(frames);
   }
 
   private local(): SignModel {

@@ -57,6 +57,20 @@ export function LandmarkCamera({ facing, active, flashSignal = 0, model, style, 
 
   useEffect(() => () => model?.detach(), [model]);
 
+  // Messages sent while the page was still loading were lost: once it has loaded,
+  // send the current state again, then hand the model its connection.
+  const latest = useRef({ active, reduceMotion, facing });
+  useEffect(() => {
+    latest.current = { active, reduceMotion, facing };
+  }, [active, reduceMotion, facing]);
+  const onLoaded = () => {
+    const { active: isActive, reduceMotion: reduce, facing: side } = latest.current;
+    send({ type: 'setActive', active: isActive });
+    send({ type: 'setReduceMotion', reduceMotion: reduce });
+    send({ type: 'setFacing', facing: side as EngineFacing });
+    model?.attach(send);
+  };
+
   return (
     <View style={[styles.container, style]} testID={testID}>
       <WebView
@@ -65,7 +79,7 @@ export function LandmarkCamera({ facing, active, flashSignal = 0, model, style, 
         originWhitelist={['https://*', 'about:*', 'blob:*']}
         onMessage={(event: WebViewMessageEvent) => onMessage(decodeEngineMessage(event.nativeEvent.data))}
         // The page's script has run: it takes messages now (again after a reload).
-        onLoadEnd={() => model?.attach(send)}
+        onLoadEnd={onLoaded}
         // The phone may stop the page (e.g. low on memory): report it instead of the app closing.
         onRenderProcessGone={onStopped}
         onContentProcessDidTerminate={onStopped}
