@@ -28,6 +28,8 @@ export function useSpeech(): SpeechController {
   const [speaking, setSpeaking] = useState(false);
   const [problem, setProblem] = useState<SpeakResult | null>(null);
   const mounted = useRef(true);
+  /** Only the latest request may update the state (an earlier one ends when it is replaced). */
+  const latest = useRef(0);
 
   useEffect(() => {
     mounted.current = true;
@@ -39,10 +41,11 @@ export function useSpeech(): SpeechController {
 
   const speak = useCallback(
     async (text: string, language: LanguageCode = settings.outputLanguage) => {
+      const request = ++latest.current;
       setProblem(null);
       setSpeaking(true);
       const result = await service.speak(text, language, SPEECH_RATE_VALUES[settings.speechRate]);
-      if (mounted.current) {
+      if (mounted.current && request === latest.current) {
         setSpeaking(false);
         if (result.status !== 'ok' && result.status !== 'stopped') setProblem(result);
       }

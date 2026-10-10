@@ -215,11 +215,18 @@ async function createLandmarkers(assets: EngineAssets, delegate: Delegate, handM
     minHandPresenceConfidence: 0.5,
     minTrackingConfidence: 0.5,
   });
-  const pose = await PoseLandmarker.createFromOptions(assets.fileset, {
-    baseOptions: { modelAssetBuffer: assets.poseModel, delegate },
-    runningMode: 'VIDEO',
-    numPoses: 1,
-  });
+  let pose: PoseLandmarker;
+  try {
+    pose = await PoseLandmarker.createFromOptions(assets.fileset, {
+      baseOptions: { modelAssetBuffer: assets.poseModel, delegate },
+      runningMode: 'VIDEO',
+      numPoses: 1,
+    });
+  } catch (error) {
+    // Do not keep the hand model (and its memory) when the pair cannot be made.
+    hands.close();
+    throw error;
+  }
   return { hands, pose, delegate };
 }
 
@@ -297,10 +304,17 @@ function startSignModel(reply: (message: EngineToHost) => void): { handle: (mess
 
 const video = document.getElementById('video') as HTMLVideoElement;
 const overlay = document.getElementById('overlay') as HTMLCanvasElement;
-let stream: MediaStream | null = null;
+/** Detection failures in a row (page thread) after which tracking stops trying. */
+const MAX_DETECT_FAILURES = 30;
 
-async function startCamera(facing: EngineFacing, webDesktopHint: boolean): Promise<void> {
+let stream: MediaStream | null = null;
+/** Counts camera starts and stops: a start that is overtaken by a later stop or start gives its camera back. */
+let cameraRequest = 0;
+
+/** Starts the camera; resolves to false if it was stopped (or restarted) while starting. */
+async function startCamera(facing: EngineFacing, webDesktopHint: boolean): Promise<boolean> {
   stopCamera();
+  const request = cameraRequest;
   const constraints = (withFacing: boolean): MediaStreamConstraints => ({
     audio: false,
     video: {
@@ -310,17 +324,26 @@ async function startCamera(facing: EngineFacing, webDesktopHint: boolean): Promi
       frameRate: { ideal: 30 },
     },
   });
+  let opened: MediaStream;
   try {
-    stream = await navigator.mediaDevices.getUserMedia(constraints(true));
+    opened = await navigator.mediaDevices.getUserMedia(constraints(true));
   } catch (error) {
     // Some devices (e.g. laptops) have only one camera: retry without a facing preference.
+    if (request !== cameraRequest) return false; // no longer wanted: its failure does not matter
     if ((error as { name?: string }).name !== 'OverconstrainedError') throw new EngineError(cameraErrorCode(error));
     try {
-      stream = await navigator.mediaDevices.getUserMedia(constraints(false));
+      opened = await navigator.mediaDevices.getUserMedia(constraints(false));
     } catch (retryError) {
+      if (request !== cameraRequest) return false;
       throw new EngineError(cameraErrorCode(retryError));
     }
   }
+  if (request !== cameraRequest) {
+    // Stopped while the camera was opening (screen left, paused, switched): do not keep it on.
+    opened.getTracks().forEach((track) => track.stop());
+    return false;
+  }
+  stream = opened;
   video.srcObject = stream;
   video.muted = true;
   video.playsInline = true;
@@ -329,9 +352,11 @@ async function startCamera(facing: EngineFacing, webDesktopHint: boolean): Promi
   video.classList.toggle('mirror', mirror);
   overlay.classList.toggle('mirror', mirror);
   await video.play();
+  return request === cameraRequest;
 }
 
 function stopCamera(): void {
+  cameraRequest += 1;
   stream?.getTracks().forEach((track) => track.stop());
   stream = null;
   video.srcObject = null;
@@ -703,8 +728,7 @@ async function main(): Promise<void> {
       cameraOn = true;
       send({ type: 'status', status: 'starting_camera' });
       try {
-        await startCamera(facing, config.mirrorUnknown);
-        send({ type: 'status', status: 'running' });
+        if (await startCamera(facing, config.mirrorUnknown)) send({ type: 'status', status: 'running' });
       } catch (error) {
         cameraOn = false;
         fail(error);
@@ -810,6 +834,7 @@ async function main(): Promise<void> {
     let current: TrackingSetup | null = null;
     let tuner: TrackingTuner | null = null;
     let changing = false;
+    let restartAfterChange = false;
     let capturing = false;
     let saved = false;
     let lastDispatch = 0;
@@ -828,10 +853,15 @@ async function main(): Promise<void> {
         // A hands worker that crashed is dropped; with no hands worker or no body worker left, tracking starts again.
         if (worker.dead) {
           handWorkers = handWorkers.filter((w) => w !== worker);
-          if ((handWorkers.length === 0 || worker.role === 'pose') && current && !changing) {
-            const setup = current;
-            current = null;
-            void change(setup);
+          if (handWorkers.length === 0 || worker.role === 'pose') {
+            if (current && !changing) {
+              const setup = current;
+              current = null;
+              void change(setup);
+            } else if (changing) {
+              // Mid-change: start again once the change is done.
+              restartAfterChange = true;
+            }
           }
         }
         return;
@@ -917,6 +947,12 @@ async function main(): Promise<void> {
       } finally {
         changing = false;
         tuner?.ready();
+        if (restartAfterChange && current) {
+          restartAfterChange = false;
+          const again = current;
+          current = null;
+          void change(again);
+        }
       }
     };
 
@@ -1013,6 +1049,8 @@ async function main(): Promise<void> {
     let switching = false;
     let busy = false;
     let lastDetect = 0;
+    let detectFailures = 0;
+    let broken = false;
     let detections = 0;
     const model: HandModel = phone && liteModel ? 'lite' : 'full';
     const failures: string[] = [];
@@ -1066,14 +1104,18 @@ async function main(): Promise<void> {
         workers: 0,
         note: [setupNote, tuner.settled ? `measured: ${tuner.summary()}` : ''].filter(Boolean).join('; '),
       });
-      if (!cameraOn || busy || switching || video.readyState < 2) return;
+      if (!cameraOn || busy || switching || broken || video.readyState < 2) return;
       if (now - lastDetect < 1000 / config.targetFps) return;
       busy = true;
       lastDetect = now;
       try {
         detect(now);
+        detectFailures = 0;
       } catch (error) {
-        fail(new EngineError('model_load_failed', String(error)));
+        // Report it once, not on every frame; after many failures in a row, stop trying.
+        detectFailures += 1;
+        if (detectFailures === 1) fail(new EngineError('model_load_failed', String(error)));
+        if (detectFailures >= MAX_DETECT_FAILURES) broken = true;
       } finally {
         busy = false;
       }

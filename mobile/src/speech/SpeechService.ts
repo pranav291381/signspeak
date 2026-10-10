@@ -35,6 +35,15 @@ function baseLanguage(tag: string): string {
   return tag.toLowerCase().split(/[-_]/)[0] ?? '';
 }
 
+/** How long to wait for the device to list its voices. */
+const VOICES_TIMEOUT_MS = 2000;
+
+/** Browsers report speech that was stopped or replaced as an error ("interrupted", "canceled"). */
+function wasStopped(error: unknown): boolean {
+  const reason = (error as { error?: unknown; message?: unknown } | null)?.error ?? (error as { message?: unknown } | null)?.message;
+  return typeof reason === 'string' && /interrupted|cancel/i.test(reason);
+}
+
 /**
  * speak(text, language) with explicit outcomes. Speech is always an addition to
  * on-screen text, never the only way information is given.
@@ -46,7 +55,9 @@ export class SpeechService {
 
   private loadVoices(): Promise<EngineVoice[]> {
     if (!this.voices) {
-      this.voices = this.engine.getVoices().catch(() => []);
+      // Some browsers never report their voices (none installed): do not wait for them forever.
+      const timeout = new Promise<EngineVoice[]>((resolve) => setTimeout(() => resolve([]), VOICES_TIMEOUT_MS));
+      this.voices = Promise.race([this.engine.getVoices().catch(() => []), timeout]);
     }
     return this.voices;
   }
@@ -82,7 +93,13 @@ export class SpeechService {
           onDone: () => resolve({ status: 'ok' }),
           onStopped: () => resolve({ status: 'stopped' }),
           onError: (error) =>
-            resolve(supported === null ? { status: 'engine_unavailable' } : { status: 'error', message: error.message }),
+            resolve(
+              wasStopped(error)
+                ? { status: 'stopped' }
+                : supported === null
+                  ? { status: 'engine_unavailable' }
+                  : { status: 'error', message: error.message },
+            ),
         });
       } catch {
         resolve({ status: 'engine_unavailable' });

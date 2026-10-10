@@ -165,6 +165,10 @@ async function extract(videoUrl: string, options: { raw?: boolean; depth?: boole
   }
   // A gap between videos, so tracking does not carry over from the previous one.
   clock += 5000;
+  // Read before the video is unloaded, which resets them.
+  const durationMs = Math.round(video.duration * 1000);
+  const width = video.videoWidth;
+  const height = video.videoHeight;
   video.removeAttribute('src');
   video.load();
 
@@ -173,9 +177,9 @@ async function extract(videoUrl: string, options: { raw?: boolean; depth?: boole
     withPerson,
     withHands,
     withRaisedHands,
-    durationMs: Math.round(video.duration * 1000),
-    width: video.videoWidth,
-    height: video.videoHeight,
+    durationMs,
+    width,
+    height,
   };
   if (options.raw) {
     // With depth: every value of the feature contract (x, y, z); otherwise x and y only.

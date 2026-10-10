@@ -76,4 +76,36 @@ describe('SpeechService', () => {
     await service.isLanguageSupported('hi');
     expect(engine.getVoices).toHaveBeenCalledTimes(2);
   });
+
+  it('treats speech the browser reports as interrupted or canceled as stopped, not failed', async () => {
+    for (const reason of ['interrupted', 'canceled']) {
+      const engine: SpeechEngine = {
+        speak: (_text, options) => options.onError(Object.assign(new Error('speech error'), { error: reason })),
+        stop: () => Promise.resolve(),
+        getVoices: () => Promise.resolve(VOICES),
+      };
+      await expect(new SpeechService(engine).speak('hello', 'en')).resolves.toEqual({ status: 'stopped' });
+    }
+  });
+
+  it('does not wait forever for voices a browser never lists', async () => {
+    jest.useFakeTimers();
+    try {
+      let spoken = false;
+      const engine: SpeechEngine = {
+        speak: (_text, options) => {
+          spoken = true;
+          options.onDone();
+        },
+        stop: () => Promise.resolve(),
+        getVoices: () => new Promise<EngineVoice[]>(() => undefined),
+      };
+      const result = new SpeechService(engine).speak('hello', 'en');
+      await jest.advanceTimersByTimeAsync(2000);
+      await expect(result).resolves.toEqual({ status: 'ok' });
+      expect(spoken).toBe(true);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
 });
